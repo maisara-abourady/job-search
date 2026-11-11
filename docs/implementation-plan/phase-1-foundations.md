@@ -37,10 +37,11 @@ Web delivery is not in this phase (PLAN.md assumption and open question 1). "Acc
 - **Layer:** Main (`apps/main/src`) and tests (`packages/testing-api/src`) — Main must not import testing-api
 - **Depends on:** P1-T01, P0-T04
 - **Size:** M
-- **Context:** Walking skeleton of the slice. Add `reader: DocumentReader`, `analyst: ResumeAnalyst` and `resumeFiles: ResumeFiles` to `MatchmakerDetails`; compose `IntakeResumeInteractor` (searches go to `requests.searchRequests`, ADR 0001 §3) and `CorrectProfileInteractor` (re-scores go to `requests.rescoreRequests`); expose both in `useCases`. `main.dev.ts` passes `UnchosenModelRuntime`-style placeholders until P1-T08 and P1-T10. Testing API superpowers: `documentWillRead(fileName, result)`, `analystWillSay({ structured, candidates, strength })`, `intake(userId, upload)`, `correct(userId, correction)`, `profileVersions(userId)` (observe), `searchesRequested`, `rescoresRequested`. The interactors are still stubs, so the first test asserts the call reaches them.
+- **Context:** Walking skeleton of the slice. Add `reader: DocumentReader`, `analyst: ResumeAnalyst` and `resumeFiles: ResumeFiles` to `MatchmakerDetails`; compose `IntakeResumeInteractor` (searches go to `requests.searchRequests`, ADR 0001 §3; `spend: d.spendAttribution`, ADR 0010) and `CorrectProfileInteractor` (re-scores go to `requests.rescoreRequests`), the latter wrapped in a new `MeasuredCorrectProfile` decorator in `packages/use-cases/src/measurement/measured-input-ports.ts` that emits `preferences-saved` and `fact-fixed` after success (ADR 0011); expose both in `useCases`. `main.dev.ts` passes `UnchosenModelRuntime`-style placeholders until P1-T08 and P1-T10. Testing API superpowers: `documentWillRead(fileName, result)`, `analystWillSay({ structured, candidates, strength })`, `intake(userId, upload)`, `correct(userId, correction)`, `profileVersions(userId)` (observe), `searchesRequested`, `rescoresRequested`. The interactors are still stubs, so the first test asserts the call reaches them.
 - **Files:**
   - modify `apps/main/src/compose-matchmaker.ts`
   - modify `apps/main/src/main.dev.ts`
+  - modify `packages/use-cases/src/measurement/measured-input-ports.ts`, `packages/use-cases/src/wiring.ts` (`MeasuredCorrectProfile`)
   - modify `packages/testing-api/src/matchmaker-testing-api.ts`
   - modify `packages/testing-api/src/builders.ts` (`aStructuredResume`, `aResumeUpload`)
   - create `packages/testing-api/test/onboarding.test.ts`
@@ -77,7 +78,7 @@ Web delivery is not in this phase (PLAN.md assumption and open question 1). "Acc
 - **Layer:** Use cases (`packages/use-cases/src/onboarding`) — must not import adapters, delivery, main, `node:*`, any library, or another area
 - **Depends on:** P1-T02, P1-T03
 - **Size:** M
-- **Context:** Replace the stub in `intake-resume.ts`, following the steps in its comment: reject uploads over 10 MB (`UseCaseError` "invalid-input"); require access through `AccessGuard` (cost-incurring, watch item W8; add it to the dependencies); store the original (`ResumeFiles`); read text (`DocumentReader`, OCR is the reader's business); stop with `unsupported-language` if not English; structure (`ResumeAnalyst.structure`); select selling points (`selectSellingPoints`); compute Resume Strength (`resumeStrength` on the analyst's ratios, top three fixes from the analyst); save a new `ProfileVersion` (version = previous + 1, preferences from `initialPreferences` on a first intake, kept from the previous version on a re-upload); request the onboarding search; return the card. The card's `proof` is the evidence text the selling point cites. See README "Actors", ADR 0005.
+- **Context:** Replace the stub in `intake-resume.ts`, following the steps in its comment: reject uploads over 10 MB (`UseCaseError` "invalid-input"); require access through `AccessGuard` (cost-incurring, watch item W8; add it to the dependencies); run the remaining steps inside `spend.charge({ userId, runId: null, purpose: "intake" }, ...)` (ADR 0010); store the original (`ResumeFiles`); read text (`DocumentReader`, OCR is the reader's business); stop with `unsupported-language` if not English; structure (`ResumeAnalyst.structure`); select selling points (`selectSellingPoints`); compute Resume Strength (`resumeStrength` on the analyst's ratios, top three fixes from the analyst); save a new `ProfileVersion` (version = previous + 1, preferences from `initialPreferences` on a first intake, kept from the previous version on a re-upload); request the onboarding search; return the card. The card's `proof` is the evidence text the selling point cites. See README "Actors", ADR 0005.
 - **Files:**
   - modify `packages/use-cases/src/onboarding/intake-resume.ts`
   - modify `apps/main/src/compose-matchmaker.ts` (pass `access`)
@@ -215,6 +216,7 @@ Web delivery is not in this phase (PLAN.md assumption and open question 1). "Acc
   - create `packages/testing-api/contract/resume-analyst.contract.ts`, `packages/testing-api/contract/resume-analyst.contract.test.ts`, `packages/testing-api/contract/fixtures/analyst-recorded-response.json`
 - **Acceptance criteria:**
   - [ ] The contract suite passes for the scripted analyst and for the adapter on the recorded response
+  - [ ] The adapter receives a `SpendMeter` in its constructor and records one `model` spend per call, priced from Main configuration, before parsing the response; the contract checks it (ADR 0010)
   - [ ] Starting the dev configuration without the model key prints the missing variable names and exits 1; with it, starts
   - [ ] `grep` finds no model name, vendor name or prompt text under `packages/use-cases` or `packages/rules`
   - [ ] Provider data settings used are written in ADR 0009's consequences or PROGRESS.md Notes (Privacy 4)

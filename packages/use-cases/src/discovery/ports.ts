@@ -63,6 +63,7 @@ export interface PostingLiveness {
   isLive(url: string): Promise<boolean>;
 }
 export type SearchRunRecord = {
+  readonly runId: string;
   readonly userId: string;
   readonly trigger: "onboarding" | "manual" | "scheduled";
   readonly startedAt: string;
@@ -72,6 +73,8 @@ export type SearchRunRecord = {
   readonly expiredDropped: number;
   readonly failedSources: readonly string[];
   readonly widenedTo: readonly string[];
+  /** PRD SearchRun "cost": spend charged to this run (sources, enrichment, ranking, and scoring awaited by the run), ADR 0010. */
+  readonly costMicros: number;
 };
 export interface SearchRuns {
   record(run: SearchRunRecord): Promise<void>;
@@ -88,5 +91,6 @@ export interface CompanyRegistry {
 
 /** Discovery hands scoring to the matching area through a port it owns; Main wires it. */
 export interface ScoringRequests {
-  score(request: { userId: string; postingIds: readonly string[]; cutAtPrefilter: readonly string[] }): Promise<void>;
+  /** `runId` lets scoring spend be charged to the search run that asked for it (ADR 0010). */
+  score(request: { userId: string; runId: string | null; postingIds: readonly string[]; cutAtPrefilter: readonly string[] }): Promise<void>;
 }

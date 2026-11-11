@@ -62,7 +62,7 @@ Existing items are marked **exists**; "Built in" names the task that completes o
 | UC-7 | `RescoreAll` | matching | exists; reuse optimization hand-off | P1-T05 (requested), P3 |
 | UC-8 | `RunFullAnalysis` | matching | exists; supersede hand-off | P3 |
 | UC-9 | `ListResults` | results | exists | P2-T01, P3 |
-| UC-10 | `ViewJobDetail` | results | stub | P3 |
+| UC-10 | `ViewJobDetail` | results | exists (ADR 0012); presenter and screen in P3 | P3 |
 | UC-11 | `ReviewNotAFit` | results | stub | P3 |
 | UC-12 | `RecordJobDecision` | results | exists | P3 |
 | UC-13 | `TailorResume` | tailoring | stub | P4 |
@@ -71,7 +71,7 @@ Existing items are marked **exists**; "Built in" names the task that completes o
 | UC-16 | `SignUp` | account | exists | P1-T06 |
 | UC-17 | `ViewAccess` | account | exists | P1-T06 |
 | UC-18 | `StartCheckout` | account | exists; no `Checkout` adapter | P6 |
-| UC-19 | `RecordSubscriptionChange` | account | stub | P6 |
+| UC-19 | `RecordSubscriptionChange` | account | exists, idempotent per event id (ADR 0013); ordering (W12) in P6 | P6 |
 | UC-20 | `ExportMyData`, `DeleteMyData` | account | exists; no `UserDataVault` adapter | P6 |
 | UC-21 | `PurgeExpiredAccounts` | account | exists; `paywalledBefore` returns `[]` | P6 |
 | UC-22 | `OperateSources` | operations | exists | P5 |
@@ -96,7 +96,7 @@ Existing items are marked **exists**; "Built in" names the task that completes o
 | P-14 | `RelevanceRanker` | discovery | testing API | A-11 (P2-T13) |
 | P-15 | `PostingCatalog`, `PostingsForScoring` | discovery, matching | `InMemoryStore` | A-22 (P3) |
 | P-16 | `PostingLiveness` | discovery | testing API | A-21 (P2-T04) |
-| P-17 | `SearchRuns`, `SearchRunHistory` | discovery, operations | `InMemoryStore` | A-22 (P3) |
+| P-17 | `SearchRuns`, `SearchRunHistory` (with `runId` and `costMicros`, ADR 0010) | discovery, operations | `InMemoryStore` | A-22 (P3) |
 | P-18 | `AtsLinkRecognizer`, `CompanyRegistry` | discovery | `InMemoryStore` | Tier 1 adapters; A-22 |
 | P-19 | `MatchJudge` | matching | testing API | A-8 (P2-T12) |
 | P-20 | `MatchNarrator` | matching | — | `TemplateNarrator` (exists); model narrator only on W4 trigger |
@@ -111,6 +111,8 @@ Existing items are marked **exists**; "Built in" names the task that completes o
 | P-29 | `MonitoringRoster`, `InboxSource` | monitoring | in-memory (P5) | A-22 (P5) |
 | P-30 | `Checkout` | account | testing API (P6) | A-28 (P6, D7) |
 | P-31 | `UserDataVault` | account | in-memory (P6) | A-22 plus file stores (P6) |
+| P-32 | `SpendMeter`, `SpendAttribution`, `SpendLedger` (ADR 0010) | shared | `AsyncSpendMeter`, `InMemorySpendLedger` (exist) | `AsyncSpendMeter` stays; ledger in A-22 (P3) |
+| P-33 | `ProductEvents` (ADR 0011) | measurement | `InMemoryProductEventLog` (exists) | D14: own table in A-22 or a vendor adapter (P3-T14) |
 
 ### Adapters, delivery, Main, cross-cutting
 
@@ -137,6 +139,8 @@ Existing items are marked **exists**; "Built in" names the task that completes o
 | A-26 | Adapter (P-11) | Flag store for kill switches | with A-22 | D10 | P3 or P5 |
 | A-27 | Adapter (P-22) | Server-sent events results feed | `apps/web` | D5 | P3 |
 | A-28 | Adapter (P-30) | Billing provider checkout and webhook listener | adapters, `apps/web` | D7 | P6 |
+| A-29 | Adapter (P-32) | `AsyncSpendMeter` (exists) and `InMemorySpendLedger` (exists) | `adapters/metering`, `adapters/in-memory` | ADR 0010 | done |
+| A-30 | Adapter (P-33) | `InMemoryProductEventLog` (exists); real destination | `adapters/in-memory`; D14 | ADR 0011 | P3-T14 |
 | D-1 | Delivery | Results controller and presenters (exist) | delivery | README | P2-T01 |
 | D-2 | Delivery | Access presenter (exists) | delivery | README | P1-T06 |
 | D-3 | Delivery | Onboarding controllers and presenters (selling-points card, corrections) | `delivery/onboarding` | ADR 0001 §7 | P1-T07 |
@@ -161,6 +165,8 @@ Existing items are marked **exists**; "Built in" names the task that completes o
 | X-9 | Cross-cutting | Model-provider data terms (no training, Privacy 4) | Main configuration | W10 | H-2 |
 | X-10 | Cross-cutting | Database migrations | storage-postgres | D2 | P3 |
 | X-11 | Cross-cutting | Formatting and lint | root | — | P0-T08 |
+| X-12 | Cross-cutting | Spend metering: every paid adapter records through `SpendMeter`; every cost-incurring use case charges | adapters, use cases | ADR 0010 | every paid-adapter task |
+| X-13 | Cross-cutting | Product events: measured decorators over input ports, wired in Main | `use-cases/src/measurement` | ADR 0011 | every task that wires a measured use case |
 
 ## Layers and the dependency rule
 
@@ -227,7 +233,7 @@ graph LR
 | Job source endpoints, quotas and terms changed since the PRD | H / M | Every source adapter task starts by verifying the endpoint in current documentation; recorded fixtures keep tests offline; a failing source never fails a run (exists). |
 | No initial Tier 1 company registry | H / H (Tier 1 returns nothing) | S-2 and H-5 in Phase 1, before Tier 1 adapters in Phase 2. |
 | JobSpy is a Python library; the stack is TypeScript | H / M | S-5 during Phase 4 decides a bridge (subprocess or sidecar) and whether watch item W6 fires. |
-| Cost per user above an unset price | M / H | S-6 builds a cost model from Phase 2 measurements; H-16 confirms caps and interval before Phase 5. Cost metering needs an architecture decision (open question 4). |
+| Cost per user above an unset price | M / H | S-6 builds a cost model from Phase 2 measurements; H-16 confirms caps and interval before Phase 5. Cost metering is decided (ADR 0010): run cost and spend per user are recorded from the first paid adapter. |
 | Web framework, streaming and authentication arrive late, threatening the 10-minute test | M / M | S-3 at the end of Phase 2; web work opens Phase 3. Controllers and presenters are framework-free already. |
 | Tier 4 legal review takes long | H / M | H-10 starts now; the product must work on Tiers 1 to 3 alone (exists). |
 | The architecture check quietly loosens | L / H | P0-T02 adds regression tests for every rule in the checker. |
@@ -253,7 +259,7 @@ Spike code lives on a throwaway branch and is not merged. Each answer is appende
 | H-1 | Settle PRD open question "How is Claude Code run as a hosted runtime agent, and do its terms allow it for a consumer product?" from Anthropic's current terms and documentation, and with Anthropic if needed | P0-T10, then P1-T10 (real resume parsing) | Before P1-T10 | Now |
 | H-2 | Create the model provider account chosen in P0-T10; configure no-training data settings (Privacy 4); put the API key in the dev and CI secret stores | P1-T10 | Phase 1 | After P0-T10 |
 | H-3 | Supply 20 varied test resumes you have consent to use (PDF, DOCX, pasted text, LinkedIn export; new graduate, career changer, long history, gaps) and review the agent-drafted ground truth | P1-T11, Gate 1 | Gate 1 | Now |
-| H-4 | Confirm what "parse correctly" means (assumption: every role's employer, title, start and end month exact; skills precision and recall at least 90% per resume) | P1-T11 | Gate 1 | Gate 0 |
+| H-4 | DONE (user delegated; default stands). What "parse correctly" means: every role's employer, title, start and end month exact; skills precision and recall at least 90% per resume) | P1-T11 | Gate 1 | Gate 0 |
 | H-5 | Choose the initial Tier 1 company registry source after S-2 (PRD open question 6) | P2-T05 to P2-T07 | Phase 2 | Phase 1 |
 | H-6 | Obtain Adzuna and USAJobs API keys | P2-T09 | Phase 2 | Phase 1 |
 | H-7 | Approve the fixed stability test set; confirm calibration values in deferred.md D13 (source reliability ratios, reason precedence, two-Missing rule, Tier 3 fallback, widen threshold 20) | Gate 2 | Gate 2 | Phase 2 |
@@ -277,14 +283,15 @@ Spike code lives on a throwaway branch and is not merged. Each answer is appende
 - **Formatter and linter:** Biome, as one root dev dependency, run as a check in `pnpm verify`. Replace if the user prefers another.
 - **Description-similarity deduplication** (PRD pipeline step 4, second stage) is a pure rule in `rules/jobs` with a threshold constant to calibrate (D13 style).
 
-## Open questions (need the user's answer)
+## Open questions: answered by the user (2026-11-11)
 
-1. Do you want a clickable web demo of sign-up and the selling-points card in Phase 1? The plan assumes web delivery starts in Phase 3. Saying yes moves D5, D6 and H-8 forward and adds about four tasks to Phase 1.
-2. The PRD's consistency rule 1 says "scoring runs at temperature 0". Current Claude models reject the `temperature` parameter. Do you accept replacing that rule with "structured output, fixed rubric, cached judgments", keeping the 95%-within-3-points exit test as the measure? (S-1 confirms the API fact.)
-3. Parsing correctness thresholds for Gate 1 (H-4).
-4. **For `/architect`:** where cost is metered (the PRD's SearchRun "cost" field and the cost-per-active-user metric) and where product analytics events live (the north-star "time to first strong match"). Both need a port decision before Phase 3. No task invents them.
-5. **For `/architect`:** job detail needs evidence text by id (`ViewJobDetail` notes it), which `ResultRow` does not carry. A small results-port change in Phase 3.
-6. `RecordSubscriptionChange` must be idempotent per provider event id, but `SubscriptionChange` has no event id. A port change in Phase 6, decided with D7.
+1. **Web demo in Phase 1:** no. Web delivery starts in Phase 3, as planned.
+2. **"Temperature 0":** accepted. The rule is replaced by "structured output, fixed rubric, cached judgments"; the Phase 2 exit (95% of re-scores within 3 points) stays the measure. Recorded as ADR 0009 when S-1 confirms the API fact.
+3. **Parsing thresholds (H-4):** the user delegated this; the plan's default stands. Every role's employer, title, start and end month exact; skills precision and recall at least 90% per resume.
+4. **Cost metering and analytics events:** decided by `/architect`. ADR 0010 (spend metered at the edge, charged by the use case; SearchRun cost; spend per user) and ADR 0011 (product events from decorators over input ports in a measurement area; destination deferred as D14).
+5. **Evidence text for job detail:** decided in ADR 0012 (`ResultsReadModel.jobDetail` returns evidence from the match's own profile version; `ViewJobDetail` implemented).
+6. **Idempotent subscription changes:** decided in ADR 0013 (`SubscriptionChange.eventId`; atomic `Accounts.applySubscriptionEvent`; `RecordSubscriptionChange` implemented; ordering is W12).
+7. **Test placement:** approved. Adapter conformance tests in `packages/testing-api/contract/`, evaluations in `apps/main/eval/`.
 
 ## Deferred decisions honored
 

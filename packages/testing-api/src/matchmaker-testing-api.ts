@@ -1,10 +1,13 @@
 import { presentResults, type ResultsViewModel } from "@matchmaker/delivery";
-import { InMemoryStore, InMemoryUsageLedger, TemplateNarrator } from "@matchmaker/adapters";
+import { AsyncSpendMeter, InMemoryProductEventLog, InMemorySpendLedger, InMemoryStore, InMemoryUsageLedger, TemplateNarrator } from "@matchmaker/adapters";
 import { composeMatchmaker, type Matchmaker } from "@matchmaker/main";
 import {
   postingIdentityKey, type JobPosting, type MatchJudgments, type ProfileVersion, type SourceTier,
 } from "@matchmaker/rules";
-import type { FoundPosting, JobSource, ListResultsResponse, RunJobSearchResponse, ScoredJobNotice } from "@matchmaker/use-cases";
+import type {
+  FoundPosting, JobSource, ListResultsResponse, ProductEvent, RecordSubscriptionChangeResponse, RunJobSearchResponse, ScoredJobNotice,
+  SearchRunRecord, SubscriptionChange, ViewJobDetailResponse,
+} from "@matchmaker/use-cases";
 import { aJobPosting, aProfile, enrichmentOf } from "./builders.ts";
 
 /** What the judge says about a posting a test did not script: a middling, evidence-free judgment. */
@@ -18,6 +21,11 @@ const MODEST_JUDGMENT: MatchJudgments = { requirements: [], experienceRelevance:
  */
 export class MatchmakerTestingApi {
   private readonly store = new InMemoryStore();
+  private readonly spendLedger = new InMemorySpendLedger();
+  private readonly events = new InMemoryProductEventLog();
+  /** The meter scripted details report spend to, exactly as real adapters will (ADR 0010). */
+  private readonly meter: AsyncSpendMeter;
+  private judgeSpendMicros = 0;
   private nowIso = "2026-11-11T09:00:00.000Z";
   private idCounter = 0;
   private readonly judgments = new Map<string, MatchJudgments>();
@@ -29,15 +37,21 @@ export class MatchmakerTestingApi {
 
   constructor() {
     const self = this;
+    const clock = { now: () => new Date(self.nowIso) };
+    this.meter = new AsyncSpendMeter(this.spendLedger, clock);
     this.app = composeMatchmaker({
       storage: this.store,
       operatorConsole: Object.assign(this.store, { recent: async () => [] }),
       usage: new InMemoryUsageLedger(),
-      clock: { now: () => new Date(self.nowIso) },
+      spendLedger: this.spendLedger,
+      spendAttribution: this.meter,
+      productEvents: this.events,
+      clock,
       ids: { next: (prefix) => `${prefix}-${++self.idCounter}` },
       judge: {
         judge: async (_profile, posting) => {
           self.judgeCalls.push(posting.id);
+          if (self.judgeSpendMicros > 0) await self.meter.record({ category: "model", provider: "scripted-judge", amountMicros: self.judgeSpendMicros });
           return self.judgments.get(posting.id) ?? MODEST_JUDGMENT;
         },
       },
@@ -82,12 +96,25 @@ export class MatchmakerTestingApi {
     this.judgments.set(postingId, judgments);
     return this;
   }
-  sourceReturns(name: string, tier: SourceTier, postings: readonly Partial<FoundPosting>[]): this {
+  /** `costPerCallMicros` makes the source a paid one: each call reports that spend (aggregator, or proxy for Tier 4). */
+  sourceReturns(name: string, tier: SourceTier, postings: readonly Partial<FoundPosting>[], costPerCallMicros = 0): this {
     const result = postings.map((p, i) => ({
       sourceName: name, tier, url: `https://${name}.example/${i}`, employer: "Acme", title: "Engineer", location: "Berlin",
       description: "Build things.", postedAt: this.nowIso, fetchedAt: this.nowIso, ...p,
     }));
-    this.sources.push({ descriptor: { name, tier }, search: async () => result });
+    const meter = this.meter;
+    this.sources.push({
+      descriptor: { name, tier },
+      search: async () => {
+        if (costPerCallMicros > 0) await meter.record({ category: tier === 4 ? "proxy" : "aggregator", provider: name, amountMicros: costPerCallMicros });
+        return result;
+      },
+    });
+    return this;
+  }
+  /** Every judgment from now on costs this much model spend. */
+  judgeCosts(micros: number): this {
+    this.judgeSpendMicros = micros;
     return this;
   }
   sourceFails(name: string, tier: SourceTier): this {
@@ -97,7 +124,7 @@ export class MatchmakerTestingApi {
 
   // ---------- what the UI and the scheduler can do ----------
   async scorePostings(userId: string, postingIds: readonly string[]) {
-    return this.app.useCases.scoreJobs.execute({ userId, postingIds, cutAtPrefilter: [] });
+    return this.app.useCases.scoreJobs.execute({ userId, runId: null, postingIds, cutAtPrefilter: [] });
   }
   async searchNow(userId: string): Promise<RunJobSearchResponse> {
     return this.app.useCases.runJobSearch.execute({ userId, trigger: "manual" });
@@ -108,8 +135,34 @@ export class MatchmakerTestingApi {
   async resultsScreen(userId: string): Promise<ResultsViewModel> {
     return presentResults(await this.results(userId));
   }
+  async jobDetail(userId: string, postingId: string): Promise<ViewJobDetailResponse> {
+    return this.app.useCases.viewJobDetail.execute({ userId, postingId });
+  }
+  async markApplied(userId: string, postingId: string): Promise<void> {
+    await this.app.useCases.recordJobDecision.execute({ userId, postingId, decision: "applied" });
+  }
   async access(userId: string) {
     return this.app.useCases.viewAccess.execute({ userId });
+  }
+  /** What the billing provider's webhook listener will do (D7): hand over one provider event. */
+  async billingProviderSends(change: SubscriptionChange): Promise<RecordSubscriptionChangeResponse> {
+    return this.app.useCases.recordSubscriptionChange.execute(change);
+  }
+
+  // ---------- observe ----------
+  lastSearchRun(): SearchRunRecord | undefined {
+    return this.store.recordedRuns().at(-1);
+  }
+  /** Spend charged to the user over all time, in micros. */
+  async spentBy(userId: string): Promise<number> {
+    return this.spendLedger.spentBy(userId, "0000", "9999");
+  }
+  /** Spend no use case charged: a cost-incurring use case forgot to open a charge (watch item W8). */
+  unattributedSpendMicros(): number {
+    return this.spendLedger.recorded().filter((r) => r.userId === null).reduce((t, r) => t + r.amountMicros, 0);
+  }
+  productEvents(userId: string): readonly ProductEvent[] {
+    return this.events.recorded().filter((e) => e.userId === userId);
   }
   async backgroundWorkSettled(): Promise<void> {
     await this.app.work.drain();

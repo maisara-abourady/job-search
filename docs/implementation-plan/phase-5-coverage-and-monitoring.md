@@ -9,19 +9,19 @@ Prerequisites: Gate 4 passed; H-10 (legal review) for any Tier 4 board; H-11 key
 
 ### P5-T01 — Tier 3 aggregator adapters: JSearch, SerpApi Google Jobs, TheirStack, Apify
 - **Traces to:** A-19, P-10, ADR 0004 §5 · **Size:** L (split per two sources at Gate 4)
-- **Acceptance:** Each passes the `JobSource` contract on fixtures and declares tier 3; they are queried only when a Tier 4 source failed, is switched off or none is configured (existing rule).
+- **Acceptance:** Each passes the `JobSource` contract on fixtures and declares tier 3; each paid call records one `aggregator` spend through `SpendMeter`, priced from Main configuration, even when the call then fails (ADR 0010); they are queried only when a Tier 4 source failed, is switched off or none is configured (existing rule).
 
 ### P5-T02 — Tier 4 adapters in `@matchmaker/scraping-sources` for boards cleared by H-10
 - **Traces to:** A-20, D11, ADR 0004 §6, Scraping safeguards 1 to 3 · **Size:** L
-- **Acceptance:** The bridge from S-5 passes the `JobSource` contract; rate limit and proxy pool internal; only normalized fields and the link are stored; a market configuration without clearance does not include the package.
+- **Acceptance:** The bridge from S-5 passes the `JobSource` contract; rate limit and proxy pool internal; proxy traffic recorded as `proxy` spend through `SpendMeter` (ADR 0010); only normalized fields and the link are stored; a market configuration without clearance does not include the package.
 
 ### P5-T03 — Kill switches that work without a deploy (D10) and the operator console
 - **Traces to:** UC-22, P-11, A-26, D-7 · **Size:** M
-- **Acceptance:** The operator flips a source off and the next run skips it; source states show the correct tier (fixes the in-memory tier default); recent run summaries list fetched, merged and failed sources.
+- **Acceptance:** The operator flips a source off and the next run skips it; source states show the correct tier (fixes the in-memory tier default); recent run summaries list fetched, merged and failed sources, and each run's cost (`costMicros`, ADR 0010).
 
 ### P5-T04 — Durable queue and `apps/worker` (D4, W5)
 - **Traces to:** A-25, D-9, P-9 · **Size:** L
-- **Acceptance:** Searches and re-scores survive a web restart; `apps/worker` is a second Main using `composeMatchmaker`; use cases unchanged; recorded as an ADR via `/architect`.
+- **Acceptance:** Searches and re-scores survive a web restart; `apps/worker` is a second Main using `composeMatchmaker`; use cases unchanged; spend stays attributed across the process boundary (queued requests carry `userId` and `runId`, and `unattributedSpendMicros` stays 0; ADR 0010 review trigger); recorded as an ADR via `/architect`.
 
 ### P5-T05 — Monitoring roster and scheduled runs (MN-1, MN-2, MN-4)
 - **Traces to:** UC-14, P-29 · **Size:** M

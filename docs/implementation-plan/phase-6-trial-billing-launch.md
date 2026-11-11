@@ -7,13 +7,14 @@ Prerequisites: Gate 5 passed; H-13 (billing provider sandbox), H-14 (price, card
 
 ## Tasks (outline)
 
-### P6-T01 — Billing decision recorded (D7) and the `SubscriptionChange` event id
-- **Traces to:** D7, UC-19, open question 6 · **Size:** S
-- **Acceptance:** `/architect` ADR names the provider and adds the provider event id to `SubscriptionChange`.
+### P6-T01 — Billing decision recorded (D7)
+- **Traces to:** D7, UC-19, ADR 0013 · **Size:** S
+- **Acceptance:** `/architect` ADR names the provider, the event-id namespacing format the listener uses, and the provider's ordering guarantee (settles W12). `SubscriptionChange.eventId` already exists (ADR 0013).
 
-### P6-T02 — `RecordSubscriptionChange` (idempotent per event id)
-- **Traces to:** UC-19, E-13 · **Size:** S
-- **Acceptance:** Active lifts the paywall; lapsed paywalls from the lapse date; the same event twice changes nothing.
+### P6-T02 — `RecordSubscriptionChange`: out-of-order events (W12)
+- **Traces to:** UC-19, E-13, ADR 0013, W12 · **Size:** S
+- **Context:** Idempotency per event id is built and tested (`packages/testing-api/test/billing.test.ts`). If P6-T01 finds the provider does not guarantee order, add `changedAt` to the rules' `Subscription` and ignore older changes; otherwise record why not in PROGRESS.md.
+- **Acceptance:** Active lifts the paywall; lapsed paywalls from the lapse date; the same event twice changes nothing (existing tests stay green); a stale event older than the last applied one changes nothing when W12 applies.
 
 ### P6-T03 — `Checkout` adapter and webhook listener in `apps/web`
 - **Traces to:** A-28, UC-18 · **Size:** M
@@ -25,7 +26,7 @@ Prerequisites: Gate 5 passed; H-13 (billing provider sandbox), H-14 (price, card
 
 ### P6-T05 — `UserDataVault` across every store; export and delete (AB-4)
 - **Traces to:** UC-20, P-31 · **Size:** M
-- **Acceptance:** Export contains every record and file for the user; delete leaves nothing in the database, object storage or queue.
+- **Acceptance:** Export contains every record and file for the user; delete leaves nothing in the database, object storage or queue, except spend records and product events, which are anonymized (user id removed, amounts and counts kept; ADR 0010, 0011); applied subscription event ids are erased with the account (ADR 0013).
 
 ### P6-T06 — Retention purge (30 days after expiry) on the scheduler
 - **Traces to:** UC-21, E-13 · **Size:** S

@@ -223,6 +223,7 @@ Mid-phase checkpoint (no stop required): once P2-T05, P2-T11, P2-T12 and P2-T13 
 - **Acceptance criteria:**
   - [ ] Contract suites pass for scripted doubles and the adapters on recorded responses
   - [ ] Neither adapter receives a `ProfileVersion` (compile-time: ports take `ScoringProfile` or `FoundPosting`)
+  - [ ] Each paid call records one `model` spend through the `SpendMeter` it receives, before parsing; the contract checks it (ADR 0010)
 - **Verify:**
   ```bash
   pnpm test:contract && pnpm verify
@@ -242,6 +243,7 @@ Mid-phase checkpoint (no stop required): once P2-T05, P2-T11, P2-T12 and P2-T13 
 - **Acceptance criteria:**
   - [ ] Contract passes for the scripted judge and the adapter on a recorded response
   - [ ] The rubric version appears in the adapter's request metadata so PROGRESS.md can track which rubric produced the stability numbers
+  - [ ] Each paid call records one `model` spend through the `SpendMeter` it receives, before parsing; the contract checks it (ADR 0010)
 - **Verify:**
   ```bash
   pnpm test:contract && pnpm verify
@@ -260,6 +262,7 @@ Mid-phase checkpoint (no stop required): once P2-T05, P2-T11, P2-T12 and P2-T13 
 - **Acceptance criteria:**
   - [ ] Contract passes for the scripted ranker and this adapter
   - [ ] On a fixture of 10 postings, a posting whose title equals the profile's latest title ranks above an unrelated one
+  - [ ] Each paid call records one `model` spend through the `SpendMeter` it receives, before parsing; the contract checks it (ADR 0010)
 - **Verify:**
   ```bash
   pnpm test:contract && pnpm verify

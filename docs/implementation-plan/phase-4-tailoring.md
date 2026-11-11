@@ -17,11 +17,11 @@ Prerequisites: Gate 3 passed; S-4 answered; H-12 access to the three parsers.
 
 ### P4-T03 — `TailorResume.generate` (TR-1, TR-3, TR-4) with the tailoring guard
 - **Traces to:** UC-13, E-11, E-12, ADR 0007 §3 · **Size:** M
-- **Acceptance:** Fair-use cap of 10 per day enforced; "Have it" keywords saved to the profile as `confirmed-keyword` evidence with the user's line; a writer output with any guard violation is rejected (one adapter retry at most) and never shown; coverage before and after reported; diff against the source; list of added keywords.
+- **Acceptance:** Matcher and writer spend charged with purpose `tailoring` (ADR 0010); Main wires `TailorResume` wrapped in a new `MeasuredTailorResume` emitting `tailored-resume-generated` on outcome `generated` (ADR 0011); fair-use cap of 10 per day enforced; "Have it" keywords saved to the profile as `confirmed-keyword` evidence with the user's line; a writer output with any guard violation is rejected (one adapter retry at most) and never shown; coverage before and after reported; diff against the source; list of added keywords.
 
 ### P4-T04 — Keyword matcher and resume writer adapters
 - **Traces to:** A-13, A-14, P-25, P-26 · **Size:** M
-- **Acceptance:** Contract suites pass on scripted and recorded responses; the guard rejects a recorded output that invents a number.
+- **Acceptance:** Contract suites pass on scripted and recorded responses; the guard rejects a recorded output that invents a number; each paid call records one `model` spend through `SpendMeter` (ADR 0010).
 
 ### P4-T05 — ATS-safe renderer for PDF and DOCX (TR-5) in `@matchmaker/documents`
 - **Traces to:** A-23, P-27, D9 · **Size:** L

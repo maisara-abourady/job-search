@@ -33,7 +33,15 @@ export const AREAS = {
   "@matchmaker/use-cases": {
     shared: [], onboarding: ["shared"], discovery: ["shared"], matching: ["shared"], results: ["shared"],
     tailoring: ["shared"], monitoring: ["shared"], account: ["shared"], operations: ["shared"],
+    // ADR 0011: measurement observes other areas' input ports (types only, see TYPE_ONLY_AREA_IMPORTS); nothing imports it.
+    measurement: ["shared", "onboarding", "results", "tailoring", "account"],
   },
   "@matchmaker/delivery": { results: [], access: [] },
-  "@matchmaker/adapters": { "in-memory": [], system: [], work: [], narration: [], "model-runtime": [], "job-sources": [] },
+  "@matchmaker/adapters": { "in-memory": [], system: [], work: [], narration: [], "model-runtime": [], "job-sources": [], metering: [] },
 };
+
+/**
+ * Areas whose imports of other areas (except "shared") must be `import type` (ADR 0011): they may depend on
+ * other areas' published contracts, never on their behavior.
+ */
+export const TYPE_ONLY_AREA_IMPORTS = { "@matchmaker/use-cases": ["measurement"] };

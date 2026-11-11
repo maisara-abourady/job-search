@@ -3,12 +3,15 @@ import {
   type MatchAssessment,
 } from "@matchmaker/rules";
 import { UseCaseError } from "../shared/errors.ts";
+import type { SpendAttribution } from "../shared/metering.ts";
 import type { Clock } from "../shared/ports.ts";
 import type { MatchJudge, MatchNarrator, MatchRecords, Narration, PostingsForScoring, ProfilesForScoring, ResultsFeed } from "./ports.ts";
 
 // ---- Input port and models (MR-1..MR-6, NF-5 re-score, NF-6 full analysis, MN-2 only new) ----
 export type ScoreJobsRequest = {
   readonly userId: string;
+  /** The search run that asked for this scoring, if any: its judge and narrator spend is charged to that run (ADR 0010). */
+  readonly runId: string | null;
   readonly postingIds: readonly string[];
   /** Postings cut at the relevance prefilter: recorded as Not a fit / Low relevance without a model call. */
   readonly cutAtPrefilter: readonly string[];
@@ -25,6 +28,7 @@ export type ScoreJobsDependencies = {
   readonly judge: MatchJudge;
   readonly narrator: MatchNarrator;
   readonly feed: ResultsFeed;
+  readonly spend: SpendAttribution;
   readonly clock: Clock;
 };
 
@@ -38,6 +42,10 @@ export class ScoreJobsInteractor implements ScoreJobs {
   }
 
   async execute(request: ScoreJobsRequest): Promise<ScoreJobsResponse> {
+    return this.d.spend.charge({ userId: request.userId, runId: request.runId, purpose: "scoring" }, () => this.score(request));
+  }
+
+  private async score(request: ScoreJobsRequest): Promise<ScoreJobsResponse> {
     const profile = await this.d.profiles.activeProfileVersion(request.userId);
     if (profile === null) throw new UseCaseError("not-found", `no profile for ${request.userId}`);
     const key = profileVersionKey(profile);

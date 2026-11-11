@@ -1,4 +1,7 @@
-import { GreenhouseBoardSource, InMemoryStore, InMemoryUsageLedger, RandomIds, SystemClock, TemplateNarrator, UnchosenModelRuntime } from "@matchmaker/adapters";
+import {
+  AsyncSpendMeter, GreenhouseBoardSource, InMemoryProductEventLog, InMemorySpendLedger, InMemoryStore, InMemoryUsageLedger, RandomIds,
+  SystemClock, TemplateNarrator, UnchosenModelRuntime,
+} from "@matchmaker/adapters";
 import { composeMatchmaker } from "./compose-matchmaker.ts";
 
 /**
@@ -6,6 +9,10 @@ import { composeMatchmaker } from "./compose-matchmaker.ts";
  * A web delivery (deferred) will call composeMatchmaker the same way from its own entry point.
  */
 const store = new InMemoryStore();
+const clock = new SystemClock();
+const spendLedger = new InMemorySpendLedger();
+// ADR 0010: every adapter that spends money gets this meter in its constructor (none does yet: Greenhouse is free).
+const meter = new AsyncSpendMeter(spendLedger, clock);
 const models = new UnchosenModelRuntime();
 const greenhouse = new GreenhouseBoardSource(async () => []);
 
@@ -13,7 +20,10 @@ export const matchmaker = composeMatchmaker({
   storage: store,
   operatorConsole: { ...bind(store, "setEnabled", "states"), recent: async () => [] },
   usage: new InMemoryUsageLedger(),
-  clock: new SystemClock(),
+  spendLedger,
+  spendAttribution: meter,
+  productEvents: new InMemoryProductEventLog(),
+  clock,
   ids: new RandomIds(),
   judge: models,
   narrator: new TemplateNarrator(),

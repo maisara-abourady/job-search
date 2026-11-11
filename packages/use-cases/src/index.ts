@@ -8,6 +8,9 @@
 export type { Clock, IdGenerator } from "./shared/ports.ts";
 export type { AccountsForAccess, UsageLedger } from "./shared/access-guard.ts";
 export { UseCaseError } from "./shared/errors.ts";
+export type {
+  ChargeTo, Spend, SpendAttribution, SpendCategory, SpendLedger, SpendMeter, SpendPurpose, SpendRecord,
+} from "./shared/metering.ts";
 
 // Onboarding (job seeker): resume intake, profile correction and preferences, AI interview
 export type { IntakeResume, IntakeResumeRequest, IntakeResumeResponse, SellingPointsCard } from "./onboarding/intake-resume.ts";
@@ -40,7 +43,7 @@ export type { ListResults, ListResultsRequest, ListResultsResponse, ResultCard }
 export type { ViewJobDetail, ViewJobDetailRequest, ViewJobDetailResponse } from "./results/view-job-detail.ts";
 export type { ReviewNotAFit, ReviewNotAFitRequest, ReviewNotAFitResponse } from "./results/review-not-a-fit.ts";
 export type { RecordJobDecision, RecordJobDecisionRequest } from "./results/record-job-decision.ts";
-export type { ResultRow, ResultsReadModel } from "./results/ports.ts";
+export type { EvidenceText, JobDetailRow, ResultRow, ResultsReadModel } from "./results/ports.ts";
 
 // Tailoring (job seeker): a resume per job, nothing invented
 export type { ConfirmedKeywords, MissingKeywordsResponse, TailorResume, TailoredResumeResponse } from "./tailoring/tailor-resume.ts";
@@ -54,9 +57,14 @@ export type { InboxSource, MonitoredUser, MonitoringRoster, MonitoringSearchRequ
 // Account and billing (business owner, privacy)
 export type { SignUp, SignUpRequest } from "./account/sign-up.ts";
 export type { AccessView, ViewAccess } from "./account/view-access.ts";
-export type { RecordSubscriptionChange, StartCheckout, SubscriptionChange } from "./account/manage-subscription.ts";
+export type {
+  RecordSubscriptionChange, RecordSubscriptionChangeResponse, StartCheckout, SubscriptionChange,
+} from "./account/manage-subscription.ts";
 export type { DeleteMyData, ExportMyData, PurgeExpiredAccounts } from "./account/manage-my-data.ts";
 export type { Accounts, Checkout, UserDataVault } from "./account/ports.ts";
+
+// Measurement (product owner): product analytics events, observed at other areas' input ports
+export type { ProductEvent, ProductEventName, ProductEvents } from "./measurement/ports.ts";
 
 // Operations (sourcing operator)
 export type { OperateSources } from "./operations/operate-sources.ts";

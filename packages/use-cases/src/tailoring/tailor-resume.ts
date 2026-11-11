@@ -1,5 +1,6 @@
 import { notYetBuilt } from "@matchmaker/rules";
 import type { AccessGuard } from "../shared/access-guard.ts";
+import type { SpendAttribution } from "../shared/metering.ts";
 import type { IdGenerator } from "../shared/ports.ts";
 import type { GeneratedFiles, KeywordMatcher, ResumeRenderer, ResumeWriter, TailoredResumes, TailoringSources } from "./ports.ts";
 
@@ -29,6 +30,8 @@ export type TailorResumeDependencies = {
   readonly resumes: TailoredResumes;
   readonly files: GeneratedFiles;
   readonly access: AccessGuard;
+  /** Matcher and writer spend is charged with purpose "tailoring" (ADR 0010). */
+  readonly spend: SpendAttribution;
   readonly ids: IdGenerator;
 };
 export class TailorResumeInteractor implements TailorResume {

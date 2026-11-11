@@ -1,4 +1,5 @@
 import { notYetBuilt } from "@matchmaker/rules";
+import type { SpendAttribution } from "../shared/metering.ts";
 import type { Clock, IdGenerator } from "../shared/ports.ts";
 import type { DocumentReader, ProfileVersions, ResumeAnalyst, ResumeFiles, ResumeUpload, SearchRequests } from "./ports.ts";
 
@@ -23,6 +24,8 @@ export type IntakeResumeDependencies = {
   readonly files: ResumeFiles;
   readonly profiles: ProfileVersions;
   readonly searches: SearchRequests;
+  /** Reader (OCR) and analyst spend is charged with purpose "intake" (ADR 0010). */
+  readonly spend: SpendAttribution;
   readonly clock: Clock;
   readonly ids: IdGenerator;
 };
@@ -33,6 +36,7 @@ export class IntakeResumeInteractor implements IntakeResume {
   }
   async execute(_request: IntakeResumeRequest): Promise<IntakeResumeResponse> {
     void this.d;
+    // Wrap the steps in spend.charge({ userId, runId: null, purpose: "intake" }, ...) (ADR 0010).
     // Steps: store file; read (OCR inside the reader); stop if not English; structure; tier selling points with
     // sellingPointTier(); resumeStrength(); save a new ProfileVersion with inferred defaults; requestSearch("onboarding").
     return notYetBuilt("RP-1..RP-6: resume intake");

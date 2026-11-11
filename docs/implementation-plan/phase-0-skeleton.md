@@ -119,12 +119,15 @@ The gate has two parts. **Gate 0A (technical)** covers P0-T01 to P0-T09; Phase 1
 - **Size:** M
 - **Context:** Every port gets one shared suite run against the fake and every real adapter, so `InMemoryStore` cannot drift from Postgres later (D2). Each suite is a function taking a factory, e.g. `matchRecordsContract(name, () => new InMemoryStore())`, so Phase 3 calls it again with the Postgres adapter. Start with the gateways the matching core already relies on. Known gaps in `InMemoryStore` (`paywalledBefore` returns `[]`; `setEnabled` defaults tier to 1) are written as `todo` cases naming Phase 5 and Phase 6.
 - **Files:**
-  - create `packages/testing-api/contract/storage-contracts.ts` (suite functions: `PostingCatalog`, `PostingsForScoring`, `MatchRecords`, `ResultsReadModel`, `ProfileVersions`, `Accounts`)
+  - create `packages/testing-api/contract/storage-contracts.ts` (suite functions: `PostingCatalog`, `PostingsForScoring`, `MatchRecords`, `ResultsReadModel`, `ProfileVersions`, `Accounts`, `SpendLedger`)
   - create `packages/testing-api/contract/in-memory-store.contract.test.ts`
 - **Acceptance criteria:**
   - [ ] Save-then-find round-trips every `JobPosting` field; `findByIdentityKey` of an unknown key returns `null`; `markClosed` removes a posting from `openPostings`
   - [ ] `findMatch` distinguishes profile version and posting revision; `latestVerdictBefore` ignores matches under the given profile version
   - [ ] `currentResults` returns only matches for the active profile version
+  - [ ] `jobDetail` returns the evidence of the match's own profile version and `null` without an active-version match (ADR 0012)
+  - [ ] `applySubscriptionEvent` returns `duplicate` for a repeated event id and leaves the subscription unchanged (ADR 0013)
+  - [ ] `SpendLedger`: `spentOnRun` sums only that run; `spentBy` respects the half-open period (ADR 0010)
   - [ ] `saveNewVersion` makes the newest version active and keeps earlier ones
   - [ ] `pnpm test:contract` runs the suites and they pass against `InMemoryStore`
 - **Verify:**

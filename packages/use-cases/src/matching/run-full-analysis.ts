@@ -12,6 +12,6 @@ export class RunFullAnalysisInteractor implements RunFullAnalysis {
   }
   async execute(request: RunFullAnalysisRequest): Promise<void> {
     // HAND-OFF (NF-6): the stored Low-relevance match for this pair must be superseded, not reused from cache.
-    await this.scoreJobs.execute({ userId: request.userId, postingIds: [request.postingId], cutAtPrefilter: [] });
+    await this.scoreJobs.execute({ userId: request.userId, runId: null, postingIds: [request.postingId], cutAtPrefilter: [] });
   }
 }

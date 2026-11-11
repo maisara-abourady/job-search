@@ -2,14 +2,15 @@ import { ResultsController } from "@matchmaker/delivery";
 import { InProcessWorkQueue } from "@matchmaker/adapters";
 import type {
   Accounts, AccountsForAccess, AtsLinkRecognizer, Clock, CompanyRegistry, IdGenerator, JobSource, MatchJudge, MatchNarrator,
-  MatchRecords, PostingCatalog, PostingEnricher, PostingLiveness, PostingsForScoring, ProfileVersions, ProfilesForScoring,
+  MatchRecords, PostingCatalog, PostingEnricher, PostingLiveness, PostingsForScoring, ProductEvents, ProfileVersions, ProfilesForScoring,
   ProfilesForSearch, RelevanceRanker, ResultsFeed, ResultsReadModel, SearchPlanner, SearchRunHistory, SearchRuns,
-  SourceSwitchControl, SourceSwitchboard, UsageLedger,
+  SourceSwitchControl, SourceSwitchboard, SpendAttribution, SpendLedger, UsageLedger,
 } from "@matchmaker/use-cases";
 import {
-  AccessGuard, ListResultsInteractor, RecheckStoredPostingsInteractor, RecordJobDecisionInteractor, RescoreAllInteractor,
-  RunDueMonitoringInteractor, RunFullAnalysisInteractor, RunJobSearchInteractor, ScoreJobsInteractor, SignUpInteractor,
-  ViewAccessInteractor, OperateSourcesInteractor,
+  AccessGuard, ListResultsInteractor, MeasuredListResults, MeasuredRecordJobDecision, MeasuredRecordSubscriptionChange,
+  MeasuredSignUp, RecheckStoredPostingsInteractor, RecordJobDecisionInteractor, RecordSubscriptionChangeInteractor,
+  RescoreAllInteractor, RunDueMonitoringInteractor, RunFullAnalysisInteractor, RunJobSearchInteractor, ScoreJobsInteractor,
+  SignUpInteractor, ViewAccessInteractor, ViewJobDetailInteractor, OperateSourcesInteractor,
 } from "@matchmaker/use-cases/wiring";
 
 /** Storage gateways, by need. One implementation may satisfy all of them (in-memory today). */
@@ -21,6 +22,12 @@ export type MatchmakerDetails = {
   readonly storage: MatchmakerStorage;
   readonly operatorConsole: SourceSwitchControl & SearchRunHistory;
   readonly usage: UsageLedger;
+  /** ADR 0010: the ledger spend is stored in, and the attribution the cost-incurring use cases charge through. The
+   * same configuration hands the matching SpendMeter to every adapter that spends money. */
+  readonly spendLedger: SpendLedger;
+  readonly spendAttribution: SpendAttribution;
+  /** ADR 0011: where product events go (in memory today; D14). */
+  readonly productEvents: ProductEvents;
   readonly clock: Clock;
   readonly ids: IdGenerator;
   readonly judge: MatchJudge;
@@ -45,13 +52,14 @@ export function composeMatchmaker(d: MatchmakerDetails) {
   const access = new AccessGuard(d.storage, d.usage, d.clock);
 
   const scoreJobs = new ScoreJobsInteractor({
-    profiles: d.storage, postings: d.storage, matches: d.storage, judge: d.judge, narrator: d.narrator, feed: d.feed, clock: d.clock,
+    profiles: d.storage, postings: d.storage, matches: d.storage, judge: d.judge, narrator: d.narrator, feed: d.feed,
+    spend: d.spendAttribution, clock: d.clock,
   });
   const rescoreAll = new RescoreAllInteractor(d.storage, scoreJobs);
   const runJobSearch = new RunJobSearchInteractor({
     sources: d.sources, switchboard: d.storage, planner: d.planner, enricher: d.enricher, ranker: d.ranker,
     profiles: d.storage, catalog: d.storage, liveness: d.liveness, runs: d.storage, atsLinks: d.atsLinks,
-    registry: d.registry ?? d.storage, access, clock: d.clock, ids: d.ids,
+    registry: d.registry ?? d.storage, access, spend: d.spendAttribution, spendLedger: d.spendLedger, clock: d.clock, ids: d.ids,
     scoring: { score: async (r) => void (await scoreJobs.execute(r)) },
   });
 
@@ -62,12 +70,13 @@ export function composeMatchmaker(d: MatchmakerDetails) {
   };
   const rescoreRequests = { rescoreAll: async (userId: string) => work.run(`rescore:${userId}`, () => rescoreAll.execute({ userId })) };
 
-  const listResults = new ListResultsInteractor(d.storage);
-  const recordJobDecision = new RecordJobDecisionInteractor(d.storage);
+  // Measured input ports (ADR 0011): the use cases know nothing of measurement; every delivery gets the wrapped port.
+  const listResults = new MeasuredListResults(new ListResultsInteractor(d.storage), d.productEvents, d.clock);
+  const recordJobDecision = new MeasuredRecordJobDecision(new RecordJobDecisionInteractor(d.storage), d.productEvents, d.clock);
 
   return {
     useCases: {
-      signUp: new SignUpInteractor(d.storage, d.clock),
+      signUp: new MeasuredSignUp(new SignUpInteractor(d.storage, d.clock), d.productEvents),
       viewAccess: new ViewAccessInteractor(d.storage, d.clock),
       runJobSearch,
       recheckStoredPostings: new RecheckStoredPostingsInteractor(d.storage, d.liveness),
@@ -75,11 +84,15 @@ export function composeMatchmaker(d: MatchmakerDetails) {
       rescoreAll,
       runFullAnalysis: new RunFullAnalysisInteractor(scoreJobs),
       listResults,
+      viewJobDetail: new ViewJobDetailInteractor(d.storage),
       recordJobDecision,
       runDueMonitoring: new RunDueMonitoringInteractor({ usersWithMonitoringOn: async () => [] }, searchRequests, d.clock),
       operateSources: new OperateSourcesInteractor(d.operatorConsole, d.operatorConsole),
-      // HAND-OFF: IntakeResume, CorrectProfile, ConductInterview, TailorResume, ViewJobDetail, ReviewNotAFit, ViewInbox,
-      // StartCheckout, RecordSubscriptionChange, ExportMyData, DeleteMyData, PurgeExpiredAccounts as their phases arrive.
+      // Fed by the billing provider's webhook listener (D7) once it exists; idempotent per provider event id (ADR 0013).
+      recordSubscriptionChange: new MeasuredRecordSubscriptionChange(new RecordSubscriptionChangeInteractor(d.storage), d.productEvents),
+      // HAND-OFF: IntakeResume, CorrectProfile, ConductInterview, TailorResume, ReviewNotAFit, ViewInbox, StartCheckout,
+      // ExportMyData, DeleteMyData, PurgeExpiredAccounts as their phases arrive. Wrap CorrectProfile, ConductInterview and
+      // TailorResume in their measured decorators when they are wired (ADR 0011 hand-off), and pass them spendAttribution.
     },
     requests: { searchRequests, rescoreRequests },
     controllers: { results: new ResultsController(listResults, recordJobDecision) },

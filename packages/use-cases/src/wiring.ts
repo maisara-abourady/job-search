@@ -23,3 +23,6 @@ export { ViewAccessInteractor } from "./account/view-access.ts";
 export { RecordSubscriptionChangeInteractor, StartCheckoutInteractor } from "./account/manage-subscription.ts";
 export { DeleteMyDataInteractor, ExportMyDataInteractor, PurgeExpiredAccountsInteractor } from "./account/manage-my-data.ts";
 export { OperateSourcesInteractor } from "./operations/operate-sources.ts";
+export {
+  MeasuredListResults, MeasuredRecordJobDecision, MeasuredRecordSubscriptionChange, MeasuredSignUp,
+} from "./measurement/measured-input-ports.ts";

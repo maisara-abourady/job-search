@@ -15,7 +15,7 @@ export class RescoreAllInteractor implements RescoreAll {
   async execute(request: { userId: string }): Promise<{ scored: number; verdictChanges: number }> {
     const postingIds = await this.matches.postingIdsScoredFor(request.userId);
     // HAND-OFF (cost): reuse requirement judgments whose requirement and cited evidence are unchanged.
-    const r = await this.scoreJobs.execute({ userId: request.userId, postingIds, cutAtPrefilter: [] });
+    const r = await this.scoreJobs.execute({ userId: request.userId, runId: null, postingIds, cutAtPrefilter: [] });
     return { scored: r.scored, verdictChanges: r.verdictChanges };
   }
 }

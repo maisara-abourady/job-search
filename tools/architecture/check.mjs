@@ -3,7 +3,7 @@
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
-import { AREAS, COMPONENTS, RESTRICTED_SUBPATHS } from "./components.mjs";
+import { AREAS, COMPONENTS, RESTRICTED_SUBPATHS, TYPE_ONLY_AREA_IMPORTS } from "./components.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const errors = [];
@@ -18,6 +18,11 @@ const walk = (dir) =>
 
 const IMPORT_RE = /(?:import|export)\s+(?:type\s+)?(?:[\s\S]*?\s+from\s+)?["']([^"']+)["']|import\(\s*["']([^"']+)["']\s*\)/g;
 const specifiers = (src) => [...src.matchAll(IMPORT_RE)].map((m) => m[1] ?? m[2]);
+const typeOnly = (src, spec) => {
+  const esc = spec.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const all = [...src.matchAll(new RegExp(`(import|export)\\s+(type\\s+)?[^;]*?from\\s+["']${esc}["']`, "g"))];
+  return all.length > 0 && all.every((m) => m[2] !== undefined);
+};
 const packageOf = (spec) => spec.split("/").slice(0, spec.startsWith("@") ? 2 : 1).join("/");
 
 const files = {}; // component -> [{ path, src }]
@@ -52,6 +57,9 @@ for (const [name, c] of Object.entries(COMPONENTS)) {
           areaEdges[name].get(from).add(to);
         }
         if (AREAS[name] && from && !(from in AREAS[name])) errors.push(`${where}: area "${from}" is not declared in components.mjs`);
+        if (from && to && from !== to && to !== "shared" && (TYPE_ONLY_AREA_IMPORTS[name] ?? []).includes(from) && !typeOnly(src, spec)) {
+          errors.push(`${where}: area "${from}" may import area "${to}" only with "import type" (${spec})`);
+        }
         continue;
       }
       if (spec.startsWith("node:")) {
@@ -117,7 +125,9 @@ for (const name of Object.keys(COMPONENTS)) {
 }
 for (const [from, tos] of pkgEdges) {
   for (const to of tos) {
-    if (metrics[from].I <= metrics[to].I && from !== "@matchmaker/testing-api") {
+    // Tests and Main are the outermost, dirtiest components (§10.1, §10.3): nothing in production depends on them, so
+    // their own I is not a stability anyone relies on (ADR 0010 records why Main is exempt as a source).
+    if (metrics[from].I <= metrics[to].I && from !== "@matchmaker/testing-api" && COMPONENTS[from].circle !== "4 main") {
       warn.push(`SDP: ${from} (I=${metrics[from].I.toFixed(2)}) depends on ${to} (I=${metrics[to].I.toFixed(2)}), which is not more stable`);
     }
   }

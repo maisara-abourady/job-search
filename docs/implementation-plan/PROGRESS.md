@@ -31,7 +31,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (reason i
 - [ ] P0-T10 Record the model runtime decision (D1)
 - [ ] GATE 0B (decision)
 - [ ] H-2 Model provider account and key (after P0-T10)
-- [ ] H-4 Parsing thresholds confirmed
+- [x] H-4 Parsing thresholds confirmed (default accepted)
 
 ### Phase 1 — Foundations (exit: 20 resumes parse correctly)
 - [ ] P1-T01 In-memory resume files and onboarding storage contracts

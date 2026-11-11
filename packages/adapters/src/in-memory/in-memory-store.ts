@@ -1,6 +1,6 @@
 import { profileVersionKey, type Account, type FairUseAction, type JobPosting, type ProfileVersion, type SellingPoint, type Verdict } from "@matchmaker/rules";
 import type {
-  Accounts, AccountsForAccess, AtsCompany, CompanyRegistry, MatchRecords, PostingCatalog, PostingsForScoring, ProfileVersions,
+  Accounts, AccountsForAccess, AtsCompany, CompanyRegistry, JobDetailRow, MatchRecords, PostingCatalog, PostingsForScoring, ProfileVersions,
   ProfilesForScoring, ProfilesForSearch, ResultRow, ResultsReadModel, SearchRunRecord, SearchRuns, SourceSwitchControl,
   SourceSwitchboard, StoredMatch, UsageLedger,
 } from "@matchmaker/use-cases";
@@ -21,6 +21,7 @@ export class InMemoryStore
   private readonly matches: StoredMatch[] = [];
   private readonly runs: SearchRunRecord[] = [];
   private readonly accounts = new Map<string, Account>();
+  private readonly appliedSubscriptionEvents = new Set<string>();
   private readonly companies = new Map<string, AtsCompany>();
   private readonly switches = new Map<string, { enabled: boolean; reason: string | null; tier: 1 | 2 | 3 | 4 }>();
 
@@ -79,18 +80,28 @@ export class InMemoryStore
     const profile = await this.activeProfileVersion(userId);
     if (profile === null) return [];
     const key = profileVersionKey(profile);
-    return this.matches
-      .filter((m) => m.userId === userId && m.profileVersionKey === key)
-      .flatMap((m) => {
-        const p = this.postings.get(m.postingId);
-        if (!p) return [];
-        return [{
-          postingId: p.id, title: p.title, employer: p.employer, location: p.location, postingUrl: p.sources[0]?.url ?? "",
-          requirements: p.requirements, assessment: m.assessment, reason: m.narration.reason,
-          pointsToCapitalize: m.narration.pointsToCapitalize, verdictChangedFrom: m.verdictChangedFrom, userState: m.userState,
-          postingOpen: p.status === "open", scoredAt: m.scoredAt,
-        }];
-      });
+    return this.matches.filter((m) => m.userId === userId && m.profileVersionKey === key).flatMap((m) => this.rowOf(m));
+  }
+  async jobDetail(userId: string, postingId: string): Promise<JobDetailRow | null> {
+    const profile = await this.activeProfileVersion(userId);
+    if (profile === null) return null;
+    const key = profileVersionKey(profile);
+    const match = this.matches.findLast((m) => m.userId === userId && m.profileVersionKey === key && m.postingId === postingId);
+    const row = match === undefined ? undefined : this.rowOf(match)[0];
+    if (row === undefined) return null;
+    // Evidence of the version the match was judged against (results read only the active version's matches).
+    const judgedAgainst = (this.profiles.get(userId) ?? []).find((v) => profileVersionKey(v) === match!.profileVersionKey);
+    return { ...row, evidence: (judgedAgainst?.evidence ?? []).map((e) => ({ id: e.id, text: e.text })) };
+  }
+  private rowOf(m: StoredMatch): ResultRow[] {
+    const p = this.postings.get(m.postingId);
+    if (!p) return [];
+    return [{
+      postingId: p.id, title: p.title, employer: p.employer, location: p.location, postingUrl: p.sources[0]?.url ?? "",
+      requirements: p.requirements, assessment: m.assessment, reason: m.narration.reason,
+      pointsToCapitalize: m.narration.pointsToCapitalize, verdictChangedFrom: m.verdictChangedFrom, userState: m.userState,
+      postingOpen: p.status === "open", scoredAt: m.scoredAt,
+    }];
   }
   async setUserState(userId: string, postingId: string, state: "applied" | "dismissed") {
     this.matches.forEach((m, i) => {
@@ -128,6 +139,14 @@ export class InMemoryStore
   async updateSubscription(userId: string, subscription: Account["subscription"]) {
     const a = this.accounts.get(userId);
     if (a) this.accounts.set(userId, { ...a, subscription });
+  }
+  async applySubscriptionEvent(eventId: string, userId: string, subscription: Account["subscription"]): Promise<"applied" | "duplicate"> {
+    // One synchronous step, so it is atomic in this single-threaded store; Postgres uses a unique key and a transaction.
+    if (this.appliedSubscriptionEvents.has(eventId)) return "duplicate";
+    this.appliedSubscriptionEvents.add(eventId);
+    const a = this.accounts.get(userId);
+    if (a) this.accounts.set(userId, { ...a, subscription });
+    return "applied";
   }
   async paywalledBefore(_cutoffIso: string): Promise<readonly string[]> {
     return []; // HAND-OFF: compute with accessStatus() once retention is built

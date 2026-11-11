@@ -1,6 +1,6 @@
 # 0001. Shape: a source-level monolith, split by level into packages and by actor into areas, enforced by the compiler
 
-Status: accepted (2026-11-11)
+Status: accepted (2026-11-11). Decision 3 amended by ADR 0011 (the measurement area may import other areas' input-port types).
 
 ## Context
 

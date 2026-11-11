@@ -1,6 +1,7 @@
 import { postingIdentityKey, mergeSourceLinks, toScoringProfile, type JobPosting } from "@matchmaker/rules";
 import type { AccessGuard } from "../shared/access-guard.ts";
 import { UseCaseError } from "../shared/errors.ts";
+import type { SpendAttribution, SpendLedger } from "../shared/metering.ts";
 import type { Clock, IdGenerator } from "../shared/ports.ts";
 import type {
   AtsLinkRecognizer, CompanyRegistry, FoundPosting, JobSource, PostingCatalog, PostingEnricher, PostingLiveness,
@@ -10,12 +11,14 @@ import type {
 // ---- Input port and models (DS-1..DS-7; Flow 1 step 3, Flow 6) ----
 export type RunJobSearchRequest = { readonly userId: string; readonly trigger: "onboarding" | "manual" | "scheduled" };
 export type RunJobSearchResponse = {
+  readonly runId: string;
   readonly fetched: number;
   readonly duplicatesMerged: number;
   readonly failedSources: readonly string[];
   readonly widenedTo: readonly string[];
   readonly sentToScoring: number;
   readonly cutAtPrefilter: number;
+  readonly costMicros: number;
 };
 export interface RunJobSearch {
   execute(request: RunJobSearchRequest): Promise<RunJobSearchResponse>;
@@ -38,6 +41,8 @@ export type RunJobSearchDependencies = {
   readonly registry: CompanyRegistry;
   readonly scoring: ScoringRequests;
   readonly access: AccessGuard;
+  readonly spend: SpendAttribution;
+  readonly spendLedger: Pick<SpendLedger, "spentOnRun">;
   readonly clock: Clock;
   readonly ids: IdGenerator;
 };
@@ -54,6 +59,12 @@ export class RunJobSearchInteractor implements RunJobSearch {
 
   async execute(request: RunJobSearchRequest): Promise<RunJobSearchResponse> {
     await this.d.access.requireAccess(request.userId, request.trigger === "manual" ? "onDemandSearches" : undefined);
+    const runId = this.d.ids.next("run");
+    // Every source call, model call and awaited scoring call made by this run is charged to it (ADR 0010).
+    return this.d.spend.charge({ userId: request.userId, runId, purpose: "search" }, () => this.run(runId, request));
+  }
+
+  private async run(runId: string, request: RunJobSearchRequest): Promise<RunJobSearchResponse> {
     const startedAt = this.d.clock.now().toISOString();
     const profile = await this.d.profiles.activeProfileVersion(request.userId);
     if (profile === null) throw new UseCaseError("not-found", `no profile for ${request.userId}`);
@@ -103,14 +114,18 @@ export class RunJobSearchInteractor implements RunJobSearch {
     const ranked = await this.d.ranker.rank(scoringProfile, runPostings);
     const toScore = ranked.slice(0, SEARCH_POLICY.prefilterCap);
     const cut = ranked.slice(SEARCH_POLICY.prefilterCap);
-    await this.d.scoring.score({ userId: request.userId, postingIds: toScore, cutAtPrefilter: cut });
+    await this.d.scoring.score({ userId: request.userId, runId, postingIds: toScore, cutAtPrefilter: cut });
 
     const duplicatesMerged = fetched.found.length - groups.size;
+    const costMicros = await this.d.spendLedger.spentOnRun(runId);
     await this.d.runs.record({
-      userId: request.userId, trigger: request.trigger, startedAt, finishedAt: this.d.clock.now().toISOString(),
-      fetched: fetched.found.length, duplicatesMerged, expiredDropped, failedSources: fetched.failed, widenedTo,
+      runId, userId: request.userId, trigger: request.trigger, startedAt, finishedAt: this.d.clock.now().toISOString(),
+      fetched: fetched.found.length, duplicatesMerged, expiredDropped, failedSources: fetched.failed, widenedTo, costMicros,
     });
-    return { fetched: fetched.found.length, duplicatesMerged, failedSources: fetched.failed, widenedTo, sentToScoring: toScore.length, cutAtPrefilter: cut.length };
+    return {
+      runId, fetched: fetched.found.length, duplicatesMerged, failedSources: fetched.failed, widenedTo,
+      sentToScoring: toScore.length, cutAtPrefilter: cut.length, costMicros,
+    };
   }
 
   /**
