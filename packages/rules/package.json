@@ -1,0 +1,7 @@
+{
+  "name": "@matchmaker/rules",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "dependencies": {}
+}

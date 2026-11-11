@@ -1,0 +1,21 @@
+{
+  "name": "ai-job-matchmaker",
+  "private": true,
+  "type": "module",
+  "description": "AI Job Matchmaker: reads a resume, interviews the seeker, searches job sources, and gives every job a verdict (Apply, Within reach, Not a fit) with its reasons.",
+  "scripts": {
+    "typecheck": "node tools/architecture/typecheck.mjs",
+    "check:architecture": "node tools/architecture/check.mjs",
+    "metrics": "node tools/architecture/check.mjs --metrics",
+    "test": "node --test \"packages/*/test/**/*.test.ts\"",
+    "verify": "pnpm run typecheck && pnpm run check:architecture && pnpm run test"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "6.0.2"
+  },
+  "engines": {
+    "node": ">=22.18"
+  },
+  "packageManager": "pnpm@10.28.0"
+}

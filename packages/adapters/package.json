@@ -1,0 +1,7 @@
+{
+  "name": "@matchmaker/adapters",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "dependencies": { "@matchmaker/rules": "workspace:*", "@matchmaker/use-cases": "workspace:*" }
+}
