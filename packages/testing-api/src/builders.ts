@@ -2,9 +2,9 @@ import type { JobPosting, ProfileVersion } from "@matchmaker/rules";
 import type { Enrichment, FoundPosting } from "@matchmaker/use-cases";
 
 /** Sensible defaults so a test states only what it is about. */
-export function aProfile(o: Partial<ProfileVersion> & { userId: string }): ProfileVersion {
+export function aProfile(o: Partial<ProfileVersion> & { personId: string }): ProfileVersion {
   return {
-    profileId: `profile-${o.userId}`, version: 1, roles: [], skills: [], credentials: [], languages: ["en"],
+    profileId: `profile-${o.personId}`, version: 1, roles: [], skills: [], credentials: [], languages: ["en"],
     evidence: [
       { id: "ev-sql", source: "resume-line", text: "Built SQL reporting for 40 stores" },
       { id: "ev-ts", source: "resume-line", text: "Led a TypeScript migration of 200k lines" },

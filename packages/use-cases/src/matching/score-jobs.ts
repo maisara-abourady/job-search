@@ -9,7 +9,7 @@ import type { MatchJudge, MatchNarrator, MatchRecords, Narration, PostingsForSco
 
 // ---- Input port and models (MR-1..MR-6, NF-5 re-score, NF-6 full analysis, MN-2 only new) ----
 export type ScoreJobsRequest = {
-  readonly userId: string;
+  readonly personId: string;
   /** The search run that asked for this scoring, if any: its judge and narrator spend is charged to that run (ADR 0010). */
   readonly runId: string | null;
   readonly postingIds: readonly string[];
@@ -42,12 +42,12 @@ export class ScoreJobsInteractor implements ScoreJobs {
   }
 
   async execute(request: ScoreJobsRequest): Promise<ScoreJobsResponse> {
-    return this.d.spend.charge({ userId: request.userId, runId: request.runId, purpose: "scoring" }, () => this.score(request));
+    return this.d.spend.charge({ personId: request.personId, runId: request.runId, purpose: "scoring" }, () => this.score(request));
   }
 
   private async score(request: ScoreJobsRequest): Promise<ScoreJobsResponse> {
-    const profile = await this.d.profiles.activeProfileVersion(request.userId);
-    if (profile === null) throw new UseCaseError("not-found", `no profile for ${request.userId}`);
+    const profile = await this.d.profiles.activeProfileVersion(request.personId);
+    if (profile === null) throw new UseCaseError("not-found", `no profile for ${request.personId}`);
     const key = profileVersionKey(profile);
     const scoringProfile = toScoringProfile(profile);
     const cut = new Set(request.cutAtPrefilter);
@@ -70,14 +70,14 @@ export class ScoreJobsInteractor implements ScoreJobs {
         assessment = assessMatch({ job: posting, profile: scoringProfile, preferences: profile.preferences, gates, judgments, now: this.d.clock.now() });
         narration = await this.d.narrator.narrate({ profile: scoringProfile, posting, assessment });
       }
-      const previous = await this.d.matches.latestVerdictBefore(request.userId, posting.id, key);
+      const previous = await this.d.matches.latestVerdictBefore(request.personId, posting.id, key);
       const changed = previous !== null && previous !== assessment.verdict;
       await this.d.matches.saveMatch({
-        userId: request.userId, profileVersionKey: key, postingId: posting.id, postingRevision: posting.revision,
+        personId: request.personId, profileVersionKey: key, postingId: posting.id, postingRevision: posting.revision,
         assessment, narration, verdictChangedFrom: changed ? previous : null, userState: "new",
         scoredAt: this.d.clock.now().toISOString(),
       });
-      this.d.feed.jobScored({ userId: request.userId, postingId: posting.id, verdict: assessment.verdict, verdictChanged: changed });
+      this.d.feed.jobScored({ personId: request.personId, postingId: posting.id, verdict: assessment.verdict, verdictChanged: changed });
       scored++;
       if (changed) verdictChanges++;
     }

@@ -40,7 +40,7 @@ export type PersonalDetails = {
  */
 export type ProfileVersion = {
   readonly profileId: string;
-  readonly userId: string;
+  readonly personId: string;
   readonly version: number;
   readonly roles: readonly RoleHeld[];
   readonly skills: readonly EvidencedSkill[];

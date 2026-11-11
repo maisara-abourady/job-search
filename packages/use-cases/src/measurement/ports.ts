@@ -1,18 +1,16 @@
 /**
  * Product analytics (ADR 0011), owned by the measurement area. Events are facts in the product's own
  * language, one per PRD metric. They carry ids, counts and times only: never resume text, profile facts,
- * personal details or job content, so no destination (own store or vendor) ever receives user data.
+ * personal details or job content, so no destination (own store or vendor) ever receives a person's data. The destination is a store on the owner's machine (ADR 0016).
  */
-type At = { readonly userId: string; readonly at: string };
+type At = { readonly personId: string; readonly at: string };
 export type ProductEvent =
-  /** North star start and every signup-based denominator. `at` is the trial start, so a repeated sign-up call reports the same time. */
-  | (At & { readonly name: "signed-up" })
-  /** North star end: a results screen was served with at least one Apply verdict. The metric uses the first per user. */
+  /** North star start ("minutes from creating a profile", ADR 0014) and every per-profile denominator. */
+  | (At & { readonly name: "profile-created" })
+  /** North star end: a results screen was served with at least one Apply verdict. The metric uses the first per profile. */
   | (At & { readonly name: "apply-verdict-shown"; readonly applyCount: number })
   /** Applied rate. */
   | (At & { readonly name: "job-marked-applied"; readonly postingId: string })
-  /** Trial-to-paid conversion. */
-  | (At & { readonly name: "subscription-activated" })
   // Emitted by decorators added when their use cases are wired (hand-off list in ADR 0011):
   /** Onboarding completion (PF screens saved through CorrectProfile). */
   | (At & { readonly name: "preferences-saved" })

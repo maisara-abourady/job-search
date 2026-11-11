@@ -1,6 +1,6 @@
 # 0010. Spend is metered at the edge and charged by the use case that caused it
 
-Status: accepted (2026-11-11)
+Status: accepted (2026-11-11). Decision 7 superseded by ADR 0015 (daily caps and the monthly budget). Amended by ADR 0014 (spend is charged to a person, `personId`; erasure keeps amounts with a null person) and ADR 0015 (cost per profile replaces cost per active user). The `proxy` category is removed (ADR 0016).
 
 ## Context
 

@@ -1,12 +1,12 @@
 import type { JobPosting, KeywordPresence, ProfileVersion, ResumeDocument, ScoringProfile } from "@matchmaker/rules";
 
 export interface TailoringSources {
-  activeProfileVersion(userId: string): Promise<ProfileVersion | null>;
-  sourceResume(userId: string): Promise<ResumeDocument | null>;
+  activeProfileVersion(personId: string): Promise<ProfileVersion | null>;
+  sourceResume(personId: string): Promise<ResumeDocument | null>;
   posting(postingId: string): Promise<JobPosting | null>;
   /** Keywords the user already confirmed or denied; confirmed ones are never asked again (Flow 4 step 3). */
-  keywordAnswers(userId: string): Promise<readonly { keyword: string; has: boolean; whereUsed: string | null }[]>;
-  saveKeywordAnswer(userId: string, answer: { keyword: string; has: boolean; whereUsed: string | null }): Promise<void>;
+  keywordAnswers(personId: string): Promise<readonly { keyword: string; has: boolean; whereUsed: string | null }[]>;
+  saveKeywordAnswer(personId: string, answer: { keyword: string; has: boolean; whereUsed: string | null }): Promise<void>;
 }
 /** Synonym presence needs judgment; exact presence is decided by the rules. */
 export interface KeywordMatcher {
@@ -22,7 +22,7 @@ export interface ResumeRenderer {
 }
 export type TailoredResumeRecord = {
   readonly id: string;
-  readonly userId: string;
+  readonly personId: string;
   readonly postingId: string;
   readonly profileVersionKey: string;
   readonly resume: ResumeDocument;
@@ -35,5 +35,5 @@ export interface TailoredResumes {
   byId(id: string): Promise<TailoredResumeRecord | null>;
 }
 export interface GeneratedFiles {
-  put(userId: string, name: string, bytes: Uint8Array): Promise<{ fileRef: string }>;
+  put(personId: string, name: string, bytes: Uint8Array): Promise<{ fileRef: string }>;
 }

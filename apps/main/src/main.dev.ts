@@ -1,28 +1,38 @@
 import {
-  AsyncSpendMeter, GreenhouseBoardSource, InMemoryProductEventLog, InMemorySpendLedger, InMemoryStore, InMemoryUsageLedger, RandomIds,
-  SystemClock, TemplateNarrator, UnchosenModelRuntime,
+  AsyncSpendMeter, GreenhouseBoardSource, InMemoryProductEventLog, InMemorySpendLedger, InMemoryStore, InMemoryUsageLedger, IntervalTicker,
+  JsonArchiveVault, RandomIds, SystemClock, TemplateNarrator, UnchosenModelRuntime,
 } from "@matchmaker/adapters";
 import { composeMatchmaker } from "./compose-matchmaker.ts";
 
 /**
- * Development configuration: everything in memory, model runtime not yet chosen, Tier 1 only, no Tier 4.
- * A web delivery (deferred) will call composeMatchmaker the same way from its own entry point.
+ * Development configuration: everything in memory, model runtime not yet chosen (D1), Tier 1 only, no Tier 4.
+ * The owner's local install (D5, D15) will be a sibling configuration: it calls composeMatchmaker the same way,
+ * serves the web UI on 127.0.0.1 only (AB-5, LOOPBACK_BIND_ADDRESS), and starts the monitoring ticker below.
  */
 const store = new InMemoryStore();
+const usage = new InMemoryUsageLedger();
 const clock = new SystemClock();
 const spendLedger = new InMemorySpendLedger();
+const productEvents = new InMemoryProductEventLog();
 // ADR 0010: every adapter that spends money gets this meter in its constructor (none does yet: Greenhouse is free).
 const meter = new AsyncSpendMeter(spendLedger, clock);
 const models = new UnchosenModelRuntime();
 const greenhouse = new GreenhouseBoardSource(async () => []);
 
+/** How often Main asks whether any profile is due (ADR 0016). The 12-hour interval itself is MONITORING_POLICY. */
+export const MONITORING_TICK_MS = 15 * 60_000;
+
 export const matchmaker = composeMatchmaker({
   storage: store,
   operatorConsole: { ...bind(store, "setEnabled", "states"), recent: async () => [] },
-  usage: new InMemoryUsageLedger(),
+  usage,
   spendLedger,
   spendAttribution: meter,
-  productEvents: new InMemoryProductEventLog(),
+  personData: new JsonArchiveVault([
+    { section: "profile", vault: store }, { section: "dailyUsage", vault: usage },
+    { section: "spend", vault: spendLedger }, { section: "productEvents", vault: productEvents },
+  ]),
+  productEvents,
   clock,
   ids: new RandomIds(),
   judge: models,
@@ -41,4 +51,8 @@ function bind<T extends object, K extends keyof T>(target: T, ...keys: K[]): Pic
   return Object.fromEntries(keys.map((k) => [k, (target[k] as (...a: unknown[]) => unknown).bind(target)])) as Pick<T, K>;
 }
 
-if (import.meta.main) console.log("AI Job Matchmaker (dev):", Object.keys(matchmaker.useCases).join(", "));
+if (import.meta.main) {
+  console.log("AI Job Matchmaker (dev):", Object.keys(matchmaker.useCases).join(", "));
+  // Monitoring while the app runs: a catch-up tick now, then every MONITORING_TICK_MS. The dev run does not stay alive for it.
+  new IntervalTicker((e) => console.error("monitoring", e)).start(() => matchmaker.useCases.runDueMonitoring.execute(), MONITORING_TICK_MS, { keepProcessAlive: false });
+}

@@ -17,13 +17,13 @@ const judgment = {
 
 test("job detail links each point to capitalize and each judged requirement to its evidence text", async () => {
   const api = new MatchmakerTestingApi();
-  await api.givenSignedUpUser("u1");
-  await api.givenProfile("u1");
+  const u1 = await api.givenPerson("Ana");
+  await api.givenProfile(u1);
   const job = await api.givenPosting();
   api.judgeWillSay(job.id, judgment);
-  await api.scorePostings("u1", [job.id]);
+  await api.scorePostings(u1, [job.id]);
 
-  const detail = await api.jobDetail("u1", job.id);
+  const detail = await api.jobDetail(u1, job.id);
 
   assert.deepEqual(detail.pointsToCapitalize[0], { point: "SQL", evidenceText: "Built SQL reporting for 40 stores" });
   assert.deepEqual(detail.gaps, [{ requirement: "Cloud infrastructure", closable: false }, { requirement: "Go", closable: true }]);
@@ -34,15 +34,15 @@ test("job detail links each point to capitalize and each judged requirement to i
 
 test("after Fix a fact, detail shows the corrected text only once the job is re-scored on the new version", async () => {
   const api = new MatchmakerTestingApi();
-  await api.givenSignedUpUser("u1");
-  const v1 = await api.givenProfile("u1");
+  const u1 = await api.givenPerson("Ana");
+  const v1 = await api.givenProfile(u1);
   const job = await api.givenPosting();
   api.judgeWillSay(job.id, judgment);
-  await api.scorePostings("u1", [job.id]);
+  await api.scorePostings(u1, [job.id]);
 
-  await api.givenProfile("u1", { evidence: v1.evidence.map((e) => (e.id === "ev-sql" ? { ...e, text: "Built SQL reporting for 45 stores" } : e)) });
-  await assert.rejects(api.jobDetail("u1", job.id), /no result/, "results read only the active version's matches");
-  await api.scorePostings("u1", [job.id]);
+  await api.givenProfile(u1, { evidence: v1.evidence.map((e) => (e.id === "ev-sql" ? { ...e, text: "Built SQL reporting for 45 stores" } : e)) });
+  await assert.rejects(api.jobDetail(u1, job.id), /no result/, "results read only the active version's matches");
+  await api.scorePostings(u1, [job.id]);
 
-  assert.equal((await api.jobDetail("u1", job.id)).pointsToCapitalize[0]?.evidenceText, "Built SQL reporting for 45 stores");
+  assert.equal((await api.jobDetail(u1, job.id)).pointsToCapitalize[0]?.evidenceText, "Built SQL reporting for 45 stores");
 });

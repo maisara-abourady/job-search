@@ -1,7 +1,7 @@
 import type { ResultRow, ResultsReadModel } from "./ports.ts";
 
 // ---- Input port and models (Flow 2; MR-3, MR-4, MR-6; shape of encouragement 2 and 3) ----
-export type ListResultsRequest = { readonly userId: string };
+export type ListResultsRequest = { readonly personId: string };
 export type ResultCard = {
   readonly postingId: string;
   readonly title: string;
@@ -32,7 +32,7 @@ export class ListResultsInteractor implements ListResults {
   }
 
   async execute(request: ListResultsRequest): Promise<ListResultsResponse> {
-    const rows = (await this.results.currentResults(request.userId))
+    const rows = (await this.results.currentResults(request.personId))
       .filter((r) => r.postingOpen && r.userState !== "dismissed")
       .sort((a, b) => b.assessment.priority - a.assessment.priority);
     const apply = rows.filter((r) => r.assessment.verdict === "apply").map(toCard);

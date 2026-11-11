@@ -1,6 +1,6 @@
 /**
  * The architecture as data. The check script enforces it; docs/architecture/README.md explains it.
- * Changing this file is an architectural decision: it needs an ADR.
+ * Changing this file is an architectural decision: it needs an ADR (latest: ADR 0014 replaced the account areas).
  */
 export const COMPONENTS = {
   "@matchmaker/rules": { dir: "packages/rules", circle: "1 entities", allowed: [], platform: false },
@@ -28,16 +28,16 @@ export const RESTRICTED_SUBPATHS = { "@matchmaker/use-cases/wiring": ["@matchmak
 export const AREAS = {
   "@matchmaker/rules": {
     shared: [], profile: ["shared"], jobs: ["shared"], matching: ["shared", "profile", "jobs"],
-    tailoring: ["shared", "profile", "jobs"], access: ["shared"],
+    tailoring: ["shared", "profile", "jobs"], spending: ["shared"],
   },
   "@matchmaker/use-cases": {
     shared: [], onboarding: ["shared"], discovery: ["shared"], matching: ["shared"], results: ["shared"],
-    tailoring: ["shared"], monitoring: ["shared"], account: ["shared"], operations: ["shared"],
+    tailoring: ["shared"], monitoring: ["shared"], profiles: ["shared"], spending: ["shared"], operations: ["shared"],
     // ADR 0011: measurement observes other areas' input ports (types only, see TYPE_ONLY_AREA_IMPORTS); nothing imports it.
-    measurement: ["shared", "onboarding", "results", "tailoring", "account"],
+    measurement: ["shared", "onboarding", "results", "tailoring", "profiles"],
   },
-  "@matchmaker/delivery": { results: [], access: [] },
-  "@matchmaker/adapters": { "in-memory": [], system: [], work: [], narration: [], "model-runtime": [], "job-sources": [], metering: [] },
+  "@matchmaker/delivery": { results: [], spending: [], "local-only": [] },
+  "@matchmaker/adapters": { "in-memory": [], system: [], work: [], narration: [], "model-runtime": [], "job-sources": [], metering: [], "data-controls": [] },
 };
 
 /**

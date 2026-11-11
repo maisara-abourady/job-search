@@ -18,7 +18,7 @@ export type ProfileCorrection =
   | { readonly kind: "fact"; readonly evidenceId: string; readonly newText: string }
   | { readonly kind: "preferences"; readonly preferences: PreferencesInput }
   | { readonly kind: "selling-point"; readonly evidenceId: string; readonly newStatement: string };
-export type CorrectProfileRequest = { readonly userId: string; readonly correction: ProfileCorrection };
+export type CorrectProfileRequest = { readonly personId: string; readonly correction: ProfileCorrection };
 export type CorrectProfileResponse = { readonly newVersion: number; readonly rescoreRequested: boolean };
 export interface CorrectProfile {
   execute(request: CorrectProfileRequest): Promise<CorrectProfileResponse>;

@@ -1,12 +1,14 @@
-import { presentResults, type ResultsViewModel } from "@matchmaker/delivery";
-import { AsyncSpendMeter, InMemoryProductEventLog, InMemorySpendLedger, InMemoryStore, InMemoryUsageLedger, TemplateNarrator } from "@matchmaker/adapters";
+import { acceptsLocalRequest, presentResults, presentRunningCost, type ResultsViewModel, type RunningCostViewModel } from "@matchmaker/delivery";
+import {
+  AsyncSpendMeter, InMemoryProductEventLog, InMemorySpendLedger, InMemoryStore, InMemoryUsageLedger, JsonArchiveVault, TemplateNarrator,
+} from "@matchmaker/adapters";
 import { composeMatchmaker, type Matchmaker } from "@matchmaker/main";
 import {
   postingIdentityKey, type JobPosting, type MatchJudgments, type ProfileVersion, type SourceTier,
 } from "@matchmaker/rules";
 import type {
-  FoundPosting, JobSource, ListResultsResponse, ProductEvent, RecordSubscriptionChangeResponse, RunJobSearchResponse, ScoredJobNotice,
-  SearchRunRecord, SubscriptionChange, ViewJobDetailResponse,
+  CreatePersonResponse, FoundPosting, JobSource, ListResultsResponse, PersonSummary, ProductEvent, RunDueMonitoringResponse,
+  RunJobSearchResponse, ScoredJobNotice, SearchRunRecord, ViewJobDetailResponse, ViewRunningCostResponse,
 } from "@matchmaker/use-cases";
 import { aJobPosting, aProfile, enrichmentOf } from "./builders.ts";
 
@@ -14,13 +16,14 @@ import { aJobPosting, aProfile, enrichmentOf } from "./builders.ts";
 const MODEST_JUDGMENT: MatchJudgments = { requirements: [], experienceRelevance: 0.5, skillsAndTools: 0.5, scopeAlignment: 0.5 };
 
 /**
- * The testing API (§10.3): a superset of what the UI uses, with superpowers. Forces states (accounts,
- * profiles, postings, time), bypasses expensive resources (models, sources, storage), and hides the
- * application's structure so tests and production code can be refactored independently.
+ * The testing API (§10.3): a superset of what the UI uses, with superpowers. Forces states (people, profiles,
+ * postings, time), bypasses expensive resources (models, sources, storage), and hides the application's
+ * structure so tests and production code can be refactored independently.
  * Tests talk to this class only; never to interactors, adapters or file paths.
  */
 export class MatchmakerTestingApi {
   private readonly store = new InMemoryStore();
+  private readonly usage = new InMemoryUsageLedger();
   private readonly spendLedger = new InMemorySpendLedger();
   private readonly events = new InMemoryProductEventLog();
   /** The meter scripted details report spend to, exactly as real adapters will (ADR 0010). */
@@ -31,6 +34,7 @@ export class MatchmakerTestingApi {
   private readonly judgments = new Map<string, MatchJudgments>();
   /** Live list handed to Main: scripting a source later adds it to the running app. */
   private readonly sources: JobSource[] = [];
+  private readonly queriedSources: string[] = [];
   readonly judgeCalls: string[] = [];
   readonly feed: ScoredJobNotice[] = [];
   private readonly app: Matchmaker;
@@ -42,9 +46,13 @@ export class MatchmakerTestingApi {
     this.app = composeMatchmaker({
       storage: this.store,
       operatorConsole: Object.assign(this.store, { recent: async () => [] }),
-      usage: new InMemoryUsageLedger(),
+      usage: this.usage,
       spendLedger: this.spendLedger,
       spendAttribution: this.meter,
+      personData: new JsonArchiveVault([
+        { section: "profile", vault: this.store }, { section: "dailyUsage", vault: this.usage },
+        { section: "spend", vault: this.spendLedger }, { section: "productEvents", vault: this.events },
+      ]),
       productEvents: this.events,
       clock,
       ids: { next: (prefix) => `${prefix}-${++self.idCounter}` },
@@ -74,16 +82,17 @@ export class MatchmakerTestingApi {
     this.nowIso = iso;
     return this;
   }
-  async givenSignedUpUser(userId: string, onIso?: string): Promise<this> {
+  /** A person profile the owner created (through the real use case, so the north-star start is recorded). Returns its id. */
+  async givenPerson(displayName: string, onIso?: string): Promise<string> {
     const previous = this.nowIso;
     if (onIso) this.nowIso = onIso;
-    await this.app.useCases.signUp.execute({ userId });
+    const { personId } = await this.app.useCases.createPerson.execute({ displayName });
     this.nowIso = previous;
-    return this;
+    return personId;
   }
-  async givenProfile(userId: string, overrides: Partial<ProfileVersion> = {}): Promise<ProfileVersion> {
-    const current = await this.store.activeProfileVersion(userId);
-    const profile = aProfile({ userId, version: (current?.version ?? 0) + 1, ...overrides });
+  async givenProfile(personId: string, overrides: Partial<ProfileVersion> = {}): Promise<ProfileVersion> {
+    const current = await this.store.activeProfileVersion(personId);
+    const profile = aProfile({ personId, version: (current?.version ?? 0) + 1, ...overrides });
     await this.store.saveNewVersion(profile, []);
     return profile;
   }
@@ -96,17 +105,19 @@ export class MatchmakerTestingApi {
     this.judgments.set(postingId, judgments);
     return this;
   }
-  /** `costPerCallMicros` makes the source a paid one: each call reports that spend (aggregator, or proxy for Tier 4). */
+  /** `costPerCallMicros` makes the source a paid one: each call reports that much aggregator spend. */
   sourceReturns(name: string, tier: SourceTier, postings: readonly Partial<FoundPosting>[], costPerCallMicros = 0): this {
     const result = postings.map((p, i) => ({
       sourceName: name, tier, url: `https://${name}.example/${i}`, employer: "Acme", title: "Engineer", location: "Berlin",
       description: "Build things.", postedAt: this.nowIso, fetchedAt: this.nowIso, ...p,
     }));
     const meter = this.meter;
+    const queried = this.queriedSources;
     this.sources.push({
       descriptor: { name, tier },
       search: async () => {
-        if (costPerCallMicros > 0) await meter.record({ category: tier === 4 ? "proxy" : "aggregator", provider: name, amountMicros: costPerCallMicros });
+        queried.push(name);
+        if (costPerCallMicros > 0) await meter.record({ category: "aggregator", provider: name, amountMicros: costPerCallMicros });
         return result;
       },
     });
@@ -118,51 +129,93 @@ export class MatchmakerTestingApi {
     return this;
   }
   sourceFails(name: string, tier: SourceTier): this {
-    this.sources.push({ descriptor: { name, tier }, search: async () => { throw new Error(`${name} is down`); } });
+    const queried = this.queriedSources;
+    this.sources.push({ descriptor: { name, tier }, search: async () => { queried.push(name); throw new Error(`${name} is down`); } });
     return this;
   }
 
-  // ---------- what the UI and the scheduler can do ----------
-  async scorePostings(userId: string, postingIds: readonly string[]) {
-    return this.app.useCases.scoreJobs.execute({ userId, runId: null, postingIds, cutAtPrefilter: [] });
+  // ---------- what the owner does (profiles, spending, sources) ----------
+  async createProfile(displayName: string): Promise<CreatePersonResponse> {
+    return this.app.useCases.createPerson.execute({ displayName });
   }
-  async searchNow(userId: string): Promise<RunJobSearchResponse> {
-    return this.app.useCases.runJobSearch.execute({ userId, trigger: "manual" });
+  async renameProfile(personId: string, displayName: string): Promise<void> {
+    await this.app.useCases.renamePerson.execute({ personId, displayName });
   }
-  async results(userId: string): Promise<ListResultsResponse> {
-    return this.app.useCases.listResults.execute({ userId });
+  async profiles(): Promise<readonly PersonSummary[]> {
+    return (await this.app.useCases.listPeople.execute()).people;
   }
-  async resultsScreen(userId: string): Promise<ResultsViewModel> {
-    return presentResults(await this.results(userId));
+  async openProfile(personId: string): Promise<PersonSummary> {
+    return this.app.useCases.openPerson.execute({ personId });
   }
-  async jobDetail(userId: string, postingId: string): Promise<ViewJobDetailResponse> {
-    return this.app.useCases.viewJobDetail.execute({ userId, postingId });
+  /** The export archive, parsed (its format is the adapter's; tests read only what they assert). */
+  async exportProfile(personId: string): Promise<Record<string, unknown>> {
+    const { archive } = await this.app.useCases.exportPersonData.execute({ personId });
+    return JSON.parse(new TextDecoder().decode(archive)) as Record<string, unknown>;
   }
-  async markApplied(userId: string, postingId: string): Promise<void> {
-    await this.app.useCases.recordJobDecision.execute({ userId, postingId, decision: "applied" });
+  async deleteProfile(personId: string): Promise<void> {
+    await this.app.useCases.deletePerson.execute({ personId });
   }
-  async access(userId: string) {
-    return this.app.useCases.viewAccess.execute({ userId });
+  async setMonthlyBudget(limitMicros: number | null): Promise<void> {
+    await this.app.useCases.setMonthlyBudget.execute({ limitMicros });
   }
-  /** What the billing provider's webhook listener will do (D7): hand over one provider event. */
-  async billingProviderSends(change: SubscriptionChange): Promise<RecordSubscriptionChangeResponse> {
-    return this.app.useCases.recordSubscriptionChange.execute(change);
+  async runningCost(monthOf?: string): Promise<ViewRunningCostResponse> {
+    return this.app.useCases.viewRunningCost.execute(monthOf === undefined ? {} : { monthOf });
+  }
+  async runningCostScreen(): Promise<RunningCostViewModel> {
+    return presentRunningCost(await this.runningCost());
+  }
+  async switchSource(sourceName: string, enabled: boolean, reason = "owner's choice"): Promise<void> {
+    await this.app.useCases.operateSources.switchSource({ sourceName, enabled, reason });
+  }
+  /** What every configuration does when the app starts (and on each timer tick): the catch-up monitoring run. */
+  async appStarts(): Promise<RunDueMonitoringResponse> {
+    const response = await this.app.useCases.runDueMonitoring.execute();
+    await this.app.work.drain();
+    return response;
+  }
+  /** AB-5: would the web Main's route handlers serve a request with these headers? */
+  localRequestAccepted(headers: { host: string | null; origin: string | null }): boolean {
+    return acceptsLocalRequest(headers);
+  }
+
+  // ---------- what the UI and the scheduler can do for the open profile ----------
+  async scorePostings(personId: string, postingIds: readonly string[]) {
+    return this.app.useCases.scoreJobs.execute({ personId, runId: null, postingIds, cutAtPrefilter: [] });
+  }
+  async searchNow(personId: string, options: { overBudgetConfirmed?: boolean } = {}): Promise<RunJobSearchResponse> {
+    return this.app.useCases.runJobSearch.execute({ personId, trigger: "manual", ...options });
+  }
+  async results(personId: string): Promise<ListResultsResponse> {
+    return this.app.useCases.listResults.execute({ personId });
+  }
+  async resultsScreen(personId: string): Promise<ResultsViewModel> {
+    return presentResults(await this.results(personId));
+  }
+  async jobDetail(personId: string, postingId: string): Promise<ViewJobDetailResponse> {
+    return this.app.useCases.viewJobDetail.execute({ personId, postingId });
+  }
+  async markApplied(personId: string, postingId: string): Promise<void> {
+    await this.app.useCases.recordJobDecision.execute({ personId, postingId, decision: "applied" });
   }
 
   // ---------- observe ----------
   lastSearchRun(): SearchRunRecord | undefined {
     return this.store.recordedRuns().at(-1);
   }
-  /** Spend charged to the user over all time, in micros. */
-  async spentBy(userId: string): Promise<number> {
-    return this.spendLedger.spentBy(userId, "0000", "9999");
+  /** Names of the sources asked, in order, since the test began. */
+  sourcesQueried(): readonly string[] {
+    return this.queriedSources;
+  }
+  /** Spend charged to the profile over all time, in micros. */
+  async spentBy(personId: string): Promise<number> {
+    return this.spendLedger.spentBy(personId, "0000", "9999");
   }
   /** Spend no use case charged: a cost-incurring use case forgot to open a charge (watch item W8). */
   unattributedSpendMicros(): number {
-    return this.spendLedger.recorded().filter((r) => r.userId === null).reduce((t, r) => t + r.amountMicros, 0);
+    return this.spendLedger.recorded().filter((r) => r.personId === null && r.purpose === "unattributed").reduce((t, r) => t + r.amountMicros, 0);
   }
-  productEvents(userId: string): readonly ProductEvent[] {
-    return this.events.recorded().filter((e) => e.userId === userId);
+  productEvents(personId: string): readonly ProductEvent[] {
+    return this.events.recorded().filter((e) => e.personId === personId);
   }
   async backgroundWorkSettled(): Promise<void> {
     await this.app.work.drain();

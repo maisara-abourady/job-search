@@ -23,12 +23,12 @@ export type FoundPosting = {
 };
 export interface JobSource {
   readonly descriptor: SourceDescriptor;
-  /** Rate limits, proxies, retries and timeouts are the adapter's business. Throwing means the source failed this run. */
+  /** Rate limits, retries and timeouts are the adapter's business. Throwing means the source failed this run. */
   search(queries: readonly SearchQuery[], timeoutMs: number): Promise<readonly FoundPosting[]>;
 }
-/** Kill switch per source, readable without a deploy (Scraping safeguards 1). */
+/** Kill switch per source, readable without a restart (Scraping safeguards 1). Null: the owner never switched it. */
 export interface SourceSwitchboard {
-  isEnabled(sourceName: string): Promise<boolean>;
+  switchedOn(sourceName: string): Promise<boolean | null>;
 }
 
 // ---------- Judgment-backed steps (ADR 0003: a model behind a port, never an orchestrator) ----------
@@ -51,7 +51,7 @@ export interface RelevanceRanker {
 
 // ---------- Storage needs of discovery ----------
 export interface ProfilesForSearch {
-  activeProfileVersion(userId: string): Promise<ProfileVersion | null>;
+  activeProfileVersion(personId: string): Promise<ProfileVersion | null>;
 }
 export interface PostingCatalog {
   findByIdentityKey(identityKey: string): Promise<JobPosting | null>;
@@ -64,7 +64,7 @@ export interface PostingLiveness {
 }
 export type SearchRunRecord = {
   readonly runId: string;
-  readonly userId: string;
+  readonly personId: string;
   readonly trigger: "onboarding" | "manual" | "scheduled";
   readonly startedAt: string;
   readonly finishedAt: string;
@@ -92,5 +92,5 @@ export interface CompanyRegistry {
 /** Discovery hands scoring to the matching area through a port it owns; Main wires it. */
 export interface ScoringRequests {
   /** `runId` lets scoring spend be charged to the search run that asked for it (ADR 0010). */
-  score(request: { userId: string; runId: string | null; postingIds: readonly string[]; cutAtPrefilter: readonly string[] }): Promise<void>;
+  score(request: { personId: string; runId: string | null; postingIds: readonly string[]; cutAtPrefilter: readonly string[] }): Promise<void>;
 }

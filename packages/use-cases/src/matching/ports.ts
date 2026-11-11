@@ -2,7 +2,7 @@ import type { JobPosting, MatchAssessment, MatchJudgments, ProfileVersion, Scori
 
 /** What matching needs from storage, named for the need (gateways; implementations hold the SQL). */
 export interface ProfilesForScoring {
-  activeProfileVersion(userId: string): Promise<ProfileVersion | null>;
+  activeProfileVersion(personId: string): Promise<ProfileVersion | null>;
 }
 export interface PostingsForScoring {
   postingsByIds(ids: readonly string[]): Promise<readonly JobPosting[]>;
@@ -10,7 +10,7 @@ export interface PostingsForScoring {
 
 /** A judged match as stored. Keyed by profile version and posting revision (ADR 0005), so a score never changes unless one of them does. */
 export type StoredMatch = {
-  readonly userId: string;
+  readonly personId: string;
   readonly profileVersionKey: string;
   readonly postingId: string;
   readonly postingRevision: number;
@@ -22,9 +22,9 @@ export type StoredMatch = {
 };
 export interface MatchRecords {
   findMatch(profileVersionKey: string, postingId: string, postingRevision: number): Promise<StoredMatch | null>;
-  latestVerdictBefore(userId: string, postingId: string, profileVersionKey: string): Promise<Verdict | null>;
+  latestVerdictBefore(personId: string, postingId: string, profileVersionKey: string): Promise<Verdict | null>;
   saveMatch(match: StoredMatch): Promise<void>;
-  postingIdsScoredFor(userId: string): Promise<readonly string[]>;
+  postingIdsScoredFor(personId: string): Promise<readonly string[]>;
 }
 
 /**
@@ -43,7 +43,7 @@ export interface MatchNarrator {
 
 /** Output port for MR-6 (results stream). Delivery implements it (SSE, polling, anything). */
 export type ScoredJobNotice = {
-  readonly userId: string;
+  readonly personId: string;
   readonly postingId: string;
   readonly verdict: "apply" | "stretch" | "not-a-fit";
   readonly verdictChanged: boolean;

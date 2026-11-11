@@ -17,14 +17,14 @@ const strongJudgment = {
 
 test("a strong, evidenced match is Apply and shows first in the Apply tab", async () => {
   const api = new MatchmakerTestingApi();
-  await api.givenSignedUpUser("u1");
-  await api.givenProfile("u1");
+  const u1 = await api.givenPerson("Ana");
+  await api.givenProfile(u1);
   const job = await api.givenPosting();
   api.judgeWillSay(job.id, strongJudgment);
 
-  await api.scorePostings("u1", [job.id]);
+  await api.scorePostings(u1, [job.id]);
 
-  const screen = await api.resultsScreen("u1");
+  const screen = await api.resultsScreen(u1);
   assert.equal(screen.tabs[0]?.countLabel, "1");
   assert.equal(screen.applyCards[0]?.verdictLabel, "Apply");
   assert.equal(api.feed.length, 1, "results stream as they are scored");
@@ -32,17 +32,17 @@ test("a strong, evidenced match is Apply and shows first in the Apply tab", asyn
 
 test("a Met judgment that cites no evidence counts as Missing, so the job is only Within reach", async () => {
   const api = new MatchmakerTestingApi();
-  await api.givenSignedUpUser("u1");
-  await api.givenProfile("u1");
+  const u1 = await api.givenPerson("Ana");
+  await api.givenProfile(u1);
   const job = await api.givenPosting();
   api.judgeWillSay(job.id, {
     ...strongJudgment,
     requirements: strongJudgment.requirements.map((r) => (r.requirementId === "r-cloud" ? { ...r, evidenceIds: ["not-in-profile"] } : r)),
   });
 
-  await api.scorePostings("u1", [job.id]);
+  await api.scorePostings(u1, [job.id]);
 
-  const screen = await api.resultsScreen("u1");
+  const screen = await api.resultsScreen(u1);
   assert.equal(screen.applyCards.length, 0);
   assert.equal(screen.emptyApplyHeading !== null, true, "an empty Apply tab is never blank");
   assert.equal(screen.withinReachCards[0]?.verdictLabel, "Within reach");
@@ -51,26 +51,26 @@ test("a Met judgment that cites no evidence counts as Missing, so the job is onl
 
 test("a failed authorization gate is Not a fit without asking the model", async () => {
   const api = new MatchmakerTestingApi();
-  await api.givenSignedUpUser("u1");
-  await api.givenProfile("u1");
+  const u1 = await api.givenPerson("Ana");
+  await api.givenProfile(u1);
   const job = await api.givenPosting({ country: "US", location: "New York" });
 
-  await api.scorePostings("u1", [job.id]);
+  await api.scorePostings(u1, [job.id]);
 
   assert.deepEqual(api.judgeCalls, []);
-  const results = await api.results("u1");
+  const results = await api.results(u1);
   assert.equal(results.notAFitCount, 1);
 });
 
 test("the same profile version and posting revision are never judged twice", async () => {
   const api = new MatchmakerTestingApi();
-  await api.givenSignedUpUser("u1");
-  await api.givenProfile("u1");
+  const u1 = await api.givenPerson("Ana");
+  await api.givenProfile(u1);
   const job = await api.givenPosting();
   api.judgeWillSay(job.id, strongJudgment);
 
-  await api.scorePostings("u1", [job.id]);
-  const second = await api.scorePostings("u1", [job.id]);
+  await api.scorePostings(u1, [job.id]);
+  const second = await api.scorePostings(u1, [job.id]);
 
   assert.equal(second.reused, 1);
   assert.equal(api.judgeCalls.length, 1);

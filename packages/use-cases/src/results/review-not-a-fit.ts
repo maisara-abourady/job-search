@@ -2,7 +2,7 @@ import { notYetBuilt } from "@matchmaker/rules";
 import type { ResultsReadModel } from "./ports.ts";
 
 /** Flow 5, NF-1..NF-4: counts by primary reason, gap insight, grouped jobs, seven-part report per job. */
-export type ReviewNotAFitRequest = { readonly userId: string };
+export type ReviewNotAFitRequest = { readonly personId: string };
 export type ReviewNotAFitResponse = {
   readonly total: number;
   readonly byReason: readonly { readonly reason: string; readonly count: number; readonly postingIds: readonly string[] }[];

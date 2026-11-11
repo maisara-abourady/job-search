@@ -5,4 +5,5 @@
 export { ResultsController } from "./results/results-controller.ts";
 export { presentResults, presentCard } from "./results/results-presenter.ts";
 export type { ResultCardViewModel, ResultsTabViewModel, ResultsViewModel } from "./results/results-view-model.ts";
-export { presentAccess, type AccessViewModel } from "./access/access-presenter.ts";
+export { formatMicros, presentRunningCost, type RunningCostViewModel } from "./spending/running-cost-presenter.ts";
+export { acceptsLocalRequest, LOOPBACK_BIND_ADDRESS } from "./local-only/local-request.ts";

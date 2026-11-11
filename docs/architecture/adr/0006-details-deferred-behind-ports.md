@@ -1,6 +1,6 @@
 # 0006. Storage, background work, web delivery, authentication, billing and file storage are deferred details
 
-Status: accepted (2026-11-11)
+Status: accepted (2026-11-11). Amended by ADR 0014 (no authentication; no billing provider: those rows are closed) and ADR 0016 (database, file storage, web and background work are local choices; see deferred.md).
 
 ## Context
 

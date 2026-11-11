@@ -40,23 +40,23 @@ export interface Interviewer {
 }
 
 export interface ResumeFiles {
-  store(userId: string, upload: ResumeUpload): Promise<{ resumeId: string; version: number }>;
+  store(personId: string, upload: ResumeUpload): Promise<{ resumeId: string; version: number }>;
 }
 export interface ProfileVersions {
-  active(userId: string): Promise<ProfileVersion | null>;
+  active(personId: string): Promise<ProfileVersion | null>;
   /** Saves a new immutable version and makes it active. */
   saveNewVersion(profile: ProfileVersion, sellingPoints: readonly SellingPoint[]): Promise<void>;
-  sellingPoints(userId: string): Promise<readonly SellingPoint[]>;
+  sellingPoints(personId: string): Promise<readonly SellingPoint[]>;
 }
 export interface InterviewTranscripts {
-  transcript(userId: string): Promise<readonly InterviewTurn[]>;
-  append(userId: string, turn: InterviewTurn): Promise<void>;
+  transcript(personId: string): Promise<readonly InterviewTurn[]>;
+  append(personId: string, turn: InterviewTurn): Promise<void>;
 }
 
 /** Onboarding asks for work it does not do itself. Main wires these to discovery and matching. */
 export interface SearchRequests {
-  requestSearch(userId: string, trigger: "onboarding" | "manual"): Promise<void>;
+  requestSearch(personId: string, trigger: "onboarding" | "manual"): Promise<void>;
 }
 export interface RescoreRequests {
-  rescoreAll(userId: string): Promise<void>;
+  rescoreAll(personId: string): Promise<void>;
 }

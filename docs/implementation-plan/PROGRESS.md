@@ -2,18 +2,16 @@
 
 Current phase: 0 — Verify and complete the walking skeleton
 Next task: P0-T01 (after H-0)
-Last updated: 2026-11-11 by planning
+Last updated: 2026-11-11 by planning (amendment for the scope revision)
 
 ## Status
 
 Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (reason in Notes) · `[-]` dropped (see deviations)
 
 ### HUMAN tasks to start now
-- [ ] H-0 Commit `docs/prd.md` and the `docs/architecture/README.md` edit
-- [ ] H-1 Claude Code as hosted runtime agent: terms answer
+- [ ] H-0 Commit the scope-revision work (PRD, ADRs 0014 to 0016, README, deferred.md, code) and this plan amendment
+- [ ] H-1 Choose the runtime on the owner's machine: Claude Code headless with own subscription vs Claude API with own key
 - [ ] H-3 20 consented test resumes
-- [ ] H-10 Tier 4 legal review per board and market
-- [ ] H-13 Country of incorporation and billing provider
 
 ### Phase 0 — Verify and complete the walking skeleton
 - [ ] P0-T01 Baseline the toolchain from a clean clone
@@ -26,11 +24,11 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (reason i
 - [ ] P0-T08 Formatter and lint check
 - [ ] P0-T09 Continuous integration
 - [ ] S-1 Which runtime implements each model port?
-- [ ] H-1 May Claude Code be the hosted runtime agent?
+- [ ] H-1 Runtime on the owner's machine chosen
 - [ ] GATE 0A (technical)
-- [ ] P0-T10 Record the model runtime decision (D1)
+- [ ] P0-T10 Record the model runtime decision (D1) in ADR 0009 (not yet written)
 - [ ] GATE 0B (decision)
-- [ ] H-2 Model provider account and key (after P0-T10)
+- [ ] H-2 Owner's model account, no-training setting, local credential (after P0-T10)
 - [x] H-4 Parsing thresholds confirmed (default accepted)
 
 ### Phase 1 — Foundations (exit: 20 resumes parse correctly)
@@ -39,7 +37,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (reason i
 - [ ] P1-T03 Rules: choose 5 to 8 selling points and suggest a target seniority band
 - [ ] P1-T04 `IntakeResume` use case
 - [ ] P1-T05 `CorrectProfile`: facts and selling points
-- [ ] P1-T06 Account and trial acceptance tests
+- [x] P1-T06 Profile and spending acceptance tests (built by the Architect; replaces account and trial tests)
 - [ ] P1-T07 Onboarding controllers and presenters
 - [ ] P1-T08 Documents package: read text, DOCX, PDF and LinkedIn PDF
 - [ ] P1-T09 OCR for image-only PDFs
@@ -49,7 +47,6 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (reason i
 - [ ] S-2 Initial Tier 1 company registry
 - [ ] H-5 Registry source chosen
 - [ ] H-6 Adzuna and USAJobs keys
-- [ ] H-8 Hosting, domain, Postgres, object storage, OAuth client, email provider (lead time for Phase 3)
 - [ ] GATE 1
 
 ### Phase 2 — Matching core (exit: 95% score stability)
@@ -69,38 +66,67 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (reason i
 - [ ] P2-T14 Score stability evaluation (exit test)
 - [ ] P2-T15 `CorrectProfile` preferences branch (use-case side)
 - [ ] P2-T16 Dev search driver and timing report
-- [ ] S-3 Web framework, SSE and authentication
+- [ ] S-3 Web framework, SSE on localhost, request hook for the local-request check
 - [ ] H-7 Stability set approved; calibration values confirmed
-- [ ] H-9 Five test users recruited
+- [ ] H-9 Five consenting test users lined up
 - [ ] GATE 2
 
 ### Phase 3 — Results experience (outline; exit: five users reach Apply in under 10 minutes)
-- [ ] P3-T01 to P3-T15 (detailed at Gate 2)
-- [ ] S-4 ATS parsers; S-6 cost model
+- [ ] P3-T01 to P3-T15 (detailed at Gate 2; P3-T08 local database, P3-T09 data folder, P3-T10 local web Main with picker and loopback check)
+- [ ] S-4 ATS parsers; S-6 running-cost model
 - [ ] H-11, H-12, H-16
 - [ ] GATE 3
 
 ### Phase 4 — Tailoring (outline; exit: three ATS parsers parse cleanly)
 - [ ] P4-T01 to P4-T08 (detailed at Gate 3)
-- [ ] S-5 Tier 4 bridge; H-14, H-15 started
+- [ ] S-5 Tier 4 bridge (only if PLAN.md open question 1 names a board)
 - [ ] GATE 4
 
 ### Phase 5 — Full coverage and monitoring (outline; exit: any single source disabled)
-- [ ] P5-T01 to P5-T08 (detailed at Gate 4)
+- [ ] P5-T01 Tier 3 aggregator adapters
+- [ ] P5-T02 Tier 4 adapters for boards the owner names (conditional)
+- [ ] P5-T03 The owner's sources screen and run summaries
+- [-] P5-T04 Durable queue and `apps/worker` (dropped: one local process, ADR 0016)
+- [x] P5-T05 Monitoring roster and scheduled runs (built by the Architect)
+- [ ] P5-T06 Daily re-check of stored postings while the app runs
+- [ ] P5-T07 Inbox
+- [ ] P5-T08 Any-single-source-disabled test (exit test)
+- [ ] S-7 Packaging for a one-command install
+- [ ] H-17 Fresh machine ready
 - [ ] GATE 5
 
-### Phase 6 — Trial, billing and launch (outline; exit: signup to payment)
-- [ ] P6-T01 to P6-T08 (detailed at Gate 5)
+### Phase 6 — Local packaging and data controls (outline; exit: fresh machine install, first match, export and delete)
+- [ ] P6-T01 Profile-management screens
+- [ ] P6-T02 Export and delete screens
+- [ ] P6-T03 Spend panel screen
+- [ ] P6-T04 Budget screen and "ask first"
+- [ ] P6-T05 Cancel a person's queued work on delete (W16)
+- [ ] P6-T06 Export and delete complete across every local store
+- [ ] P6-T07 Record the packaging decision (D15)
+- [ ] P6-T08 One-command install and start; the owner's README
+- [ ] P6-T09 Fresh-machine exit test
 - [ ] GATE 6
 
 ## Notes
 
 - 2026-11-11 (planning): `pnpm verify` green on commit 6b5684f (7 components, 71 files, 6 tests). `node apps/main/src/main.dev.ts` exits 0. `pnpm metrics`: rules D=1.00 (accepted, W1), use-cases D=0.05, delivery 0.40, adapters 0.38, main 0.33.
+- 2026-11-11 (amendment): re-surveyed the working tree after the Architect's scope-revision changes (uncommitted on top of ae33ed0). `pnpm verify` green: 7 components, 87 files, 22 tests in 9 files. `node apps/main/src/main.dev.ts` exits 0 and lists 18 use cases. `pnpm metrics`: rules D=1.00 (W1), use-cases 0.05, delivery 0.40, adapters 0.27, scraping-sources 0.00, main 0.33.
 - 2026-11-11 (planning): the architecture check was probed in a scratch copy with injected violations; it reported each one. P0-T02 turns that probe into permanent tests.
 - Tests talk only to `MatchmakerTestingApi` (ADR 0008); `packages/rules` cannot hold tests (`node:*` is forbidden there). Adapter contract suites go in `packages/testing-api/contract/`; evaluations in `apps/main/eval/`.
-- Current Claude models reject `temperature`; the PRD's "temperature 0" rule needs the replacement recorded in ADR 0009 (PLAN.md open question 2).
+- **ADR 0009 does not exist yet.** The number is reserved for the runtime decision. P0-T10 writes it (or `/architect` writes it from S-1's answer if S-1 settles it first). It must record the "temperature 0" replacement the user approved (structured output, fixed rubric, cached judgments; current Claude models reject `temperature`), the runtime per port, the owner's credential handling, and how subscription spend is reported. Later tasks that cite ADR 0009 depend on Gate 0B. New ADRs take numbers from 0017.
+- Known gaps the Architect left as hand-offs: `IntakeResume`, `ConductInterview` and `TailorResume` must call `SpendingGuard` when built (P1-T04, P3-T02, P4-T03); `DeletePerson` does not cancel queued work (W16, P6-T05); `InMemoryStore.setEnabled` defaults the tier to 1 (P5-T03); the testing API still throws background errors inside the queue and mutates the store for `operatorConsole` (P0-T04).
 
 ## Deviations log
 
 | Date | Task | What changed in the plan | Why |
 |------|------|--------------------------|-----|
+| 2026-11-11 | all | Plan amended for the PRD scope revision: a personal, local-only tool for the owner and a few friends; no accounts, trial, billing or hosting; Tier 4 off by default with no proxy pool; Phase 6 is "Local packaging and data controls". PLAN.md inventory updated (E-13 is `Person`, new E-16 monthly budget; UC-16 to UC-21 are the profiles and spending use cases and the `SpendingGuard`; P-2, P-30, P-31, P-33 re-scoped, new P-34; A-16b, A-22, A-28, A-30 re-scoped, new A-31, A-32; D-2, D-8, D-9 re-scoped, new D-11, D-12; M-3 is the owner's local configuration; X-2, X-7, X-9, X-10 re-scoped, new X-14), spikes S-1, S-3, S-6 reworded and S-7 added, risks and assumptions rewritten | PRD revision of 2026-11-11; ADRs 0014, 0015, 0016; updated README and deferred.md; code changes by the Architect |
+| 2026-11-11 | HUMAN | H-1 reworded to the local runtime choice; H-0 now covers committing the scope-revision work; H-2, H-3, H-9 mention the owner's account and friends' consent (Privacy 4, 5); H-11 loses the proxy pool; H-16 says daily caps and adds the budget; H-8, H-10, H-13, H-14, H-15 removed; H-17 (fresh machine for the Phase 6 exit) added | No hosting, legal review per market, billing, price or privacy policy any more; the Phase 6 exit needs a fresh machine |
+| 2026-11-11 | P1-T06 | Replaced "Account and trial acceptance tests" with "Profile and spending acceptance tests" and marked done | The trial is gone (ADR 0014); the Architect wrote `profiles.test.ts` and `spending.test.ts` |
+| 2026-11-11 | P5-T05 | Marked done | The Architect built the store roster, catch-up at start, the 14-day unopened pause and the budget pause (`monitoring.test.ts`, `spending.test.ts`); remaining wiring moved to P3-T08 and P3-T10 |
+| 2026-11-11 | P5-T04 | Dropped (durable queue and `apps/worker`) | ADR 0016 §1: one local process; D4 has only local triggers, reviewed at Gates 3 and 5 |
+| 2026-11-11 | Phase 6 | `phase-6-trial-billing-launch.md` renamed to `phase-6-local-packaging-and-data-controls.md` and rewritten; the old P6-T01 to P6-T08 (billing decision, subscription ordering, checkout, banner and paywall, user data vault, retention purge, legal documents, signup-to-payment test) are dropped and their IDs reused for the new P6-T01 to P6-T09 | None of the old tasks had started; the PRD's Phase 6 is now profile management, export and delete, spend and budget, W16, and one-command packaging (D15) |
+| 2026-11-11 | P0-T04, P0-T05, P0-T06 | Smoke request uses `CreatePerson` and `presentRunningCost` instead of sign-up and the access presenter; the testing-API task drops `givenSourceSwitchedOff` (`switchSource` exists) and asserts `daily-cap-reached` and `monthly-budget-reached` instead of `access-denied`; contract suites cover `People`, `MonitoringRoster`, `MonthlyBudgetControl`, `UsageLedger` and `PersonDataVault` instead of `Accounts` | The account area and access presenter were deleted (ADR 0014) |
+| 2026-11-11 | P0-T10, S-1, Phases 1 and 2 | Fixed the dangling "ADR 0009" citations: the ADR is still to be written by P0-T10 (or from S-1), and must record the temperature-0 replacement the user approved; Phase 1 and 2 citations now say so. P1-T08's ADR number changed from 0010 (now taken) to the next free number | ADR 0009 does not exist; ADRs 0010 to 0016 were written since the plan |
+| 2026-11-11 | P1-T01, P1-T02, P1-T04, P1-T07, P1-T10, P1-T12 | `userId` is `personId`; `IntakeResume` calls `SpendingGuard` (on demand, uncapped) instead of `AccessGuard`; resume files implement `PersonDataVault`; the intake controller handles "ask first"; the configuration loader gathers the owner's credential | ADRs 0014, 0015, 0016 |
+| 2026-11-11 | Phases 3, 4, 5 | Phase 3: no sign-up, authentication or staging; local database (SQLite default) with schema versioning instead of Postgres with encryption; data-folder files instead of encrypted object storage; local web Main with loopback bind, the local-request hook (W15), a minimal profile picker and the ticker; product events stored locally (D14). Phase 4: daily cap through `SpendingGuard`; files in the data folder. Phase 5: Tier 4 conditional on the owner naming boards, no proxy pool or markets; switches without a restart; S-7 added | ADRs 0014, 0015, 0016; deferred.md D2, D5, D8, D11, D14, D15, W15 |

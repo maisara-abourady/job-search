@@ -1,6 +1,6 @@
 # 0013. Subscription changes carry the provider's event id and are applied at most once, atomically, by the accounts gateway
 
-Status: accepted (2026-11-11). Refines ADR 0006's billing row. The billing provider itself stays deferred (D7).
+Status: **superseded by ADR 0014** (2026-11-11). The app is never monetized: there is no billing provider, subscription or webhook. Kept for history only; the code it describes was removed.
 
 ## Context
 

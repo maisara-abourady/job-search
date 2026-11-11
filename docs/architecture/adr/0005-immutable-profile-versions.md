@@ -1,6 +1,6 @@
 # 0005. Profile versions are immutable; matches are keyed by profile version and posting revision
 
-Status: accepted (2026-11-11)
+Status: accepted (2026-11-11). Consequence on retention amended by ADR 0014: data is kept until the owner deletes the profile; there is no purge after expiry.
 
 ## Context
 

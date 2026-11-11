@@ -4,9 +4,9 @@ import type { InterviewTranscripts, Interviewer, ProfileVersions, RescoreRequest
 
 /** IN-1..IN-5. The UI and the interview dance one question at a time (use-case boundary, §12.2). */
 export type InterviewStepRequest =
-  | { readonly userId: string; readonly action: "start" | "end" }
-  | { readonly userId: string; readonly action: "answer"; readonly questionId: string; readonly answer: string }
-  | { readonly userId: string; readonly action: "skip"; readonly questionId: string };
+  | { readonly personId: string; readonly action: "start" | "end" }
+  | { readonly personId: string; readonly action: "answer"; readonly questionId: string; readonly answer: string }
+  | { readonly personId: string; readonly action: "skip"; readonly questionId: string };
 export type InterviewStepResponse =
   | { readonly state: "asking"; readonly questionId: string; readonly question: string; readonly number: number; readonly ofAtMost: number }
   | { readonly state: "finished"; readonly answered: number };

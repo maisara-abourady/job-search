@@ -3,7 +3,8 @@
 Goal: A search over real Tier 1 and Tier 2 sources, run from a parsed resume, gives every fetched job one verdict with its reason. **Exit test (PRD): score stability holds at 95% on a fixed test set** (re-scoring the same pair lands within 3 points).
 Detail level: Full
 Traces to: UC-2 (preferences, use-case side), UC-4, UC-5, UC-6, UC-9, E-2, E-5 to E-10, P-10, P-12 to P-16, P-18, P-19, A-8 to A-11, A-17, A-18, A-21, D-1, D-10, X-5, X-6, X-8; PRD DS-1 to DS-6 (DS-7 exists), MR-1 to MR-4, MR-6, Scoring systems, Verdicts, Consistency rules, Job sources Tiers 1 and 2
-Prerequisites: Gate 1 passed. H-5 (registry source) before P2-T05. H-6 (Adzuna, USAJobs keys) before P2-T09.
+Prerequisites: Gate 1 passed (which includes Gate 0B, so ADR 0009 exists: it is written in P0-T10 and every "ADR 0009" below refers to it). H-5 (registry source) before P2-T05. H-6 (Adzuna, USAJobs keys) before P2-T09.
+Amended 2026-11-11 for the scope revision: the tasks are unchanged in substance; `personId` replaces `userId`, the Gate 2 checkpoint drops hosting and authentication.
 
 The pipeline (`RunJobSearchInteractor`) and the verdict rules already exist and are proven with scripted details. This phase pins them with characterization tests first, closes the two pipeline hand-offs (fairness redaction, second-stage deduplication and revisions), then replaces each scripted detail with a real adapter behind a contract suite, and ends with the stability evaluation. Each source adapter starts by verifying its endpoint, quota and terms in current documentation (the PRD warns they change often) and records a response fixture so tests stay offline.
 
@@ -211,7 +212,7 @@ Mid-phase checkpoint (no stop required): once P2-T05, P2-T11, P2-T12 and P2-T13 
 
 ### P2-T11 — Search planner and posting enricher adapters
 
-- **Traces to:** A-9, A-10, P-12, P-13, ADR 0003, ADR 0009; DS-1, DS-6; edge case "Search returns very few jobs"
+- **Traces to:** A-9, A-10, P-12, P-13, X-12, ADR 0003, ADR 0009 (P0-T10); DS-1, DS-6; edge case "Search returns very few jobs"
 - **Layer:** Interface adapters (model-runtime package) — must not import delivery, main, testing-api or `/wiring`
 - **Depends on:** P1-T10, P2-T02
 - **Size:** M
@@ -231,11 +232,11 @@ Mid-phase checkpoint (no stop required): once P2-T05, P2-T11, P2-T12 and P2-T13 
 
 ### P2-T12 — Match judge adapter
 
-- **Traces to:** A-8, P-19, E-8, ADR 0002 §2, ADR 0007, ADR 0009; MR-2, Fit components, Consistency rules
+- **Traces to:** A-8, P-19, E-8, X-12, ADR 0002 §2, ADR 0007, ADR 0009 (P0-T10); MR-2, Fit components, Consistency rules
 - **Layer:** Interface adapters (model-runtime package) — as P2-T11
 - **Depends on:** P2-T11
 - **Size:** M
-- **Context:** `MatchJudge.judge(profile, posting)` returns `MatchJudgments` only: per requirement met, partial or missing with cited evidence ids and closable-by-user, plus experience relevance, skills and tools, and scope alignment as ratios. The adapter decides nothing else (ADR 0002): no score, verdict or reason. Give the model the profile's evidence with ids and the posting's requirements with ids, a fixed rubric (versioned as a constant in the adapter), and a schema for structured output. For PRD consistency rule 1 apply the replacement recorded in ADR 0009 (current models reject `temperature`). Contract: exactly one judgment per posting requirement id, ratios within 0 to 1, cited ids are profile evidence ids (the rules overrule any others, but the contract flags them).
+- **Context:** `MatchJudge.judge(profile, posting)` returns `MatchJudgments` only: per requirement met, partial or missing with cited evidence ids and closable-by-user, plus experience relevance, skills and tools, and scope alignment as ratios. The adapter decides nothing else (ADR 0002): no score, verdict or reason. Give the model the profile's evidence with ids and the posting's requirements with ids, a fixed rubric (versioned as a constant in the adapter), and a schema for structured output. For PRD consistency rule 1 apply the replacement the user approved and ADR 0009 records (structured output, fixed rubric, cached judgments; current models reject `temperature`). Contract: exactly one judgment per posting requirement id, ratios within 0 to 1, cited ids are profile evidence ids (the rules overrule any others, but the contract flags them).
 - **Files:**
   - create `src/match-judge.ts`, `src/rubric.ts`, schema entry in the model-runtime package
   - modify `packages/testing-api/contract/model-ports.contract.ts`, `.contract.test.ts`, recorded responses
@@ -251,7 +252,7 @@ Mid-phase checkpoint (no stop required): once P2-T05, P2-T11, P2-T12 and P2-T13 
 
 ### P2-T13 — Relevance ranker (prefilter)
 
-- **Traces to:** A-11, P-14, D3, ADR 0009; MR-2, PRD "Ranking and cost control"
+- **Traces to:** A-11, P-14, D3, ADR 0009 (P0-T10); MR-2, PRD "Ranking and cost control"
 - **Layer:** Interface adapters (as ADR 0009 places it) — must not import delivery, main, testing-api
 - **Depends on:** P2-T11
 - **Size:** M
@@ -337,5 +338,5 @@ Mid-phase checkpoint (no stop required): once P2-T05, P2-T11, P2-T12 and P2-T13 
   pnpm dev search <one of your own resumes>
   ```
   Expected: Apply, Within reach and Not a fit tabs with counts; each card has a one-sentence reason; Within reach cards show "N points from Apply: confirm or build ..."; the run summary names any failed source; timings for first result and full run.
-- **Human checkpoint:** Read ten verdicts against the postings: is the strictness right? Confirm or change the calibration assumptions (H-7, deferred.md D13). Review cost and latency per judgment for S-6. Confirm S-3's answer (web framework, SSE, authentication), that H-8 is provisioned and H-9 has five people lined up. Review `deferred.md` (W2, W4: are template reasons good enough?).
+- **Human checkpoint:** Read ten verdicts against the postings: is the strictness right? Confirm or change the calibration assumptions (H-7, deferred.md D13). Review cost and latency per judgment for S-6. Confirm S-3's answer (web framework, SSE on localhost, the request hook for the local-request check) and that H-9 has five consenting people lined up. Review `deferred.md` (W2, W4: are template reasons good enough?).
 - **Detail next phase:** at this gate, expand Phase 3 from outline to full task specs, using S-3's answer.

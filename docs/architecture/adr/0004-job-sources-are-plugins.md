@@ -1,6 +1,6 @@
 # 0004. Job sources are plugins: one port, tier and kill switch as data, Tier 4 in its own package
 
-Status: accepted (2026-11-11)
+Status: accepted (2026-11-11). Amended by ADR 0016: there are no launch markets; Tier 4 is off until the owner turns a board on (decision 6 now reads "an installation may leave the package out"); there is no proxy pool.
 
 ## Context
 

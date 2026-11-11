@@ -5,5 +5,5 @@ export interface SourceSwitchControl {
 }
 export interface SearchRunHistory {
   /** DS-7 run summaries, with each run's cost (PRD SearchRun "cost", ADR 0010). */
-  recent(limit: number): Promise<readonly { runId: string; userId: string; trigger: string; finishedAt: string; fetched: number; duplicatesMerged: number; failedSources: readonly string[]; costMicros: number }[]>;
+  recent(limit: number): Promise<readonly { runId: string; personId: string; trigger: string; finishedAt: string; fetched: number; duplicatesMerged: number; failedSources: readonly string[]; costMicros: number }[]>;
 }

@@ -1,5 +1,5 @@
-import { postingIdentityKey, mergeSourceLinks, toScoringProfile, type JobPosting } from "@matchmaker/rules";
-import type { AccessGuard } from "../shared/access-guard.ts";
+import { postingIdentityKey, mergeSourceLinks, toScoringProfile, type JobPosting, type SourceTier } from "@matchmaker/rules";
+import type { SpendingGuard } from "../shared/spending-guard.ts";
 import { UseCaseError } from "../shared/errors.ts";
 import type { SpendAttribution, SpendLedger } from "../shared/metering.ts";
 import type { Clock, IdGenerator } from "../shared/ports.ts";
@@ -9,7 +9,12 @@ import type {
 } from "./ports.ts";
 
 // ---- Input port and models (DS-1..DS-7; Flow 1 step 3, Flow 6) ----
-export type RunJobSearchRequest = { readonly userId: string; readonly trigger: "onboarding" | "manual" | "scheduled" };
+export type RunJobSearchRequest = {
+  readonly personId: string;
+  readonly trigger: "onboarding" | "manual" | "scheduled";
+  /** The owner agreed to spend past the monthly budget (the UI asked first). Ignored for scheduled runs, which pause. */
+  readonly overBudgetConfirmed?: boolean;
+};
 export type RunJobSearchResponse = {
   readonly runId: string;
   readonly fetched: number;
@@ -27,6 +32,15 @@ export interface RunJobSearch {
 /** ASSUMPTIONS from the PRD, kept here because they are application cost policy, not business rules. */
 export const SEARCH_POLICY = { prefilterCap: 150, widenBelow: 20, sourceTimeoutMs: 30_000 } as const;
 
+/**
+ * Scraping safeguards 1, Terms of service: a source the owner never switched is on, except Tier 4, which is off until
+ * the owner turns that board on after reading its terms. Tier is data; no source is named here (§3.4, ADR 0016).
+ */
+export const SOURCE_POLICY = { offUntilSwitchedOn: [4] as readonly SourceTier[] } as const;
+function enabledByDefault(tier: SourceTier): boolean {
+  return !SOURCE_POLICY.offUntilSwitchedOn.includes(tier);
+}
+
 export type RunJobSearchDependencies = {
   readonly sources: readonly JobSource[];
   readonly switchboard: SourceSwitchboard;
@@ -40,7 +54,7 @@ export type RunJobSearchDependencies = {
   readonly atsLinks: AtsLinkRecognizer;
   readonly registry: CompanyRegistry;
   readonly scoring: ScoringRequests;
-  readonly access: AccessGuard;
+  readonly spending: SpendingGuard;
   readonly spend: SpendAttribution;
   readonly spendLedger: Pick<SpendLedger, "spentOnRun">;
   readonly clock: Clock;
@@ -58,16 +72,18 @@ export class RunJobSearchInteractor implements RunJobSearch {
   }
 
   async execute(request: RunJobSearchRequest): Promise<RunJobSearchResponse> {
-    await this.d.access.requireAccess(request.userId, request.trigger === "manual" ? "onDemandSearches" : undefined);
+    // Running cost (ADR 0015): manual searches count against the daily cap; scheduled ones pause at the budget.
+    if (request.trigger === "scheduled") await this.d.spending.beforeBackground(request.personId);
+    else await this.d.spending.beforeOnDemand(request.personId, request.trigger === "manual" ? "onDemandSearches" : null, request.overBudgetConfirmed === true);
     const runId = this.d.ids.next("run");
     // Every source call, model call and awaited scoring call made by this run is charged to it (ADR 0010).
-    return this.d.spend.charge({ userId: request.userId, runId, purpose: "search" }, () => this.run(runId, request));
+    return this.d.spend.charge({ personId: request.personId, runId, purpose: "search" }, () => this.run(runId, request));
   }
 
   private async run(runId: string, request: RunJobSearchRequest): Promise<RunJobSearchResponse> {
     const startedAt = this.d.clock.now().toISOString();
-    const profile = await this.d.profiles.activeProfileVersion(request.userId);
-    if (profile === null) throw new UseCaseError("not-found", `no profile for ${request.userId}`);
+    const profile = await this.d.profiles.activeProfileVersion(request.personId);
+    if (profile === null) throw new UseCaseError("not-found", `no profile for ${request.personId}`);
     const scoringProfile = toScoringProfile(profile);
 
     let plan = await this.d.planner.plan(scoringProfile, false);
@@ -114,12 +130,12 @@ export class RunJobSearchInteractor implements RunJobSearch {
     const ranked = await this.d.ranker.rank(scoringProfile, runPostings);
     const toScore = ranked.slice(0, SEARCH_POLICY.prefilterCap);
     const cut = ranked.slice(SEARCH_POLICY.prefilterCap);
-    await this.d.scoring.score({ userId: request.userId, runId, postingIds: toScore, cutAtPrefilter: cut });
+    await this.d.scoring.score({ personId: request.personId, runId, postingIds: toScore, cutAtPrefilter: cut });
 
     const duplicatesMerged = fetched.found.length - groups.size;
     const costMicros = await this.d.spendLedger.spentOnRun(runId);
     await this.d.runs.record({
-      runId, userId: request.userId, trigger: request.trigger, startedAt, finishedAt: this.d.clock.now().toISOString(),
+      runId, personId: request.personId, trigger: request.trigger, startedAt, finishedAt: this.d.clock.now().toISOString(),
       fetched: fetched.found.length, duplicatesMerged, expiredDropped, failedSources: fetched.failed, widenedTo, costMicros,
     });
     return {
@@ -135,7 +151,9 @@ export class RunJobSearchInteractor implements RunJobSearch {
    */
   private async fetchAll(queries: readonly SearchQuery[]): Promise<{ found: FoundPosting[]; failed: string[] }> {
     const enabled: JobSource[] = [];
-    for (const s of this.d.sources) if (await this.d.switchboard.isEnabled(s.descriptor.name)) enabled.push(s);
+    for (const s of this.d.sources) {
+      if ((await this.d.switchboard.switchedOn(s.descriptor.name)) ?? enabledByDefault(s.descriptor.tier)) enabled.push(s);
+    }
     const primary = enabled.filter((s) => s.descriptor.tier !== 3);
     const first = await this.query(primary, queries);
     const tier4Configured = this.d.sources.filter((s) => s.descriptor.tier === 4).length;

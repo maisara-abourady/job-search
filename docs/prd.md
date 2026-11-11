@@ -1,25 +1,27 @@
 # PRD: AI Job Matchmaker
 
-Nov 11, 2026 · @Maisara
+Nov 11, 2026 · @Maisara · Revised Nov 11, 2026: personal, local-only tool
+
+> **Scope revision.** This is not a product. It runs locally on the owner's machine, is operated by the owner for themselves and a few friends, and is never hosted, sold or monetized. There are no accounts, trial, billing or paywall. Everything below has been rectified to match; the change log is at the end.
 
 ## Summary
 
 The product reads a resume, runs a short AI interview, searches every reachable job source, and tells the job seeker which jobs to apply to, what to emphasize in each application, and exactly why every other job is not a fit.
 
-It is a consumer web app for any role, worldwide, in English. An agent built on Claude Code runs the searches. Each strong match comes with a resume tailored for that job's ATS.
+It is a personal web app that runs locally on the owner's machine, for any role, worldwide, in English. The owner uses it for their own search and keeps a separate profile for each friend they help. An agent built on Claude Code runs the searches. Each strong match comes with a resume tailored for that job's ATS.
 
-The north-star metric is time to first strong match: the minutes between signup and the first Apply verdict on screen. The proposed target is a median under 10 minutes.
+The north-star metric is time to first strong match: the minutes between creating a profile and the first Apply verdict on screen. The proposed target is a median under 10 minutes.
 
 The working name is AI Job Matchmaker. Items marked "assumption" were not covered in the interview and need your confirmation.
 
 ## Decisions from the interview
 
-These 19 answers are fixed inputs to everything below.
+These answers are fixed inputs to everything below. Rows marked *revised* were changed by the scope revision.
 
 | Area | Decision |
 | --- | --- |
-| Audience | Job seekers, consumer product |
-| Form | Web app, with a Claude Code agent |
+| Audience | The owner and a few friends; not a product *(revised)* |
+| Form | Web app running locally on the owner's machine, with a Claude Code agent *(revised)* |
 | Segment | Any role, global |
 | Claude Code's role | Builds the product and runs searches at runtime |
 | Discovery | On demand and continuous background monitoring |
@@ -31,7 +33,8 @@ These 19 answers are fixed inputs to everything below.
 | Tailoring depth | Aggressive ATS keyword optimization |
 | Missing keywords | Ask the user to confirm they have it, then add |
 | Alerts | In-app only |
-| Pricing | 7-day free trial, then payment required to keep using the app |
+| Profiles | One profile per person, managed by the owner; no sign-up or login *(revised)* |
+| Pricing | None: never monetized; the owner pays their own model and aggregator costs *(revised)* |
 | Languages | English only |
 | Learning from behaviour | None in v1 |
 | Hard dealbreakers | Work authorization and seniority level |
@@ -40,7 +43,7 @@ These 19 answers are fixed inputs to everything below.
 
 ## Users and jobs to be done
 
-The primary user is an active job seeker who is applying now and wastes hours reading postings they will never win. The secondary user is a passive seeker who wants the product to watch the market for them.
+The operator is the owner, who installs and runs the app on their own machine and creates a profile for each person they help. Each person served is an active job seeker who is applying now and wastes hours reading postings they will never win, or a passive seeker who wants the app to watch the market for them. The owner reviews results with the friend or sends them the tailored resume.
 
 | The user wants | The product answers with |
 | --- | --- |
@@ -67,11 +70,11 @@ Every screen asks for one decision at most, and the product never asks what it c
 
 ## User flows
 
-There are eight flows. The first three form the path to the north-star moment.
+There are eight flows. The first three form the path to the north-star moment. "The user" below means the owner, acting for whichever person's profile is open.
 
 ### Flow 1: Onboarding
 
-1. The user lands and drops a resume: PDF, DOCX, pasted text, or a LinkedIn profile PDF export.
+1. The owner opens the app on their machine, creates or selects a person's profile, and drops that person's resume: PDF, DOCX, pasted text, or a LinkedIn profile PDF export.
 2. The product parses it and shows a selling-points card: "Here is what you are selling." The user can correct any line.
 3. The background search starts now, using the parsed resume alone.
 4. The user answers four preference screens, one tap each: location and work mode, work authorization, target seniority, and salary floor (optional).
@@ -111,7 +114,7 @@ There are eight flows. The first three form the path to the north-star moment.
 ### Flow 6: Monitoring
 
 1. Monitoring is on by default after the first search.
-2. The agent re-runs searches on a schedule and scores only new jobs.
+2. The agent re-runs searches on a schedule and scores only new jobs. Scheduled runs happen only while the app is running on the owner's machine; a run that was missed while it was off happens at the next start.
 3. On the next visit an in-app inbox shows new Apply and Stretch matches since the last session.
 4. The user can trigger a fresh search manually at any time.
 
@@ -120,11 +123,11 @@ There are eight flows. The first three form the path to the north-star moment.
 1. The user uploads a new resume or edits a fact, preference, or interview answer.
 2. All stored jobs are re-scored. Verdicts that changed are flagged.
 
-### Flow 8: Trial end
+### Flow 8: Managing profiles
 
-1. An in-app banner appears on day 5 with the days remaining.
-2. On day 8 the app shows a paywall on login. The match counts stay visible behind it as a reminder of what is waiting.
-3. After payment the user returns to exactly where they left off.
+1. The owner sees a list of profiles (themselves and each friend) and switches between them; each profile's results, inbox and tailored resumes are separate.
+2. The owner can export a profile's data or delete a profile entirely, for example when a friend asks.
+3. A running-cost panel shows model and aggregator spend per profile and per month.
 
 ### Edge cases
 
@@ -143,7 +146,7 @@ There are eight flows. The first three form the path to the north-star moment.
 
 ## Functional requirements
 
-There are 52 requirements across nine areas. P0 is required for launch; P1 follows within the first release cycle.
+There are 53 requirements across nine areas. P0 is required for the first usable version; P1 follows after it.
 
 ### Resume intake and profile
 
@@ -233,14 +236,15 @@ There are 52 requirements across nine areas. P0 is required for launch; P1 follo
 | MN-3 | Show an in-app inbox of new Apply and Stretch matches since the last visit | P0 |
 | MN-4 | Pause monitoring after 14 days without a login (assumption) | P1 |
 
-### Account and billing
+### Profiles and local operation *(revised; replaces Account and billing)*
 
 | ID | Requirement | Priority |
 | --- | --- | --- |
-| AB-1 | Sign up with email or Google | P0 |
-| AB-2 | Start a 7-day full-access trial at signup | P0 |
-| AB-3 | Block the app behind a paywall when the trial ends | P0 |
-| AB-4 | Let the user export or delete all their data | P0 |
+| AB-1 | Create, rename, and switch between person profiles; no sign-up, login, or passwords | P0 |
+| AB-2 | Keep every profile's data separate: resumes, matches, inbox, tailored resumes, confirmed keywords | P0 |
+| AB-3 | Show model and aggregator spend per profile and per month, with an optional monthly budget the owner sets that pauses monitoring when reached | P0 |
+| AB-4 | Export or delete all data for one profile | P0 |
+| AB-5 | Listen only on the local machine (localhost) by default; never expose the app to the internet | P0 |
 
 ## Scoring systems
 
@@ -309,7 +313,7 @@ Every Met or Partial judgment must cite the resume line or interview answer that
 | Freshness | 40 | Full points up to 7 days old, declining to zero at 45 days |
 | Description completeness | 25 | Presence of responsibilities, requirements, location, and employer name |
 | Source reliability | 20 | Employer ATS feed scores highest, then official APIs, aggregators, and scraped boards |
-| Legitimacy | 15 | Identifiable employer, no requests for payment, no known scam patterns |
+| Legitimacy | 15 | Identifiable employer, no requests for payment from the applicant, no known scam patterns |
 
 ### ATS Keyword Coverage
 
@@ -424,7 +428,7 @@ Sources are organized in four tiers by reliability and risk, and every source si
 | 1 | Greenhouse, Lever, Ashby, Workable, SmartRecruiters, Recruitee | Public ATS job-board endpoints, per company | Low |
 | 2 | Adzuna, Remotive, RemoteOK, Arbeitnow, Jobicy, Himalayas, The Muse, USAJobs, Hacker News Who's Hiring, We Work Remotely | Free APIs and RSS | Low |
 | 3 | JSearch, SerpApi Google Jobs, TheirStack, Apify actors | Paid aggregator APIs | Low legal risk, per-call cost |
-| 4 | LinkedIn, Indeed, Glassdoor, ZipRecruiter, Google Jobs, Bayt, employer career pages | Direct scraping, with JobSpy as the starting library | High: terms-of-service exposure and blocking |
+| 4 | LinkedIn, Indeed, Glassdoor, ZipRecruiter, Google Jobs, Bayt, employer career pages | Direct scraping, with JobSpy as the starting library | High: terms-of-service breach, account bans, and IP blocking; off by default |
 
 Endpoint details, quotas, and pricing for each source need verification during build; they change often.
 
@@ -445,10 +449,10 @@ ATS endpoints are queried per company, so the product needs a registry of employ
 
 ### Scraping safeguards
 
-1. Each Tier 4 adapter has a rate limit, a proxy pool, and a kill switch that disables it without a deploy.
+1. Each Tier 4 adapter has a rate limit and an on/off switch, and is off by default. No proxy pool: this is personal, low-volume use.
 2. When a Tier 4 source fails, the same queries fall back to Tier 3 aggregators.
 3. Scraped pages are stored only as normalized job fields plus the source link.
-4. Tier 4 launches only after a legal review of each board's terms for the launch markets.
+4. The owner turns on a Tier 4 board only after reading that board's terms and accepting the risk. Never use a logged-in personal account (for example a LinkedIn login) for scraping, since that account can be banned.
 
 ## Agent architecture
 
@@ -465,7 +469,7 @@ The API hands work to the agent; the agent dispatches pipeline workers, which pu
 | Builder | Implements the product phase by phase from this PRD, with you reviewing each phase |
 | Runtime agent | Plans searches, scores jobs, tailors resumes, and drafts fixes when a scraper breaks |
 
-How Claude Code is run headless inside a hosted product, and what its usage terms allow, must be confirmed in the [Claude Code documentation](https://docs.claude.com/en/docs/claude-code/overview) before the build starts.
+The app runs only on the owner's machine, using the owner's own Claude account or API key; nothing is hosted for other people. Which runtime to use (Claude Code headless with the owner's subscription, or the Claude API with the owner's API key) is decided in Phase 0 against the current [Claude Code documentation](https://docs.claude.com/en/docs/claude-code/overview) and terms. Because friends' data passes through it, the API key route is the safer default if the subscription terms are unclear.
 
 ### Runtime agent tasks
 
@@ -474,7 +478,7 @@ How Claude Code is run headless inside a hosted product, and what its usage term
 | Search planner | Profile and preferences | Queries per source | None |
 | Scorer | Profile and enriched job | Gate results, scores, verdict, reason, report | None |
 | Resume tailor | Profile, job, confirmed keywords | Tailored resume and coverage scores | The user confirms keywords |
-| Adapter repair | Failing adapter and sample page | A proposed code change | You approve before deploy |
+| Adapter repair | Failing adapter and sample page | A proposed code change | The owner approves before it is used |
 
 ### Model tiering
 
@@ -484,12 +488,11 @@ A small, cheap model handles extraction and enrichment. A large model handles sc
 
 | Layer | Choice |
 | --- | --- |
-| Web app | Next.js with server-sent events for streaming |
+| Web app | Next.js with server-sent events for streaming, served on localhost |
 | API and workers | TypeScript or Python services with a job queue |
-| Database | Postgres with the pgvector extension |
-| File storage | Object storage for resumes and generated files |
-| Scraping | JobSpy plus custom adapters, behind a proxy pool |
-| Billing | A merchant-of-record provider; the choice depends on where the company is incorporated |
+| Database | A local database: SQLite, or Postgres with pgvector if embeddings need it |
+| File storage | A folder on the owner's machine for resumes and generated files |
+| Scraping | JobSpy plus custom adapters, off by default |
 
 ## Data model
 
@@ -497,7 +500,7 @@ Twelve entities cover v1, plus a run log.
 
 | Entity | Key fields |
 | --- | --- |
-| User | Email, trial start, subscription status |
+| Person | Display name, created time *(revised: no email, trial, or subscription)* |
 | Resume | File, parsed text, version, active flag |
 | Profile | Roles, skills, education, inferred seniority, Resume Strength, profile version |
 | SellingPoint | Statement, tier, evidence reference |
@@ -510,44 +513,39 @@ Twelve entities cover v1, plus a run log.
 | RequirementJudgment | Match, requirement, judgment, evidence reference |
 | TailoredResume | Match, content, coverage before and after, confirmed keywords, files |
 
-A SearchRun record logs each run's sources, counts, failures, and cost.
+A SearchRun record logs each run's sources, counts, failures, and cost. A Spend record logs each paid call's cost against a profile.
 
-## Pricing and trial
+## Running cost *(revised; replaces Pricing and trial)*
 
-Every user gets 7 days of full access, then must subscribe to keep using the app.
+Nothing is sold. The owner pays for the model and any paid aggregators, so the app keeps that cost visible and bounded.
 
 | Item | Rule |
 | --- | --- |
-| Trial length | 7 days from signup |
-| Trial access | Every feature, every source tier |
-| Card at signup | Not required (assumption) |
-| After the trial | Paywall on login; no free tier |
-| Plan | One monthly plan; price not yet set |
-| Data after expiry | Kept for 30 days, then deleted (assumption) |
-| Fair-use caps | 3 on-demand searches and 10 tailored resumes per day (assumption) |
-
-The fair-use caps exist to bound model and aggregator cost per user. They should be invisible to normal use.
+| Who pays | The owner, through their own Claude account or API key and any aggregator keys |
+| Cost visibility | Spend per profile and per month on screen (AB-3) |
+| Monthly budget | Optional; set by the owner; when reached, monitoring pauses and on-demand actions ask first |
+| Daily caps | 3 on-demand searches and 10 tailored resumes per profile per day (assumption), to stop runaway spend |
+| Data retention | Kept until the owner deletes the profile |
 
 ## Metrics
 
-The north star is median time to first strong match, with a proposed target under 10 minutes from signup.
+The north star is median time to first strong match, with a proposed target under 10 minutes from creating a profile. With a handful of profiles these are checks, not statistics.
 
 | Metric | Definition | Proposed target |
 | --- | --- | --- |
-| Time to first strong match | Minutes from signup to the first Apply verdict shown | Median under 10 |
+| Time to first strong match | Minutes from profile creation to the first Apply verdict shown | Median under 10 |
 | First-session match rate | Share of users who see at least one Apply job in their first session | 70% |
-| Onboarding completion | Share of signups who finish preferences | 80% |
+| Onboarding completion | Share of profiles that finish preferences | 80% |
 | Interview completion | Share of users who answer at least three interview questions | 60% |
 | Tailoring rate | Share of Apply jobs that get a tailored resume | 40% |
 | Applied rate | Share of Apply jobs marked applied | 30% |
 | Fix-a-fact rate | Share of Not a fit reports where the user corrects a fact | Under 5% |
 | Score stability | Share of re-scores landing within 3 points | 95% |
-| Trial-to-paid conversion | Share of trials that subscribe | Set after pricing |
-| Cost per active user | Model, aggregator, and proxy spend per user per month | Set after pricing |
+| Cost per profile | Model and aggregator spend per profile per month | Under the owner's monthly budget |
 
-All targets are proposals to validate in the first month of live data.
+All targets are proposals to check against the first month of real use.
 
-## Non-functional requirements, privacy, and legal
+## Non-functional requirements, privacy, and terms
 
 The speed targets below exist to protect the north-star metric.
 
@@ -558,24 +556,24 @@ The speed targets below exist to protect the north-star metric.
 | Full run | Complete within 5 minutes |
 | Tailored resume | Generated within 45 seconds of keyword confirmation |
 | Availability | A failed source never fails a run |
-| Devices | Responsive web; fully usable on a phone |
+| Devices | Runs in a browser on the owner's machine (macOS, Windows, or Linux); responsive layout |
 | Accessibility | WCAG 2.1 AA |
 
 ### Privacy
 
-1. Resumes and profiles are encrypted at rest and in transit.
-2. The user can export or delete all their data at any time.
+1. All data stays on the owner's machine, apart from the calls the app makes to the model provider and job sources. The data folder relies on the machine's own disk encryption (FileVault, BitLocker, or LUKS).
+2. The owner can export or delete any profile's data at any time, and deletes a friend's data when that friend asks.
 3. Resume data is never sold or shared with employers or job boards.
-4. Model providers must be configured so user data is not used for training.
-5. A privacy policy and data-processing terms are required for each launch market before release.
+4. The model provider account must be configured so data is not used for training.
+5. The owner asks each friend before adding their resume, and tells them it is sent to the model provider for analysis. No privacy policy is needed because nothing is offered to the public.
 
 ### Fairness
 
 Scoring uses only job-relevant evidence. Name, photo, age, gender, nationality, and marital status are stripped before any scoring call. Work authorization is used only as the user stated it.
 
-### Legal exposure
+### Terms of service
 
-Direct scraping of job boards can breach their terms of service and can be blocked without notice. Tier 4 needs a legal review per board and per launch market, and the product must work acceptably on tiers 1 to 3 alone.
+Not monetizing does not change a job board's terms: direct scraping of LinkedIn, Indeed, Glassdoor and similar boards breaches most of their terms whether or not money is involved. For small-scale personal use the practical risk is account bans and IP blocks rather than legal action, but it is not zero. Tier 4 is therefore off by default, enabled per board by the owner's choice, and never with a logged-in personal account. The app must work well on tiers 1 to 3 alone, where Tier 3 aggregators carry the scraping risk for you.
 
 ## Out of scope for v1
 
@@ -589,42 +587,46 @@ These were considered and deliberately left out.
 - Learning from user behaviour
 - Native mobile apps and a browser extension
 - Coach, agency, and team accounts
+- Hosting the app for other people, public sign-up, accounts and logins
+- Trial, pricing, billing, and any monetization
 - Interview preparation and salary negotiation
 - User-adjustable score weights
 
 ## Risks and open questions
 
-The two largest risks are scraping exposure and cost per user against a price that is not yet set.
+The two largest risks are scraping exposure and the owner's running cost.
 
 | Risk | Effect | Mitigation |
 | --- | --- | --- |
-| Job boards block or object to scraping | Tier 4 coverage disappears | Kill switches, aggregator fallback, legal review, a product that works on tiers 1 to 3 |
-| Model and aggregator cost per user exceeds revenue | Negative margin | Prefilter cap, model tiering, caching, fair-use caps |
+| Job boards block or object to scraping | Tier 4 coverage disappears; a personal account could be banned | Off by default, aggregator fallback, no logged-in accounts, an app that works on tiers 1 to 3 |
+| Model and aggregator cost grows beyond what the owner wants to pay | Unwelcome bills | Spend shown per profile, monthly budget, prefilter cap, model tiering, caching, daily caps |
 | Users distrust scores | Low engagement with verdicts | Evidence cited for every judgment, Fix a fact, score stability rule |
 | Users confirm keywords they do not have | Resumes that overclaim | One-line usage description required per keyword; list of added keywords shown for interview preparation |
 | Postings rarely state sponsorship | Many Unknown authorization gates | Unknown passes with a flag; employer-level sponsorship history is a later enhancement |
 | Strict verdicts leave new users with an empty Apply tab | Slow time to first strong match | Closest-three view, adjacent-title widening, Stretch framed as Within reach |
-| In-app-only alerts are missed | Monitoring delivers little value | Revisit email alerts after launch data |
+| In-app-only alerts are missed | Monitoring delivers little value | Revisit email alerts after a month of use |
+| Monitoring only runs while the owner's machine is on | Gaps in monitoring | Catch-up run at startup |
 
 ### Open questions
 
-- [ ] What is the monthly price?
-- [ ] Is a card required to start the trial?
-- [ ] Which billing provider fits the company's country of incorporation?
-- [ ] How is Claude Code run as a hosted runtime agent, and do its terms allow it for a consumer product?
-- [ ] Which launch markets get the first legal review for Tier 4 scraping?
+- [ ] Runtime on the owner's machine: Claude Code headless with the owner's subscription, or the Claude API with an API key (decided in Phase 0)?
+- [ ] Which Tier 4 boards, if any, will the owner turn on?
 - [ ] Where does the initial Tier 1 company registry come from?
 - [ ] Is 12 hours the right monitoring interval?
-- [ ] Are the fair-use caps and the 150-job scoring cap right for the cost model?
-- [ ] What is the product's name?
+- [ ] Are the daily caps and the 150-job scoring cap right for the owner's budget?
+- [ ] What is the app's name? (cosmetic)
 
 ## Release plan
 
 Six phases, each built with Claude Code and closed by an exit test before the next begins.
 
-1. **Foundations.** Accounts, resume intake, parsing, profile, selling points, and Resume Strength. Exit: 20 varied test resumes parse with correct roles, dates, and skills.
+1. **Foundations.** Person profiles, resume intake, parsing, profile, selling points, and Resume Strength. Exit: 20 varied test resumes parse with correct roles, dates, and skills.
 2. **Matching core.** Tier 1 and 2 adapters, the pipeline, gates, Fit, Confidence, Job Quality, and verdicts. Exit: score stability holds at 95% on a fixed test set.
 3. **Results experience.** Preferences, AI interview, three tabs, job detail, Not a fit reports, gap insight, and Fix a fact. Exit: five test users reach a first Apply verdict in under 10 minutes.
 4. **Tailoring.** Keyword confirmation, generation, coverage scores, diff, and exports. Exit: tailored resumes parse cleanly in three common ATS parsers.
 5. **Full coverage and monitoring.** Tier 3 and 4 adapters, kill switches, scheduled runs, and the in-app inbox. Exit: a run completes with any single source disabled.
-6. **Trial, billing, and launch.** Trial clock, paywall, subscription, data export and deletion, and legal documents. Exit: a full signup-to-payment path works end to end.
+6. **Local packaging and data controls.** *(revised)* Profile management, per-profile export and deletion, spend panel and monthly budget, and a one-command local install and start. Exit: on a fresh machine, the owner installs, starts the app, creates a profile and reaches a first match, then exports and deletes that profile cleanly.
+
+## Change log
+
+- **Nov 11, 2026, scope revision.** The app is a personal tool that runs locally on the owner's machine, for the owner and a few friends, and is never hosted or monetized. Removed: the consumer framing, sign-up, the 7-day trial, the paywall, billing, pricing, launch markets, legal review, privacy policy, and proxy pool. Replaced Account and billing (AB-1 to AB-4) with Profiles and local operation (AB-1 to AB-5), Flow 8 Trial end with Managing profiles, Pricing and trial with Running cost, and Phase 6 with Local packaging and data controls. Tier 4 scraping is now off by default.

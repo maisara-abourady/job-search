@@ -1,6 +1,6 @@
 # 0011. Product events are measured at the input ports by a measurement area; the destination is a detail
 
-Status: accepted (2026-11-11). Amends ADR 0001 decision 3 ("areas never import each other") with one exception: the measurement area, types only.
+Status: accepted (2026-11-11). Amends ADR 0001 decision 3 ("areas never import each other") with one exception: the measurement area, types only. Amended by ADR 0014 (`signed-up` becomes `profile-created` from `CreatePerson`; `subscription-activated` and its decorator are removed; measurement imports `profiles` instead of `account`) and ADR 0016 (D14 decided: events are stored locally; no vendor).
 
 ## Context
 

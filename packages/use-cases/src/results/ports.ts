@@ -29,8 +29,8 @@ export type EvidenceText = { readonly id: string; readonly text: string };
 export type JobDetailRow = ResultRow & { readonly evidence: readonly EvidenceText[] };
 export interface ResultsReadModel {
   /** Matches for the user's active profile version. */
-  currentResults(userId: string): Promise<readonly ResultRow[]>;
+  currentResults(personId: string): Promise<readonly ResultRow[]>;
   /** The active-version match for one posting, with its evidence texts; null if there is none. */
-  jobDetail(userId: string, postingId: string): Promise<JobDetailRow | null>;
-  setUserState(userId: string, postingId: string, state: "applied" | "dismissed"): Promise<void>;
+  jobDetail(personId: string, postingId: string): Promise<JobDetailRow | null>;
+  setUserState(personId: string, postingId: string, state: "applied" | "dismissed"): Promise<void>;
 }

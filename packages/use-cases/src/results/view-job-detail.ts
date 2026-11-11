@@ -2,7 +2,7 @@ import { UseCaseError } from "../shared/errors.ts";
 import type { JobDetailRow, ResultsReadModel } from "./ports.ts";
 
 /** Flow 3, MR-5, MR-8: verdict, three points with evidence, gaps (closable or not), breakdown on expand. */
-export type ViewJobDetailRequest = { readonly userId: string; readonly postingId: string };
+export type ViewJobDetailRequest = { readonly personId: string; readonly postingId: string };
 export type ViewJobDetailResponse = {
   readonly verdict: "apply" | "stretch" | "not-a-fit";
   readonly reason: string;
@@ -30,7 +30,7 @@ export class ViewJobDetailInteractor implements ViewJobDetail {
     this.results = results;
   }
   async execute(request: ViewJobDetailRequest): Promise<ViewJobDetailResponse> {
-    const row = await this.results.jobDetail(request.userId, request.postingId);
+    const row = await this.results.jobDetail(request.personId, request.postingId);
     if (row === null) throw new UseCaseError("not-found", `no result for ${request.postingId}`);
     const textOf = evidenceLookup(row);
     const requirementText = new Map(row.requirements.map((r) => [r.id, r]));

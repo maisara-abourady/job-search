@@ -6,7 +6,7 @@
 
 // Shared
 export type { Clock, IdGenerator } from "./shared/ports.ts";
-export type { AccountsForAccess, UsageLedger } from "./shared/access-guard.ts";
+export type { CappedAction, MonthlyBudgetSetting, PeopleForSpending, UsageLedger } from "./shared/spending-guard.ts";
 export { UseCaseError } from "./shared/errors.ts";
 export type {
   ChargeTo, Spend, SpendAttribution, SpendCategory, SpendLedger, SpendMeter, SpendPurpose, SpendRecord,
@@ -50,22 +50,27 @@ export type { ConfirmedKeywords, MissingKeywordsResponse, TailorResume, Tailored
 export type { GeneratedFiles, KeywordMatcher, ResumeRenderer, ResumeWriter, TailoredResumeRecord, TailoredResumes, TailoringSources } from "./tailoring/ports.ts";
 
 // Monitoring (scheduler, passive seeker)
-export type { RunDueMonitoring } from "./monitoring/run-due-monitoring.ts";
+export type { RunDueMonitoring, RunDueMonitoringResponse } from "./monitoring/run-due-monitoring.ts";
 export type { InboxResponse, ViewInbox } from "./monitoring/view-inbox.ts";
-export type { InboxSource, MonitoredUser, MonitoringRoster, MonitoringSearchRequests } from "./monitoring/ports.ts";
+export type { InboxSource, MonitoredPerson, MonitoringRoster, MonitoringSearchRequests } from "./monitoring/ports.ts";
 
-// Account and billing (business owner, privacy)
-export type { SignUp, SignUpRequest } from "./account/sign-up.ts";
-export type { AccessView, ViewAccess } from "./account/view-access.ts";
+// Profiles (the owner, managing the people they help): AB-1, AB-2, AB-4
 export type {
-  RecordSubscriptionChange, RecordSubscriptionChangeResponse, StartCheckout, SubscriptionChange,
-} from "./account/manage-subscription.ts";
-export type { DeleteMyData, ExportMyData, PurgeExpiredAccounts } from "./account/manage-my-data.ts";
-export type { Accounts, Checkout, UserDataVault } from "./account/ports.ts";
+  CreatePerson, CreatePersonRequest, CreatePersonResponse, ListPeople, OpenPerson, OpenPersonRequest, PersonSummary, RenamePerson,
+  RenamePersonRequest,
+} from "./profiles/manage-people.ts";
+export type { DeletePerson, ExportPersonData } from "./profiles/person-data.ts";
+export type { People, PersonDataVault } from "./profiles/ports.ts";
 
-// Measurement (product owner): product analytics events, observed at other areas' input ports
+// Spending (the owner, paying the bills): AB-3, Running cost
+export type {
+  SetMonthlyBudget, SetMonthlyBudgetRequest, ViewRunningCost, ViewRunningCostRequest, ViewRunningCostResponse,
+} from "./spending/running-cost.ts";
+export type { MonthlyBudgetControl, PeopleForRunningCost } from "./spending/ports.ts";
+
+// Measurement (the owner, checking the product works): product events, observed at other areas' input ports
 export type { ProductEvent, ProductEventName, ProductEvents } from "./measurement/ports.ts";
 
-// Operations (sourcing operator)
+// Operations (the owner as sourcing operator)
 export type { OperateSources } from "./operations/operate-sources.ts";
 export type { SearchRunHistory, SourceSwitchControl } from "./operations/ports.ts";

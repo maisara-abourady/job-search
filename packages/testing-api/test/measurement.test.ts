@@ -15,36 +15,36 @@ const strongJudgment = {
   experienceRelevance: 0.9, skillsAndTools: 0.9, scopeAlignment: 0.8,
 };
 
-test("time to first strong match is measurable: signup, then the first results screen with an Apply verdict", async () => {
+test("time to first strong match is measurable: profile created, then the first results screen with an Apply verdict", async () => {
   const api = new MatchmakerTestingApi();
-  await api.givenSignedUpUser("u1", "2026-11-11T09:00:00.000Z");
-  await api.givenProfile("u1");
+  const u1 = await api.givenPerson("Ana", "2026-11-11T09:00:00.000Z");
+  await api.givenProfile(u1);
   const job = await api.givenPosting();
   api.judgeWillSay(job.id, strongJudgment);
 
   api.atTime("2026-11-11T09:03:00.000Z");
-  await api.results("u1"); // nothing scored yet: no Apply shown
-  await api.scorePostings("u1", [job.id]);
+  await api.results(u1); // nothing scored yet: no Apply shown
+  await api.scorePostings(u1, [job.id]);
   api.atTime("2026-11-11T09:07:00.000Z");
-  await api.results("u1");
+  await api.results(u1);
 
-  const events = api.productEvents("u1");
-  const signedUp = events.find((e) => e.name === "signed-up");
+  const events = api.productEvents(u1);
+  const created = events.find((e) => e.name === "profile-created");
   const firstApply = events.find((e) => e.name === "apply-verdict-shown");
-  assert.equal(signedUp?.at, "2026-11-11T09:00:00.000Z");
+  assert.equal(created?.at, "2026-11-11T09:00:00.000Z");
   assert.equal(firstApply?.at, "2026-11-11T09:07:00.000Z");
-  const minutes = (Date.parse(firstApply!.at) - Date.parse(signedUp!.at)) / 60_000;
+  const minutes = (Date.parse(firstApply!.at) - Date.parse(created!.at)) / 60_000;
   assert.equal(minutes, 7);
 });
 
 test("marking a job applied is a product event; dismissing is not", async () => {
   const api = new MatchmakerTestingApi();
-  await api.givenSignedUpUser("u1");
-  await api.givenProfile("u1");
+  const u1 = await api.givenPerson("Ana");
+  await api.givenProfile(u1);
   const job = await api.givenPosting();
-  await api.scorePostings("u1", [job.id]);
+  await api.scorePostings(u1, [job.id]);
 
-  await api.markApplied("u1", job.id);
+  await api.markApplied(u1, job.id);
 
-  assert.deepEqual(api.productEvents("u1").map((e) => e.name), ["signed-up", "job-marked-applied"]);
+  assert.deepEqual(api.productEvents(u1).map((e) => e.name), ["profile-created", "job-marked-applied"]);
 });
