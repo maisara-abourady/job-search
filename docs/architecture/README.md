@@ -1,5 +1,7 @@
 # AI Job Matchmaker: architecture
 
+Requirements: [`docs/prd.md`](../prd.md), the product requirements document (requirement IDs and the six-phase release plan).
+
 AI Job Matchmaker reads a job seeker's resume, interviews them briefly, searches every reachable job source, and gives every job one verdict: **Apply**, **Within reach** (Stretch), or **Not a fit**. Each verdict comes with its reasons, evidence, and the single change that would move it. It tailors a resume per job without inventing anything, watches the market in the background, and runs on a 7-day trial and then a subscription.
 
 This document describes the system as it is now. Decisions and their reasons are in `adr/`. Decisions not yet made, and boundaries being watched, are in `deferred.md`.
