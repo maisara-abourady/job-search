@@ -1,7 +1,7 @@
 # Progress
 
 Current phase: 0 — Verify and complete the walking skeleton
-Next task: Gate 0A review (S-1 needs the owner's machine; then P0-T10)
+Next task: S-1 confirmation run on the owner's machine, then P0-T10; Phase 1 (P1-T01 to P1-T08) in a fresh session
 Last updated: 2026-11-12 by execution (P0-T09)
 
 ## Status
@@ -11,7 +11,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (reason i
 ### HUMAN tasks to start now
 - [x] H-0 Commit the scope-revision work (PRD, ADRs 0014 to 0016, README, deferred.md, code) and this plan amendment
 - [x] H-1 Runtime: Claude Code headless with the owner's existing subscription (2026-11-12)
-- [~] H-3 Consented test resumes: 6 received (owner's cap, 2026-11-12; consent confirmation pending)
+- [x] H-3 Consented test resumes: 6 received (owner's cap); the owner confirmed all six consented (2026-11-12)
 
 ### Phase 0 — Verify and complete the walking skeleton
 - [x] P0-T01 Baseline the toolchain from a clean clone
@@ -23,7 +23,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (reason i
 - [x] P0-T07 Evaluation harness scaffold
 - [x] P0-T08 Formatter and lint check
 - [x] P0-T09 Continuous integration
-- [ ] S-1 Which runtime implements each model port?
+- [~] S-1 Which runtime implements each model port?
 - [x] H-1 Runtime on the owner's machine chosen (subscription)
 - [ ] GATE 0A (technical)
 - [ ] P0-T10 Record the model runtime decision (D1) in ADR 0009 (not yet written)
@@ -127,6 +127,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (reason i
 - 2026-11-12 (P0-T08): Biome 2.6.7 (config from `biome init`), limited to `.ts`, `.mjs`, `.json` so docs are untouched; 2-space indent, double quotes, line width 140. Recommended rules except `style/noNonNullAssertion` and `complexity/useLiteralKeys`, which fight the `!` and `["key"]` escapes the code uses for `noUncheckedIndexedAccess`. Two commits: a formatting-only reformat (every changed source equal to the old one once whitespace and punctuation are ignored), then two lint fixes (`self` alias in the testing API; `forEach` returning a value in `RunJobSearch.fetchAll`, now a `for` loop) and `pnpm lint` (`biome check .`) in `verify`. An unused variable or a misformatted file makes `pnpm lint` exit 1.
 - 2026-11-12 (P0-T09): `.github/workflows/verify.yml` (actions/checkout v7.0.1, actions/setup-node v7.1.0 with `.node-version`, pnpm through Corepack, frozen install, `pnpm verify`, `pnpm smoke`). Run 43181059712 on 71057d4 passed. A probe commit with a failing test (9cc7ddc) made run 43181144195 fail; the probe was removed in the next commit. Merged to `main` on the owner's instruction (fast-forward to 7d13c3f); CI run 43182882370 on `main` passed.
 - 2026-11-12 (S-1, P0-T10): S-1 has no task dependencies, but its measurements (structured output, latency, what spend headless calls report) must run Claude Code headless on the owner's subscription on the owner's machine. This container has neither, and a run here would not measure the owner's setup, so S-1 is left for the owner (or a session on their machine). P0-T10 and Gate 0B wait on it.
+- 2026-11-12 (S-1): spike script `tools/spikes/s1/run-s1.mjs` with fictional samples. First run in this cloud session on the owner's account: all 25 calls schema-valid, latencies well inside the NFRs, every call reports a cost estimate, one of two repeated judgments flipped one requirement. Answer in PLAN.md "Spike answers". Left: a run on the owner's machine for latency and the hand-filled facts (usage limits, training setting).
 
 ## Deviations log
 
@@ -147,3 +148,4 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (reason i
 | 2026-11-12 | P0-T08 | Done as two commits (formatting-only reformat, then lint fixes plus `lint` in `verify`) | The task asks for a reformat commit that changes only whitespace and punctuation; the two lint fixes are small code edits and needed their own commit |
 | 2026-11-12 | P0-T09 | The "failing test makes CI fail" check ran as a probe commit on the working branch, removed in the next commit, instead of on a throwaway branch | This session may push only to its working branch |
 | 2026-11-12 | H-3, P1-T11, Gate 1 | The parsing test set is 6 real resumes, not 20 (all PDFs). Variety the plan asked for (DOCX, pasted text, LinkedIn export, scanned PDF; new graduate, career changer, long history, gaps) is not yet covered; how to fill it is an open question for the owner | The owner can supply at most 6 |
+| 2026-11-12 | S-1 | Spike code is on the working branch (`tools/spikes/s1/`, results gitignored), not a throwaway branch; first run in the cloud session, confirmation run on the owner's machine | The owner must be able to fetch and run it; this session may push only to its working branch |

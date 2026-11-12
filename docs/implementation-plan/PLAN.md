@@ -334,3 +334,15 @@ Removed by the scope revision: H-8 (hosting, domain, Postgres, object storage, O
 ## Spike answers
 
 (Appended by each spike.)
+
+### S-1 — How each model port runs on Claude Code headless (2026-11-12, first run: cloud session)
+
+Run with `node tools/spikes/s1/run-s1.mjs` (fictional samples only: 2 resumes, 5 postings; 25 calls) in a Claude Code cloud session on the owner's account. Claude Code 2.1.322, `claude -p --output-format json --json-schema <schema> --tools "" --system-prompt <rubric>`; large = sonnet (served by claude-sonnet-5-5), small = haiku (claude-haiku-5-5).
+
+- **Structured output:** works. `--json-schema` returns a schema-valid object in `structured_output`: 25/25 calls.
+- **Latency (wall clock per call, includes CLI start):** structure about 5.6 s; enrichment p50 5.3 s; ranking 5.9 s; judge p50 3.3 s. Five calls in parallel took about as long as one (enrich 5.9 s, judge 3.5 to 3.8 s). Within the NFRs: selling-points card under 20 s (structure plus a selling-points call is about 11 s); first result under 60 s.
+- **Citations:** 10/10 judge calls cited only evidence ids that exist.
+- **Consistency without temperature:** the CLI has no temperature setting. Repeating one judgment 3 times: a strong pair gave identical judgments (ratios within 0.05); a poor-fit pair flipped one requirement between partial and met in 1 of 3 runs. So structured output plus a fixed rubric is not enough by itself: cached judgments (score once per profile version and posting revision, ADR 0005) are what make scores stable, and the Gate 2 stability evaluation must measure fresh judgments, not cached ones.
+- **Spend:** every call reports `total_cost_usd` (a priced estimate; about 0.007 USD per call at p50, 0.22 USD for all 25). Under the subscription it is not a charge, so the monthly budget (ADR 0015) can run on these estimates.
+- **Embeddings (D3):** Claude Code has none. A small-model ranking call over the postings stood in for `RelevanceRanker` (5.9 s for 5 postings); in-process lexical ranking is the alternative.
+- **Still open (owner's machine):** latency on the owner's machine and network, whether these calls count against the subscription's usage limits, and the account's model-training setting (Privacy 4). The cloud run uses the same account and CLI, so the structured-output, consistency and spend findings should carry over; latency may differ.

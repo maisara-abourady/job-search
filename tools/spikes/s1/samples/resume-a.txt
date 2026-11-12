@@ -1,0 +1,25 @@
+LENA VOSS (fictional sample)
+Berlin, Germany · lena.voss@example.com
+
+SUMMARY
+Backend engineer with 7 years building data-heavy web services.
+
+EXPERIENCE
+Senior Software Engineer — Kestrel Logistics GmbH, Berlin — 03/2022 to present
+- Led migration of the shipment-tracking API from a Python monolith to TypeScript services; p95 latency fell from 900 ms to 180 ms.
+- Designed the PostgreSQL partitioning scheme for 2 billion tracking events.
+- Mentored 4 engineers; ran the team's hiring loop for 2 years.
+
+Software Engineer — Pixelgrove Studios, Hamburg — 06/2018 to 02/2022
+- Built the billing service in Node.js handling 30k invoices a month.
+- Introduced end-to-end tests that cut production incidents by 40%.
+
+Junior Developer — Pixelgrove Studios, Hamburg — 09/2017 to 05/2018
+- Maintained internal admin tools (PHP, MySQL).
+
+EDUCATION
+B.Sc. Computer Science — University of Hamburg — 2017
+
+SKILLS
+TypeScript, Node.js, PostgreSQL, Python, AWS (ECS, RDS), Docker, Terraform
+LANGUAGES: German (native), English (fluent)

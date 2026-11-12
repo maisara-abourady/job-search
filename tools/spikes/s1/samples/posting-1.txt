@@ -1,0 +1,5 @@
+Senior Backend Engineer (TypeScript) — Ferrolink, Berlin (hybrid, 2 days in office)
+We build freight-matching software. You will own services in TypeScript/Node.js on AWS.
+Requirements: 5+ years backend experience; strong TypeScript; PostgreSQL at scale; experience mentoring engineers.
+Nice to have: Terraform, event-driven architectures (Kafka).
+You must be authorized to work in Germany; we do not sponsor visas. Salary 75,000–90,000 EUR.

@@ -1,0 +1,22 @@
+SAMIR HADDAD (fictional sample)
+Cairo, Egypt · Open to remote
+
+PROFILE
+Operations coordinator moving into product operations. Career break 2021–2022 (family).
+
+WORK HISTORY
+Product Operations Associate, Nile Basket (grocery delivery), Cairo · Jan 2023 – Present
+• Run the weekly release checklist for 3 product squads; on-time releases rose from 70% to 95%.
+• Built SQL dashboards in Metabase tracking order defects across 12 dark stores.
+• Wrote 40+ help-centre articles that reduced support tickets by 15%.
+
+Operations Coordinator, Delta Freight Forwarding, Alexandria · Sep 2016 – Jun 2021
+• Coordinated customs paperwork for ~120 shipments a month.
+• Introduced a shared tracker that replaced email hand-offs between 3 offices.
+
+EDUCATION
+Bachelor of Commerce, Alexandria University, 2016
+Google Data Analytics Certificate, 2023
+
+TOOLS: SQL, Metabase, Jira, Notion, Excel
+LANGUAGES: Arabic (native), English (professional)
