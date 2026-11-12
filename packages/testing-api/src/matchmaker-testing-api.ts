@@ -20,6 +20,10 @@ const MODEST_JUDGMENT: MatchJudgments = { requirements: [], experienceRelevance:
  * postings, time), bypasses expensive resources (models, sources, storage), and hides the application's
  * structure so tests and production code can be refactored independently.
  * Tests talk to this class only; never to interactors, adapters or file paths.
+ *
+ * Rule for every new slice: each port a slice adds to `MatchmakerDetails` gets a scripted double here, wired in
+ * the constructor, plus the superpowers its tests need to force that port's answers (as `judgeWillSay` does for
+ * `MatchJudge`). A test must never need a real model, source, file or clock.
  */
 export class MatchmakerTestingApi {
   private readonly store = new InMemoryStore();
@@ -36,6 +40,10 @@ export class MatchmakerTestingApi {
   private readonly sources: JobSource[] = [];
   private readonly queriedSources: string[] = [];
   readonly judgeCalls: string[] = [];
+  /** Background failures, collected so `backgroundWorkSettled()` can fail the test that caused them. */
+  private readonly backgroundErrors: string[] = [];
+  private plannerError: Error | null = null;
+  private readonly requestedSearches: { personId: string; trigger: "onboarding" | "manual" | "scheduled" }[] = [];
   readonly feed: ScoredJobNotice[] = [];
   private readonly app: Matchmaker;
 
@@ -45,7 +53,12 @@ export class MatchmakerTestingApi {
     this.meter = new AsyncSpendMeter(this.spendLedger, clock);
     this.app = composeMatchmaker({
       storage: this.store,
-      operatorConsole: Object.assign(this.store, { recent: async () => [] }),
+      // Its own object: the store keeps exactly the methods its class gives it.
+      operatorConsole: {
+        setEnabled: (sourceName, enabled, reason) => self.store.setEnabled(sourceName, enabled, reason),
+        states: () => self.store.states(),
+        recent: async () => [],
+      },
       usage: this.usage,
       spendLedger: this.spendLedger,
       spendAttribution: this.meter,
@@ -64,7 +77,10 @@ export class MatchmakerTestingApi {
         },
       },
       narrator: new TemplateNarrator(),
-      planner: { plan: async (_p, widen) => ({ queries: [{ titles: ["engineer"], keywords: [], locations: [], includeRemote: true }], adjacentTitlesUsed: widen ? ["adjacent role"] : [] }) },
+      planner: { plan: async (_p, widen) => {
+        if (self.plannerError) throw self.plannerError;
+        return { queries: [{ titles: ["engineer"], keywords: [], locations: [], includeRemote: true }], adjacentTitlesUsed: widen ? ["adjacent role"] : [] };
+      } },
       enricher: { enrich: async (found) => enrichmentOf(found) },
       ranker: { rank: async (_p, postings) => postings.map((p) => p.id) },
       sources: this.sources,
@@ -72,9 +88,16 @@ export class MatchmakerTestingApi {
       atsLinks: { recognize: () => null },
       feed: { jobScored: (n) => self.feed.push(n) },
       onBackgroundError: (task, e) => {
-        throw new Error(`background task ${task} failed: ${String(e)}`);
+        self.backgroundErrors.push(`background task ${task} failed: ${String(e)}`);
       },
     });
+    // Observe the search request port Main wired (monitoring and onboarding reach discovery through it).
+    const searchRequests = this.app.requests.searchRequests;
+    const requestSearch = searchRequests.requestSearch;
+    searchRequests.requestSearch = async (personId, trigger) => {
+      self.requestedSearches.push({ personId, trigger });
+      return requestSearch(personId, trigger);
+    };
   }
 
   // ---------- superpowers: force state ----------
@@ -128,6 +151,11 @@ export class MatchmakerTestingApi {
     this.judgeSpendMicros = micros;
     return this;
   }
+  /** From now on the search planner throws, so every search fails before any source is asked. */
+  searchPlannerFails(reason: string): this {
+    this.plannerError = new Error(reason);
+    return this;
+  }
   sourceFails(name: string, tier: SourceTier): this {
     const queried = this.queriedSources;
     this.sources.push({ descriptor: { name, tier }, search: async () => { queried.push(name); throw new Error(`${name} is down`); } });
@@ -170,7 +198,7 @@ export class MatchmakerTestingApi {
   /** What every configuration does when the app starts (and on each timer tick): the catch-up monitoring run. */
   async appStarts(): Promise<RunDueMonitoringResponse> {
     const response = await this.app.useCases.runDueMonitoring.execute();
-    await this.app.work.drain();
+    await this.backgroundWorkSettled();
     return response;
   }
   /** AB-5: would the web Main's route handlers serve a request with these headers? */
@@ -198,7 +226,16 @@ export class MatchmakerTestingApi {
     await this.app.useCases.recordJobDecision.execute({ personId, postingId, decision: "applied" });
   }
 
+  /** What intake does once a profile is saved: request the first search in the background (P-1, onboarding trigger). */
+  async onboardingSearch(personId: string): Promise<void> {
+    await this.app.requests.searchRequests.requestSearch(personId, "onboarding");
+  }
+
   // ---------- observe ----------
+  /** Every search requested through Main's request port (onboarding and monitoring), in order. */
+  searchesRequested(): readonly { personId: string; trigger: "onboarding" | "manual" | "scheduled" }[] {
+    return this.requestedSearches;
+  }
   lastSearchRun(): SearchRunRecord | undefined {
     return this.store.recordedRuns().at(-1);
   }
@@ -217,7 +254,12 @@ export class MatchmakerTestingApi {
   productEvents(personId: string): readonly ProductEvent[] {
     return this.events.recorded().filter((e) => e.personId === personId);
   }
+  /** Waits for background work; rejects, naming each failed task, if any failed since the last call. */
   async backgroundWorkSettled(): Promise<void> {
     await this.app.work.drain();
+    if (this.backgroundErrors.length > 0) {
+      const failures = this.backgroundErrors.splice(0);
+      throw new Error(failures.join("\n"));
+    }
   }
 }
