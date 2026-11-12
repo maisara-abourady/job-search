@@ -7,7 +7,7 @@
     "typecheck": "node tools/architecture/typecheck.mjs",
     "check:architecture": "node tools/architecture/check.mjs",
     "metrics": "node tools/architecture/check.mjs --metrics",
-    "test": "node --test \"packages/*/test/**/*.test.ts\"",
+    "test": "node --test \"packages/*/test/**/*.test.ts\" \"tools/architecture/test/*.test.mjs\"",
     "verify": "pnpm run typecheck && pnpm run check:architecture && pnpm run test"
   },
   "devDependencies": {

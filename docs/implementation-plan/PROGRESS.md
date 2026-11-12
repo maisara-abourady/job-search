@@ -1,8 +1,8 @@
 # Progress
 
 Current phase: 0 — Verify and complete the walking skeleton
-Next task: P0-T02
-Last updated: 2026-11-12 by execution (P0-T01)
+Next task: P0-T03
+Last updated: 2026-11-12 by execution (P0-T02)
 
 ## Status
 
@@ -15,7 +15,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (reason i
 
 ### Phase 0 — Verify and complete the walking skeleton
 - [x] P0-T01 Baseline the toolchain from a clean clone
-- [ ] P0-T02 Regression tests for the architecture check
+- [x] P0-T02 Regression tests for the architecture check
 - [ ] P0-T03 Extend checker and test coverage to new directories
 - [ ] P0-T04 Complete the testing API as a Main configuration
 - [ ] P0-T05 Walking skeleton through the dev Main
@@ -117,6 +117,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (reason i
 - Known gaps the Architect left as hand-offs: `IntakeResume`, `ConductInterview` and `TailorResume` must call `SpendingGuard` when built (P1-T04, P3-T02, P4-T03); `DeletePerson` does not cancel queued work (W16, P6-T05); `InMemoryStore.setEnabled` defaults the tier to 1 (P5-T03); the testing API still throws background errors inside the queue and mutates the store for `operatorConsole` (P0-T04).
 - 2026-11-12 (H-0): the scope-revision work and plan amendment are committed (d13cfc0, 035db16); the working branch was fast-forwarded onto them.
 - 2026-11-12 (P0-T01): fresh clone on Node 22.23.4 (pinned in `.node-version`), pnpm 10.28.0: `pnpm install --frozen-lockfile && pnpm verify` green, 7 components, 87 files, 22/22 tests. D baseline (`pnpm metrics`): rules 1.00 (W1, accepted), use-cases 0.05, delivery 0.40, adapters 0.27, scraping-sources 0.00, main 0.33, testing-api 0.00. `node apps/main/src/main.dev.ts` exits 0 in 0.1 s.
+- 2026-11-12 (P0-T02): `check.mjs` takes `--root <dir>` (or `ARCH_ROOT`) and reads `<root>/tools/architecture/components.mjs`; no rule changed. 11 checker tests (clean fixture, nine injected violations, real repo) in `tools/architecture/test/`, part of `pnpm test` (33 tests). A mutation that disables the `node:*` rule makes the matching case fail.
 
 ## Deviations log
 
@@ -133,3 +134,4 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (reason i
 | 2026-11-11 | P1-T01, P1-T02, P1-T04, P1-T07, P1-T10, P1-T12 | `userId` is `personId`; `IntakeResume` calls `SpendingGuard` (on demand, uncapped) instead of `AccessGuard`; resume files implement `PersonDataVault`; the intake controller handles "ask first"; the configuration loader gathers the owner's credential | ADRs 0014, 0015, 0016 |
 | 2026-11-11 | Phases 3, 4, 5 | Phase 3: no sign-up, authentication or staging; local database (SQLite default) with schema versioning instead of Postgres with encryption; data-folder files instead of encrypted object storage; local web Main with loopback bind, the local-request hook (W15), a minimal profile picker and the ticker; product events stored locally (D14). Phase 4: daily cap through `SpendingGuard`; files in the data folder. Phase 5: Tier 4 conditional on the owner naming boards, no proxy pool or markets; switches without a restart; S-7 added | ADRs 0014, 0015, 0016; deferred.md D2, D5, D8, D11, D14, D15, W15 |
 | 2026-11-12 | 0, 5, HUMAN | H-1 done: runtime is Claude Code headless with the owner's subscription (API key route not explored, per owner). S-1 narrowed to how each port runs on it. P5-T02 acceptance adds the PRD's per-board blocking-risk table and human-pace session rules | Owner's instruction 2026-11-12; PRD revision of 2026-11-12 |
+| 2026-11-12 | P0-T02, P0-T03, P0-T04, P0-T05, Gate 0, P1-T01, Gate 2 | Verify commands of the form `node --test <directory>/` changed to quoted globs (`node --test "tools/architecture/test/*.test.mjs"`, `"packages/testing-api/test/*.test.ts"`, `"apps/main/test/*.test.ts"`) | Node 22 treats a directory argument to `node --test` as a module to load and fails with MODULE_NOT_FOUND |

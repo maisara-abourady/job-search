@@ -331,7 +331,7 @@ Mid-phase checkpoint (no stop required): once P2-T05, P2-T11, P2-T12 and P2-T13 
 - **Exit criteria:**
   - [ ] Full suite green: `pnpm verify`
   - [ ] Boundary check green: `pnpm check:architecture && pnpm metrics` (no new SDP warning; adapters D recorded)
-  - [ ] Phase acceptance tests green: `node --test packages/testing-api/test/` and `pnpm test:contract`
+  - [ ] Phase acceptance tests green: `node --test "packages/testing-api/test/*.test.ts"` and `pnpm test:contract`
   - [ ] **PRD exit test:** `pnpm eval stability` at 95% or more on the approved fixed test set
 - **Demo:**
   ```bash

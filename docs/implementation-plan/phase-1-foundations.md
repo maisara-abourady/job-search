@@ -54,7 +54,7 @@ Amended 2026-11-11 for the scope revision: `userId` is `personId`; `AccessGuard`
   - [ ] `pnpm smoke` and every earlier test still pass
 - **Verify:**
   ```bash
-  node --test packages/testing-api/test/ && pnpm smoke && pnpm verify
+  node --test "packages/testing-api/test/*.test.ts" && pnpm smoke && pnpm verify
   ```
 
 ### P1-T03 — Rules: choose 5 to 8 selling points and suggest a target seniority band

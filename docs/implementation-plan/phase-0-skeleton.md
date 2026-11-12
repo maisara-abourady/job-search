@@ -49,7 +49,7 @@ The gate has two parts. **Gate 0A (technical)** covers P0-T01 to P0-T09; Phase 1
   - [ ] Running the check on the real repository still prints `architecture ok`
 - **Verify:**
   ```bash
-  node --test tools/architecture/test/ && pnpm check:architecture
+  node --test "tools/architecture/test/*.test.mjs" && pnpm check:architecture
   ```
 
 ### P0-T03 — Extend checker and test coverage to new directories
@@ -70,7 +70,7 @@ The gate has two parts. **Gate 0A (technical)** covers P0-T01 to P0-T09; Phase 1
   - [ ] `pnpm verify` runs typecheck, check, `test` and `test:contract` (the last may find zero files until P0-T06)
 - **Verify:**
   ```bash
-  node --test tools/architecture/test/ && pnpm verify
+  node --test "tools/architecture/test/*.test.mjs" && pnpm verify
   ```
 
 ### P0-T04 — Complete the testing API as a Main configuration
@@ -91,7 +91,7 @@ The gate has two parts. **Gate 0A (technical)** covers P0-T01 to P0-T09; Phase 1
   - [ ] The 22 existing tests still pass unchanged
 - **Verify:**
   ```bash
-  node --test packages/testing-api/test/ && pnpm verify
+  node --test "packages/testing-api/test/*.test.ts" && pnpm verify
   ```
 
 ### P0-T05 — Walking skeleton through the dev Main
@@ -110,7 +110,7 @@ The gate has two parts. **Gate 0A (technical)** covers P0-T01 to P0-T09; Phase 1
   - [ ] The smoke test is part of `pnpm test`
 - **Verify:**
   ```bash
-  pnpm smoke && node --test apps/main/test/ && pnpm check:architecture
+  pnpm smoke && node --test "apps/main/test/*.test.ts" && pnpm check:architecture
   ```
 
 ### P0-T06 — Home for adapter contract suites, with the first storage suite
@@ -238,7 +238,7 @@ The gate has two parts. **Gate 0A (technical)** covers P0-T01 to P0-T09; Phase 1
 
 - **Exit criteria (0A, technical):**
   - [ ] Full suite green: `pnpm verify` (typecheck, architecture check, lint, tests, contract tests)
-  - [ ] Boundary check green and self-tested: `pnpm check:architecture && node --test tools/architecture/test/`
+  - [ ] Boundary check green and self-tested: `pnpm check:architecture && node --test "tools/architecture/test/*.test.mjs"`
   - [ ] CI green on the default branch: `gh run list --workflow verify.yml --limit 1`
   - [ ] Skeleton acceptance: `pnpm smoke` and `pnpm eval sample`
 - **Exit criteria (0B, decision):**

@@ -2,10 +2,16 @@
 // a manifest drifts from the architecture, or a cycle appears. With --metrics, reports I, A and D (§4.6, §4.7).
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { dirname, join, relative, resolve, sep } from "node:path";
-import { fileURLToPath } from "node:url";
-import { AREAS, COMPONENTS, RESTRICTED_SUBPATHS, TYPE_ONLY_AREA_IMPORTS } from "./components.mjs";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
-const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
+// The root is this repository unless `--root <dir>` or ARCH_ROOT names another workspace (the checker's own tests
+// use fixture workspaces). The architecture map is always read from <root>/tools/architecture/components.mjs.
+const rootArg = process.argv.indexOf("--root");
+const root = rootArg !== -1 ? resolve(process.argv[rootArg + 1])
+  : process.env.ARCH_ROOT ? resolve(process.env.ARCH_ROOT)
+  : resolve(dirname(fileURLToPath(import.meta.url)), "../..");
+const { AREAS, COMPONENTS, RESTRICTED_SUBPATHS, TYPE_ONLY_AREA_IMPORTS } =
+  await import(pathToFileURL(join(root, "tools/architecture/components.mjs")).href);
 const errors = [];
 const warn = [];
 
