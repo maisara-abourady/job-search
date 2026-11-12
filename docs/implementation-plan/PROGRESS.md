@@ -10,7 +10,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (reason i
 
 ### HUMAN tasks to start now
 - [ ] H-0 Commit the scope-revision work (PRD, ADRs 0014 to 0016, README, deferred.md, code) and this plan amendment
-- [ ] H-1 Choose the runtime on the owner's machine: Claude Code headless with own subscription vs Claude API with own key
+- [x] H-1 Runtime: Claude Code headless with the owner's existing subscription (2026-11-12)
 - [ ] H-3 20 consented test resumes
 
 ### Phase 0 — Verify and complete the walking skeleton
@@ -24,7 +24,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (reason i
 - [ ] P0-T08 Formatter and lint check
 - [ ] P0-T09 Continuous integration
 - [ ] S-1 Which runtime implements each model port?
-- [ ] H-1 Runtime on the owner's machine chosen
+- [x] H-1 Runtime on the owner's machine chosen (subscription)
 - [ ] GATE 0A (technical)
 - [ ] P0-T10 Record the model runtime decision (D1) in ADR 0009 (not yet written)
 - [ ] GATE 0B (decision)
@@ -130,3 +130,4 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (reason i
 | 2026-11-11 | P0-T10, S-1, Phases 1 and 2 | Fixed the dangling "ADR 0009" citations: the ADR is still to be written by P0-T10 (or from S-1), and must record the temperature-0 replacement the user approved; Phase 1 and 2 citations now say so. P1-T08's ADR number changed from 0010 (now taken) to the next free number | ADR 0009 does not exist; ADRs 0010 to 0016 were written since the plan |
 | 2026-11-11 | P1-T01, P1-T02, P1-T04, P1-T07, P1-T10, P1-T12 | `userId` is `personId`; `IntakeResume` calls `SpendingGuard` (on demand, uncapped) instead of `AccessGuard`; resume files implement `PersonDataVault`; the intake controller handles "ask first"; the configuration loader gathers the owner's credential | ADRs 0014, 0015, 0016 |
 | 2026-11-11 | Phases 3, 4, 5 | Phase 3: no sign-up, authentication or staging; local database (SQLite default) with schema versioning instead of Postgres with encryption; data-folder files instead of encrypted object storage; local web Main with loopback bind, the local-request hook (W15), a minimal profile picker and the ticker; product events stored locally (D14). Phase 4: daily cap through `SpendingGuard`; files in the data folder. Phase 5: Tier 4 conditional on the owner naming boards, no proxy pool or markets; switches without a restart; S-7 added | ADRs 0014, 0015, 0016; deferred.md D2, D5, D8, D11, D14, D15, W15 |
+| 2026-11-12 | 0, 5, HUMAN | H-1 done: runtime is Claude Code headless with the owner's subscription (API key route not explored, per owner). S-1 narrowed to how each port runs on it. P5-T02 acceptance adds the PRD's per-board blocking-risk table and human-pace session rules | Owner's instruction 2026-11-12; PRD revision of 2026-11-12 |

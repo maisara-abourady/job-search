@@ -449,10 +449,41 @@ ATS endpoints are queried per company, so the product needs a registry of employ
 
 ### Scraping safeguards
 
-1. Each Tier 4 adapter has a rate limit and an on/off switch, and is off by default. No proxy pool: this is personal, low-volume use.
+1. Each Tier 4 adapter has an on/off switch, is off by default, and runs at human pace (below). No proxy pool: this is personal, low-volume use from the owner's own IP address.
 2. When a Tier 4 source fails, the same queries fall back to Tier 3 aggregators.
 3. Scraped pages are stored only as normalized job fields plus the source link.
 4. The owner turns on a Tier 4 board only after reading that board's terms and accepting the risk. Never use a logged-in personal account (for example a LinkedIn login) for scraping, since that account can be banned.
+
+### Blocking risk by board
+
+All requests come from the owner's home IP address, so a block affects the owner's normal browsing of that site too. Risk levels are as known in November 2026 (JobSpy documentation and general experience); boards change their defences without notice, so the app treats every level as provisional.
+
+| Board | Risk of an IP block | What is known | Default stance |
+| --- | --- | --- | --- |
+| LinkedIn | High | Answers bursts with HTTP 429 (usually clears within about a minute); the most restrictive board; actively pursues scrapers; personal accounts get banned | Allowed only at human pace, anonymous, never logged in |
+| Glassdoor | High | Rate-limits above about 2 requests a second; often puts content behind a login wall | Allowed only at human pace, anonymous |
+| Indeed | Medium | JobSpy currently reports no rate limiting, but the board is known for aggressive bot protection that can change overnight | Allowed only at human pace |
+| ZipRecruiter | Medium to high (undocumented) | US and Canada only; no published limits, so treat it like LinkedIn | Allowed only at human pace, only when a profile targets the US or Canada |
+| Google Jobs | High | Google shows "unusual traffic" CAPTCHAs to automated searches; JobSpy reports direct scraping as currently unavailable | Never scraped directly; reached through SerpApi (Tier 3) instead |
+| Bayt | Low to medium (undocumented) | Middle East board; no published limits | Allowed only at human pace |
+| Employer career pages | Low | One employer, a few pages; many are hosted on Tier 1 ATSs and are fetched there instead | Allowed at human pace, per employer |
+
+### Human pace
+
+Tier 4 scraping imitates one person browsing one board, not a crawler. The pacing protects the owner's IP address and keeps the load on each board negligible. It is not a way around a board's defences: the app never rotates IPs, spoofs browser fingerprints, solves CAPTCHAs, or retries around a block.
+
+| Rule | Value (assumption, tunable) |
+| --- | --- |
+| Concurrency | One request at a time per board; different boards may run side by side |
+| Gap between requests | Random 8 to 20 seconds, as if reading a results page; a longer random pause of 1 to 3 minutes every 10 to 15 requests |
+| Session length | At most 30 minutes of activity per board, or 60 requests, whichever comes first |
+| Rest between sessions | At least 4 hours per board; at most 3 sessions per board per day |
+| Shared budget | The limits are per board for the whole machine, not per profile: all profiles share one IP address, so their Tier 4 queries are pooled into the same session and de-duplicated |
+| What a session fetches | Search-result pages first; posting detail pages only for jobs that pass the relevance prefilter, most relevant first |
+| Ordinary browser behaviour | A normal, current browser identity string; cookies kept within a session and cleared between sessions; no logged-in account |
+| On any sign of blocking | A 429, a 403, a CAPTCHA page, or a login wall ends the session at once; that board rests for 24 hours, then 48, then is switched off and the owner is told; the run continues on Tiers 1 to 3 |
+
+Because a session takes up to 30 minutes, Tier 4 never sits on the path to the first result. A run returns Tier 1 to 3 results within the usual targets (first result in 60 seconds, full run in 5 minutes); Tier 4 runs as a background session and its jobs are scored and added to the tabs, and to the inbox, as they arrive.
 
 ## Agent architecture
 
@@ -469,7 +500,7 @@ The API hands work to the agent; the agent dispatches pipeline workers, which pu
 | Builder | Implements the product phase by phase from this PRD, with you reviewing each phase |
 | Runtime agent | Plans searches, scores jobs, tailors resumes, and drafts fixes when a scraper breaks |
 
-The app runs only on the owner's machine, using the owner's own Claude account or API key; nothing is hosted for other people. Which runtime to use (Claude Code headless with the owner's subscription, or the Claude API with the owner's API key) is decided in Phase 0 against the current [Claude Code documentation](https://docs.claude.com/en/docs/claude-code/overview) and terms. Because friends' data passes through it, the API key route is the safer default if the subscription terms are unclear.
+The app runs only on the owner's machine; nothing is hosted for other people. **Decided (Nov 12, 2026):** the runtime is Claude Code run headless on the owner's machine with the owner's existing Claude subscription. No API key or alternative is explored. Phase 0 confirms only how each model task runs on it (structured output, speed) and how its usage is shown in the running-cost panel, since a subscription has no per-call price.
 
 ### Runtime agent tasks
 
@@ -492,7 +523,7 @@ A small, cheap model handles extraction and enrichment. A large model handles sc
 | API and workers | TypeScript or Python services with a job queue |
 | Database | A local database: SQLite, or Postgres with pgvector if embeddings need it |
 | File storage | A folder on the owner's machine for resumes and generated files |
-| Scraping | JobSpy plus custom adapters, off by default |
+| Scraping | JobSpy plus custom adapters, off by default, human-paced |
 
 ## Data model
 
@@ -598,7 +629,7 @@ The two largest risks are scraping exposure and the owner's running cost.
 
 | Risk | Effect | Mitigation |
 | --- | --- | --- |
-| Job boards block or object to scraping | Tier 4 coverage disappears; a personal account could be banned | Off by default, aggregator fallback, no logged-in accounts, an app that works on tiers 1 to 3 |
+| Job boards block or object to scraping | Tier 4 coverage disappears; the owner's home IP address is blocked from that board, including for normal browsing; a personal account could be banned | Off by default, human pace with session limits, stop and rest at the first sign of blocking, aggregator fallback, no logged-in accounts, an app that works on tiers 1 to 3 |
 | Model and aggregator cost grows beyond what the owner wants to pay | Unwelcome bills | Spend shown per profile, monthly budget, prefilter cap, model tiering, caching, daily caps |
 | Users distrust scores | Low engagement with verdicts | Evidence cited for every judgment, Fix a fact, score stability rule |
 | Users confirm keywords they do not have | Resumes that overclaim | One-line usage description required per keyword; list of added keywords shown for interview preparation |
@@ -609,7 +640,7 @@ The two largest risks are scraping exposure and the owner's running cost.
 
 ### Open questions
 
-- [ ] Runtime on the owner's machine: Claude Code headless with the owner's subscription, or the Claude API with an API key (decided in Phase 0)?
+- [x] Runtime on the owner's machine: Claude Code headless with the owner's existing subscription (decided Nov 12, 2026)
 - [ ] Which Tier 4 boards, if any, will the owner turn on?
 - [ ] Where does the initial Tier 1 company registry come from?
 - [ ] Is 12 hours the right monitoring interval?
@@ -630,3 +661,4 @@ Six phases, each built with Claude Code and closed by an exit test before the ne
 ## Change log
 
 - **Nov 11, 2026, scope revision.** The app is a personal tool that runs locally on the owner's machine, for the owner and a few friends, and is never hosted or monetized. Removed: the consumer framing, sign-up, the 7-day trial, the paywall, billing, pricing, launch markets, legal review, privacy policy, and proxy pool. Replaced Account and billing (AB-1 to AB-4) with Profiles and local operation (AB-1 to AB-5), Flow 8 Trial end with Managing profiles, Pricing and trial with Running cost, and Phase 6 with Local packaging and data controls. Tier 4 scraping is now off by default.
+- **Nov 12, 2026.** Runtime decided: Claude Code headless with the owner's existing subscription. Added Blocking risk by board and Human pace rules for Tier 4 scraping; Google Jobs is reached only through SerpApi.
