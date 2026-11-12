@@ -1,6 +1,6 @@
 # 0002. The model judges; the rules decide
 
-Status: accepted (2026-11-11)
+Status: accepted (2026-11-11). Amended by ADR 0009: the runtime has no temperature setting. "Scoring runs at temperature 0" is replaced by structured output, a fixed versioned rubric and cached judgments, and stability is measured on fresh judgments.
 
 ## Context
 

@@ -1,6 +1,6 @@
 # 0016. Local-only operation: one process on the owner's machine, loopback-only delivery, monitoring while the app runs, Tier 4 off by default
 
-Status: accepted (2026-11-11). **Amends** ADR 0003 (the runtime options and their trigger), ADR 0004 (no launch markets; Tier 4 off by default; no proxy pool), ADR 0006 (web, background work, file storage and database rows: now local choices) and ADR 0011 (the event destination D14 is decided: local).
+Status: accepted (2026-11-11). **Amends** ADR 0003 (the runtime options and their trigger), ADR 0004 (no launch markets; Tier 4 off by default; no proxy pool), ADR 0006 (web, background work, file storage and database rows: now local choices) and ADR 0011 (the event destination D14 is decided: local). Decision 5 is made concrete by ADR 0009: the "credential" is a signed-in `claude` CLI that Main checks at start.
 
 ## Context
 

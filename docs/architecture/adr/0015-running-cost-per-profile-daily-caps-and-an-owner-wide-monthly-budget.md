@@ -1,6 +1,6 @@
 # 0015. Running cost is bounded by per-profile daily caps and one optional owner-wide monthly budget, enforced by a spending guard inside the use cases
 
-Status: accepted (2026-11-11). **Supersedes ADR 0010 decision 7** (count-based fair-use caps in `rules/access`) and closes watch item W13. Amends ADR 0010 decision 8 and its "active user" interpretation, and watch item W8.
+Status: accepted (2026-11-11). **Supersedes ADR 0010 decision 7** (count-based fair-use caps in `rules/access`) and closes watch item W13. Amends ADR 0010 decision 8 and its "active user" interpretation, and watch item W8. Its open consequence on subscription spend is settled by ADR 0009: adapters report the CLI's priced estimate.
 
 ## Context
 

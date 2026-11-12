@@ -1,6 +1,6 @@
 # 0003. The runtime agent is a detail behind need-named ports; the pipeline is a use case
 
-Status: accepted (2026-11-11). Supersedes the PRD's topology "the API hands work to the agent; the agent dispatches pipeline workers". Amended by ADR 0016: the runtime is no longer hosted; the options are Claude Code headless with the owner's subscription or the Claude API with the owner's key (D1), and the owner's credential is gathered by Main.
+Status: accepted (2026-11-11). Supersedes the PRD's topology "the API hands work to the agent; the agent dispatches pipeline workers". Amended by ADR 0016: the runtime is no longer hosted; the options are Claude Code headless with the owner's subscription or the Claude API with the owner's key (D1), and the owner's credential is gathered by Main. Amended by ADR 0009: decision 3 is made (Claude Code headless with the owner's subscription; one adapter class per port in `@matchmaker/model-runtime-claude-code`; `RelevanceRanker` ranks lexically with no model).
 
 ## Context
 

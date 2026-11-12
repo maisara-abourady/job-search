@@ -98,6 +98,7 @@ Every arrow points toward higher-level policy. Instability decreases along every
 - `delivery` depends only on `use-cases`; it never sees an Entity.
 - `adapters` and `scraping-sources` depend on `use-cases` and `rules`.
 - Nothing depends on `main` except the testing API. Nothing depends on the testing API.
+- **Planned (ADR 0009, created by P1-T10):** `@matchmaker/model-runtime-claude-code`, circle 3-4, which may import `rules` and `use-cases`. Main and the testing API's contract suites depend on it. Its areas are `headless` (the humble CLI runner) and one area per use-case area it serves (`onboarding`, `discovery`, `matching`, `tailoring`), each of which may import only `headless`. `@matchmaker/adapters` gains the area `relevance`. `UnchosenModelRuntime` is deleted once every model port has its adapter.
 
 ## Boundaries
 
@@ -107,7 +108,7 @@ Every arrow points toward higher-level policy. Instability decreases along every
 | Use cases and delivery | Package | Full: input ports and plain request/response models owned by use cases; types-only surface; interactors only via `/wiring` for Main | Controller calls input port; query use cases return response models; streaming via the `ResultsFeed` output port; presenters build view models of strings, flags and enums. "Ask first" past the budget is an error code plus `overBudgetConfirmed` in the next request (ADR 0015) |
 | Use cases and storage | Package | Full: gateways per area, named for the need, implemented by `InMemoryStore` (later a local database, D2). Examples: `ResultsReadModel.jobDetail` returns evidence text from the match's own profile version (ADR 0012); `People.recordOpened`; `MonitoringRoster.peopleWithMonitoringOn` | Entities and plain records in and out; never rows |
 | Use cases and a person's data across stores | Package | Full: `PersonDataVault` owned by `profiles`, implemented by every store and composed by `JsonArchiveVault` in each configuration (ADR 0014) | Bytes of a JSON archive out; erase by `personId` (spend kept with a null person) |
-| Use cases and model runtime | Package | Full: one port per judgment need; models receive only `ScoringProfile`; the owner's credential stays in Main (ADR 0003, 0016) | Plain structures (`MatchJudgments`, `SearchPlan`, `Enrichment`, and so on) |
+| Use cases and model runtime | Package (planned `model-runtime-claude-code`; the adapters drive the `claude` CLI as a child process per call) | Full: one port per judgment need; models receive only `ScoringProfile`; the runtime's configuration and its start check stay in Main (ADR 0003, 0009, 0016). The prefilter ranks lexically in `adapters/relevance`, with no model (ADR 0009) | Plain structures (`MatchJudgments`, `SearchPlan`, `Enrichment`, and so on), mapped from the CLI's `structured_output` inside the adapter; the envelope, cost fields and model ids never cross |
 | Use cases and job sources | Package | Full: `JobSource` port, tier as data, `SourceSwitchboard` (null means never switched; Tier 4 then off) | `FoundPosting` in the common schema |
 | Tier 4 and everything else | Separate package, optional per installation | Full at package level (ADR 0004) | Same `JobSource` port |
 | Use-case areas among themselves | Folders in one package | **Partial** (enforced folder isolation; cross-area needs go through request ports wired in Main) | `SearchRequests`, `RescoreRequests`, `ScoringRequests` (carries `runId`), `MonitoringSearchRequests` |
@@ -127,6 +128,7 @@ The **decoupling mode** is source-level: one local process and one deployment (A
 - Fewer than 20 unique jobs triggers one widening pass.
 - MN-4 "14 days without a login" is 14 days since the owner last opened the profile (ADR 0014).
 - The monthly budget is one owner-wide budget over all profiles' spend in the calendar month (UTC) (ADR 0015).
+- The PRD's "embedding similarity" prefilter is in-process lexical ranking, because the chosen runtime has no embeddings. Model spend under the subscription is the CLI's priced estimate, not a charge (ADR 0009).
 
 ## Main
 
@@ -134,7 +136,27 @@ The **decoupling mode** is source-level: one local process and one deployment (A
 - Its input is `MatchmakerDetails`: storage, model ports, sources, clock, ids, feed, usage ledger, spend ledger and spend attribution, the person-data vault, and the product-events destination.
 - Each configuration creates one `AsyncSpendMeter` and hands it both to `composeMatchmaker` (as attribution) and to every adapter that spends money (as `SpendMeter`, ADR 0010). It composes the `JsonArchiveVault` from every store that holds a person's data.
 - **`apps/main/src/main.dev.ts`** is the development configuration: in-memory storage, Tier 1 only, `UnchosenModelRuntime`, `TemplateNarrator`. It starts the monitoring `IntervalTicker` (a catch-up tick now, then every 15 minutes) without keeping the process alive. Run it with `node apps/main/src/main.dev.ts`.
-- **Planned configuration:** the owner's local install (D5, D15): the local web Main, binding `127.0.0.1` only and calling `acceptsLocalRequest` before every handler; a local database and data folder (D2, D8); the chosen runtime with the owner's credential (D1); the ticker kept alive while the app runs. A worker Main only if D4 fires.
+- **Model runtime (ADR 0009).** Every configuration that makes real model calls does the following:
+  - It gathers a `ClaudeCodeRuntimeConfig` from the owner's local configuration (environment or a gitignored file; X-2). The settings are:
+    - the command (`claude`);
+    - the tier aliases (large `sonnet`, small `haiku`) and the map from port to tier;
+    - `maxConcurrentCalls` (5);
+    - the per-call timeout (60 s);
+    - `modelTrainingOffConfirmed`.
+  - It calls `checkClaudeCodeReady` before composing, and exits 1 with one message listing what is missing. The checks are:
+    - the CLI is installed at the minimum version;
+    - the CLI is signed in with the subscription, checked without a model call;
+    - the owner has confirmed that "Help improve Claude" is off (Privacy 4). This is a declaration: no CLI or API can verify it, so the start prints the confirmed date and the owner's README repeats the rule.
+  - It hands the configuration and the `SpendMeter` to each port adapter. Adapters record the CLI's priced estimate (`total_cost_usd`) as model spend.
+
+  The testing API, CI's smoke run and the contract suites use scripted or recorded models and skip the check.
+- **Planned configuration:** the owner's local install (D5, D15). It is the local web Main:
+  - it binds `127.0.0.1` only and calls `acceptsLocalRequest` before every handler;
+  - it uses a local database and data folder (D2, D8);
+  - it uses the Claude Code runtime as above (D1, ADR 0009);
+  - it keeps the ticker alive while the app runs.
+
+  A worker Main is added only if D4 fires.
 
 ## Testing API
 

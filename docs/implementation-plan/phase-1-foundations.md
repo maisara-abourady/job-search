@@ -208,12 +208,12 @@ Amended 2026-11-11 for the scope revision: `userId` is `personId`; `AccessGuard`
 ### P1-T10 — Model runtime package, configuration loader and the resume analyst
 
 - **Traces to:** A-7, P-4, X-2, X-9, X-12, D1, ADR 0003, ADR 0009 (written in P0-T10), ADR 0016 §5, RP-2, RP-4, RP-5, RP-6
-- **Layer:** Interface adapters (the model-runtime package named in ADR 0009) and Main (`apps/main/src/config.ts`) — the adapter must not import delivery, main, testing-api or `/wiring`; nothing inside use-cases or rules may name a model, vendor or prompt
+- **Layer:** Interface adapters (`@matchmaker/model-runtime-claude-code`, ADR 0009 decision 2) and Main (`apps/main/src/config.ts`) — the adapter must not import delivery, main, testing-api or `/wiring`; nothing inside use-cases or rules may name a model, vendor or prompt
 - **Depends on:** P0-T10 (Gate 0B), H-2, P1-T04
 - **Size:** L
 - **Context:** Real resume parsing. Create the model-runtime package per ADR 0009 (components entry, manifests; the ADR already covers it). Implement `ResumeAnalyst`: `structure(text)` (roles with employer, title, start and end month, achievements as evidence items with stable ids, skills with evidence ids, credentials, languages, inferred seniority on the ladder, personal details only in `personal`), `sellingPointCandidates` (the three tier questions answered per candidate, citing an evidence id), `strengthRatios` (five component ratios and the three fixes that would raise the score most). Use structured output against schemas; use the `claude-api` skill for current SDK usage if the runtime is the Messages API. Main gets a typed configuration loader for the owner's local configuration (environment variables or a gitignored local file; no secrets store, ADR 0016 §5): each configuration declares what it needs, such as the owner's API key or the Claude Code subscription session as ADR 0009 says, and fails at start with a message listing what is missing. The credential goes to the adapters' constructors and never into use cases. Add `resumeAnalystContract`: every id a role, skill or candidate cites exists in `evidence`; months are `YYYY-MM`; ratios are within 0 to 1. Run it against the scripted analyst and against this adapter with a recorded response (no network in `pnpm verify`).
 - **Files:**
-  - create the package from ADR 0009 (e.g. `packages/model-runtime-<name>/package.json`, `tsconfig.json`, `src/index.ts`, `src/resume-analyst.ts`, `src/schemas/resume.ts`)
+  - create `packages/model-runtime-claude-code/` per ADR 0009 decision 2 (`package.json`, `tsconfig.json`, `src/index.ts`, `src/headless/` for the CLI runner, `src/onboarding/resume-analyst.ts` and its schema), and apply the `components.mjs` entry and areas the ADR gives
   - create `apps/main/src/config.ts`
   - modify `apps/main/src/main.dev.ts`, `apps/main/package.json`, `pnpm-lock.yaml`
   - create `packages/testing-api/contract/resume-analyst.contract.ts`, `packages/testing-api/contract/resume-analyst.contract.test.ts`, `packages/testing-api/contract/fixtures/analyst-recorded-response.json`
@@ -223,7 +223,8 @@ Amended 2026-11-11 for the scope revision: `userId` is `personId`; `AccessGuard`
   - [ ] Starting the dev configuration without the credential prints the missing setting names and exits 1; with it, starts
   - [ ] `.gitignore` covers the local configuration file; `git check-ignore` confirms it
   - [ ] `grep` finds no model name, vendor name or prompt text under `packages/use-cases` or `packages/rules`
-  - [ ] The no-training setting of the owner's account is written in ADR 0009's consequences or PROGRESS.md Notes (Privacy 4)
+  - [ ] Main refuses to start a model-calling configuration until the training-off confirmation is set (ADR 0009 decision 7, Privacy 4); the owner's H-2 confirmation date is in PROGRESS.md Notes
+  - [ ] Confirmed against current Claude Code docs, and recorded in PROGRESS.md: the sign-in status command that makes no model call, and the flag that keeps user-level CLAUDE.md, hooks and plugins out of calls (ADR 0009 hand-off)
 - **Verify:**
   ```bash
   pnpm test:contract && pnpm verify && ! grep -rniE "claude|anthropic|prompt|temperature" packages/use-cases/src packages/rules/src

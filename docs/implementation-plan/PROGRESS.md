@@ -1,7 +1,7 @@
 # Progress
 
 Current phase: 0 — Verify and complete the walking skeleton
-Next task: S-1 confirmation run on the owner's machine, then P0-T10; Phase 1 (P1-T01 to P1-T08) in a fresh session
+Next task: Gate 0B review by the owner; Phase 1 (P1-T01 to P1-T08) in a fresh session
 Last updated: 2026-11-12 by execution (P0-T09)
 
 ## Status
@@ -26,7 +26,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (reason i
 - [x] S-1 Which runtime implements each model port?
 - [x] H-1 Runtime on the owner's machine chosen (subscription)
 - [x] GATE 0A (technical) — approved by the owner 2026-11-12 (Phase 1 tasks P1-T01 to P1-T08 may start)
-- [ ] P0-T10 Record the model runtime decision (D1) in ADR 0009 (not yet written)
+- [x] P0-T10 Record the model runtime decision (D1) in ADR 0009
 - [ ] GATE 0B (decision)
 - [ ] H-2 Owner's model account, no-training setting, local credential (after P0-T10)
 - [x] H-4 Parsing thresholds confirmed (default accepted)
@@ -129,6 +129,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (reason i
 - 2026-11-12 (S-1, P0-T10): S-1 has no task dependencies, but its measurements (structured output, latency, what spend headless calls report) must run Claude Code headless on the owner's subscription on the owner's machine. This container has neither, and a run here would not measure the owner's setup, so S-1 is left for the owner (or a session on their machine). P0-T10 and Gate 0B wait on it.
 - 2026-11-12 (S-1): spike script `tools/spikes/s1/run-s1.mjs` with fictional samples. First run in this cloud session on the owner's account: all 25 calls schema-valid, latencies well inside the NFRs, every call reports a cost estimate, one of two repeated judgments flipped one requirement. Answer in PLAN.md "Spike answers". Left: a run on the owner's machine for latency and the hand-filled facts (usage limits, training setting).
 - 2026-11-12 (S-1, owner): plan is Claude Ultra. "Help improve Claude" is currently ON, which breaks PRD Privacy 4; turning it off is part of H-2 and must happen before any real resume reaches the model (P1-T10, P1-T11). The owner accepts the cloud-session latency numbers as the S-1 latency answer. The owner will install and run the app on their machine at the end (ADR 0016) without working in the repository.
+- 2026-11-12 (P0-T10): `/architect` wrote ADR 0009. Every model port runs on Claude Code headless with the owner's subscription. Large (`sonnet`): ResumeAnalyst, SearchPlanner, MatchJudge, Interviewer, ResumeWriter. Small (`haiku`): PostingEnricher, KeywordMatcher. No model: DocumentReader, MatchNarrator, and RelevanceRanker (in-process lexical, D3). Package `@matchmaker/model-runtime-claude-code`. Spend is the per-call `total_cost_usd` estimate. Main refuses to start model calls without the training-off confirmation (Privacy 4). New watch items W17 (one-posting-at-a-time enrichment and judging may miss the 60 s first result: decide before P2-T13), W18 (subscription usage limits), W19 (Claude Code self-updates). D1 and D3 decided in deferred.md; ADRs 0002, 0003, 0015 and 0016 carry an "amended by ADR 0009" line.
 
 ## Deviations log
 
@@ -150,3 +151,5 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (reason i
 | 2026-11-12 | P0-T09 | The "failing test makes CI fail" check ran as a probe commit on the working branch, removed in the next commit, instead of on a throwaway branch | This session may push only to its working branch |
 | 2026-11-12 | H-3, P1-T11, Gate 1 | The parsing test set is 6 real resumes, not 20 (all PDFs). Variety the plan asked for (DOCX, pasted text, LinkedIn export, scanned PDF; new graduate, career changer, long history, gaps) is not yet covered; how to fill it is an open question for the owner | The owner can supply at most 6 |
 | 2026-11-12 | S-1 | Spike code is on the working branch (`tools/spikes/s1/`, results gitignored), not a throwaway branch; first run in the cloud session, confirmation run on the owner's machine | The owner must be able to fetch and run it; this session may push only to its working branch |
+| 2026-11-12 | P1-T10 | Package fixed to `packages/model-runtime-claude-code`; no-training criterion now the start-up refusal plus the H-2 date; new criterion to confirm the sign-in check and settings-isolation flag against current docs | ADR 0009 |
+| 2026-11-12 | P2-T11, P2-T12, P2-T13, P4-T04, P6-T03, P6-T08 | To apply when Phase 2 is re-read at Gate 1 and later phases are detailed: P2-T11/P2-T12 make enrichment and judging concurrent in the use cases (runner bounds at `maxConcurrentCalls`, default 5); P2-T13 ranker is lexical in `packages/adapters/src/relevance/` with no spend line; decide W17 before P2-T13; P4-T04 deletes `UnchosenModelRuntime` and the adapters' `model-runtime` area; P6-T03/P6-T08 label model spend as an estimate and the README states the training rule | ADR 0009 hand-offs |
