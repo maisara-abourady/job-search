@@ -33,7 +33,7 @@ const packageOf = (spec) => spec.split("/").slice(0, spec.startsWith("@") ? 2 : 
 
 const files = {}; // component -> [{ path, src }]
 for (const [name, c] of Object.entries(COMPONENTS)) {
-  const dirs = ["src", "test"].map((d) => join(root, c.dir, d)).filter((d) => { try { return statSync(d).isDirectory(); } catch { return false; } });
+  const dirs = ["src", "test", "contract", "eval"].map((d) => join(root, c.dir, d)).filter((d) => { try { return statSync(d).isDirectory(); } catch { return false; } });
   files[name] = dirs.flatMap(walk).map((path) => ({ path, src: readFileSync(path, "utf8") }));
 }
 

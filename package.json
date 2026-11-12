@@ -7,8 +7,9 @@
     "typecheck": "node tools/architecture/typecheck.mjs",
     "check:architecture": "node tools/architecture/check.mjs",
     "metrics": "node tools/architecture/check.mjs --metrics",
-    "test": "node --test \"packages/*/test/**/*.test.ts\" \"tools/architecture/test/*.test.mjs\"",
-    "verify": "pnpm run typecheck && pnpm run check:architecture && pnpm run test"
+    "test": "node --test \"packages/*/test/**/*.test.ts\" \"apps/*/test/**/*.test.ts\" \"tools/**/test/*.test.mjs\"",
+    "test:contract": "node --test \"packages/testing-api/contract/**/*.contract.test.ts\"",
+    "verify": "pnpm run typecheck && pnpm run check:architecture && pnpm run test && pnpm run test:contract"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

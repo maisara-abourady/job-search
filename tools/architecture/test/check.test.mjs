@@ -114,6 +114,20 @@ test("an adapter subfolder importing another fails", () =>
     /area "storage" may not import area "clock"/,
   ));
 
+test("a violation inside a contract/ directory fails", () =>
+  assertViolation(
+    { "packages/use-cases/contract/store.contract.test.ts": 'import { MemoryStore } from "@matchmaker/adapters";\nexport const s = new MemoryStore();\n' },
+    "packages/use-cases/contract/store.contract.test.ts",
+    /@matchmaker\/use-cases may not depend on @matchmaker\/adapters/,
+  ));
+
+test("a violation inside an eval/ directory fails", () =>
+  assertViolation(
+    { "apps/main/eval/reach-in.ts": 'import { MemoryStore } from "../../../packages/adapters/src/storage/memory-store.ts";\nexport const s = new MemoryStore();\n' },
+    "apps/main/eval/reach-in.ts",
+    /relative import leaves the component/,
+  ));
+
 test("the real repository still passes", () => {
   const r = spawnSync(process.execPath, [checker], { encoding: "utf8", cwd: repoRoot });
   assert.equal(r.status, 0, r.stdout + r.stderr);
