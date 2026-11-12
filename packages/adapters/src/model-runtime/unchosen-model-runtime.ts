@@ -5,8 +5,10 @@ import type {
   MatchJudge,
   PostingEnricher,
   RelevanceRanker,
+  ResumeAnalyst,
   SearchPlan,
   SearchPlanner,
+  StructuredResume,
 } from "@matchmaker/use-cases";
 
 /**
@@ -14,7 +16,16 @@ import type {
  * Claude Code headless, the Claude Agent SDK, or a direct model API. Each judgment-backed port gets its
  * own adapter class when chosen; model tiering (small for enrichment, large for judging) is configured in Main.
  */
-export class UnchosenModelRuntime implements MatchJudge, SearchPlanner, PostingEnricher, RelevanceRanker {
+export class UnchosenModelRuntime implements MatchJudge, SearchPlanner, PostingEnricher, RelevanceRanker, ResumeAnalyst {
+  async structure(_text: string): Promise<StructuredResume> {
+    return notYetBuilt("ADR 0009: ResumeAnalyst adapter (P1-T10)");
+  }
+  async sellingPointCandidates(_resume: StructuredResume): ReturnType<ResumeAnalyst["sellingPointCandidates"]> {
+    return notYetBuilt("ADR 0009: ResumeAnalyst adapter (P1-T10)");
+  }
+  async strengthRatios(_resume: StructuredResume): ReturnType<ResumeAnalyst["strengthRatios"]> {
+    return notYetBuilt("ADR 0009: ResumeAnalyst adapter (P1-T10)");
+  }
   async judge(_profile: ScoringProfile, _posting: JobPosting): ReturnType<MatchJudge["judge"]> {
     return notYetBuilt("ADR 0003: MatchJudge adapter (temperature 0, fixed rubric, structured output)");
   }

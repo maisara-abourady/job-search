@@ -1,5 +1,5 @@
 import type { JobPosting, ProfileVersion } from "@matchmaker/rules";
-import type { Enrichment, FoundPosting } from "@matchmaker/use-cases";
+import type { Enrichment, FoundPosting, ResumeAnalyst, ResumeUpload, StructuredResume } from "@matchmaker/use-cases";
 
 /** Sensible defaults so a test states only what it is about. */
 export function aProfile(o: Partial<ProfileVersion> & { personId: string }): ProfileVersion {
@@ -65,4 +65,55 @@ export function enrichmentOf(_found: FoundPosting): Enrichment {
   const { requirements, seniority, seniorityText, authorization, salary, workMode, country, language, completeness, legitimacy } =
     aJobPosting({ id: "x" });
   return { requirements, seniority, seniorityText, authorization, salary, workMode, country, language, completeness, legitimacy };
+}
+
+/** A fictional upload; by default a small PDF whose text the scripted reader returns as English. */
+export function aResumeUpload(o: Partial<ResumeUpload> = {}): ResumeUpload {
+  return { kind: "pdf", fileName: "resume.pdf", bytes: new TextEncoder().encode("Fictional resume of Dana Example"), text: null, ...o };
+}
+
+/** A fictional structured resume: two roles, three achievements, two skills, one credential. */
+export function aStructuredResume(o: Partial<StructuredResume> = {}): StructuredResume {
+  return {
+    roles: [
+      {
+        employer: "Northwind Analytics",
+        title: "Senior Data Engineer",
+        start: "2022-03",
+        end: null,
+        achievementEvidenceIds: ["ev-1", "ev-2"],
+      },
+      { employer: "Contoso Retail", title: "Data Engineer", start: "2018-06", end: "2022-02", achievementEvidenceIds: ["ev-3"] },
+    ],
+    skills: [
+      { name: "SQL", evidenceIds: ["ev-1", "ev-3"] },
+      { name: "Python", evidenceIds: ["ev-2"] },
+    ],
+    credentials: [{ kind: "degree", name: "BSc Computer Science", issuer: "Example University", year: "2018" }],
+    languages: ["en"],
+    evidence: [
+      { id: "ev-1", source: "resume-line", text: "Cut nightly pipeline time from 6 hours to 40 minutes" },
+      { id: "ev-2", source: "resume-line", text: "Built a Python data-quality service used by 12 teams" },
+      { id: "ev-3", source: "resume-line", text: "Wrote SQL reporting for 40 stores" },
+    ],
+    inferredSeniority: "senior",
+    personal: { name: "Dana Example", photoRef: null, age: null, gender: null, nationality: null, maritalStatus: null },
+    ...o,
+  };
+}
+
+export type SellingPointCandidate = Awaited<ReturnType<ResumeAnalyst["sellingPointCandidates"]>>[number];
+export type StrengthAnswer = Awaited<ReturnType<ResumeAnalyst["strengthRatios"]>>;
+
+/** A candidate whose three tier tests are answered; `yeses` picks how many are "yes" (3 Signature, 2 Strong, 1 Supporting, 0 none). */
+export function aCandidate(evidenceId: string, yeses: 0 | 1 | 2 | 3, statement = `Point on ${evidenceId}`): SellingPointCandidate {
+  return { statement, evidenceId, quantified: yeses >= 1, withinLastThreeYears: yeses >= 2, uncommonForRole: yeses >= 3 };
+}
+
+export function aStrengthAnswer(o: Partial<StrengthAnswer> = {}): StrengthAnswer {
+  return {
+    ratios: { impactEvidence: 0.5, skillsDepth: 0.5, clarityAndStructure: 0.5, careerTrajectory: 0.5, atsReadability: 0.5 },
+    topFixes: ["Quantify the 2019 migration", "Add a skills section", "Shorten the summary"],
+    ...o,
+  };
 }

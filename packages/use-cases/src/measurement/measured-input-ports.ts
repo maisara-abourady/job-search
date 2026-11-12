@@ -1,4 +1,5 @@
 import type { Clock } from "../shared/ports.ts";
+import type { CorrectProfile, CorrectProfileRequest, CorrectProfileResponse } from "../onboarding/correct-profile.ts";
 import type { CreatePerson, CreatePersonRequest, CreatePersonResponse } from "../profiles/manage-people.ts";
 import type { ListResults, ListResultsRequest, ListResultsResponse } from "../results/list-results.ts";
 import type { RecordJobDecision, RecordJobDecisionRequest } from "../results/record-job-decision.ts";
@@ -66,5 +67,24 @@ export class MeasuredRecordJobDecision implements RecordJobDecision {
         postingId: request.postingId,
       });
     }
+  }
+}
+
+/** Onboarding completion (preferences saved) and fix-a-fact rate, from the one correction use case. */
+export class MeasuredCorrectProfile implements CorrectProfile {
+  private readonly inner: CorrectProfile;
+  private readonly events: ProductEvents;
+  private readonly clock: Clock;
+  constructor(inner: CorrectProfile, events: ProductEvents, clock: Clock) {
+    this.inner = inner;
+    this.events = events;
+    this.clock = clock;
+  }
+  async execute(request: CorrectProfileRequest): Promise<CorrectProfileResponse> {
+    const response = await this.inner.execute(request);
+    const at = this.clock.now().toISOString();
+    if (request.correction.kind === "preferences") this.events.record({ name: "preferences-saved", personId: request.personId, at });
+    if (request.correction.kind === "fact") this.events.record({ name: "fact-fixed", personId: request.personId, at });
+    return response;
   }
 }

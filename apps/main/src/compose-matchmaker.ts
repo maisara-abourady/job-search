@@ -4,6 +4,7 @@ import type {
   AtsLinkRecognizer,
   Clock,
   CompanyRegistry,
+  DocumentReader,
   IdGenerator,
   JobSource,
   MatchJudge,
@@ -23,6 +24,8 @@ import type {
   ProfilesForSearch,
   RelevanceRanker,
   ResultsFeed,
+  ResumeAnalyst,
+  ResumeFiles,
   ResultsReadModel,
   SearchPlanner,
   SearchRunHistory,
@@ -34,11 +37,14 @@ import type {
   UsageLedger,
 } from "@matchmaker/use-cases";
 import {
+  CorrectProfileInteractor,
   CreatePersonInteractor,
   DeletePersonInteractor,
   ExportPersonDataInteractor,
+  IntakeResumeInteractor,
   ListPeopleInteractor,
   ListResultsInteractor,
+  MeasuredCorrectProfile,
   MeasuredCreatePerson,
   MeasuredListResults,
   MeasuredRecordJobDecision,
@@ -89,6 +95,10 @@ export type MatchmakerDetails = {
   readonly productEvents: ProductEvents;
   readonly clock: Clock;
   readonly ids: IdGenerator;
+  /** Onboarding (UC-1): the original upload's store, text extraction (OCR inside), and the resume analyst. */
+  readonly resumeFiles: ResumeFiles;
+  readonly reader: DocumentReader;
+  readonly analyst: ResumeAnalyst;
   readonly judge: MatchJudge;
   readonly narrator: MatchNarrator;
   readonly planner: SearchPlanner;
@@ -154,8 +164,25 @@ export function composeMatchmaker(d: MatchmakerDetails) {
   const listResults = new MeasuredListResults(new ListResultsInteractor(d.storage), d.productEvents, d.clock);
   const recordJobDecision = new MeasuredRecordJobDecision(new RecordJobDecisionInteractor(d.storage), d.productEvents, d.clock);
 
+  // Onboarding (UC-1, UC-2): intake spends (analyst, OCR) so it asks the guard first; corrections only request a re-score.
+  const intakeResume = new IntakeResumeInteractor({
+    reader: d.reader,
+    analyst: d.analyst,
+    files: d.resumeFiles,
+    profiles: d.storage,
+    searches: searchRequests,
+    spending,
+    spend: d.spendAttribution,
+    clock: d.clock,
+    ids: d.ids,
+  });
+  const correctProfile = new MeasuredCorrectProfile(new CorrectProfileInteractor(d.storage, rescoreRequests), d.productEvents, d.clock);
+
   return {
     useCases: {
+      // Onboarding (UC-1, UC-2)
+      intakeResume,
+      correctProfile,
       // Profiles (AB-1, AB-2, AB-4)
       createPerson: new MeasuredCreatePerson(
         new CreatePersonInteractor({ people: d.storage, ids: d.ids, clock: d.clock }),
@@ -181,9 +208,9 @@ export function composeMatchmaker(d: MatchmakerDetails) {
       // Monitoring: each configuration calls this at start (the catch-up run) and then on its timer (ADR 0016).
       runDueMonitoring: new RunDueMonitoringInteractor({ roster: d.storage, searches: searchRequests, spending, clock: d.clock }),
       operateSources: new OperateSourcesInteractor(d.operatorConsole, d.operatorConsole),
-      // HAND-OFF: IntakeResume, CorrectProfile, ConductInterview, TailorResume, ReviewNotAFit, ViewInbox as their phases
-      // arrive. Wrap CorrectProfile, ConductInterview and TailorResume in their measured decorators when they are wired
-      // (ADR 0011 hand-off), and pass them spendAttribution; TailorResume and IntakeResume also get `spending`.
+      // HAND-OFF: ConductInterview, TailorResume, ReviewNotAFit, ViewInbox as their phases
+      // arrive. Wrap ConductInterview and TailorResume in their measured decorators when they are wired
+      // (ADR 0011 hand-off), and pass them spendAttribution; TailorResume also gets `spending`.
     },
     requests: { searchRequests, rescoreRequests },
     controllers: { results: new ResultsController(listResults, recordJobDecision) },

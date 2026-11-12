@@ -1,6 +1,7 @@
 import {
   AsyncSpendMeter,
   InMemoryProductEventLog,
+  InMemoryResumeFiles,
   InMemorySpendLedger,
   InMemoryStore,
   InMemoryUsageLedger,
@@ -9,19 +10,25 @@ import {
   TemplateNarrator,
   UnchosenModelRuntime,
 } from "@matchmaker/adapters";
+import { notYetBuilt } from "@matchmaker/rules";
 import type { MatchmakerDetails } from "../src/compose-matchmaker.ts";
 
 /**
  * Details with every store in memory and no model runtime (D1 is undecided): an evaluation overrides the ports it
  * measures with real adapters, or with scripted ones for the sample. Returns the store so a run can seed it.
  */
-export function inMemoryDetails(overrides: Partial<MatchmakerDetails> = {}): { details: MatchmakerDetails; store: InMemoryStore } {
+export function inMemoryDetails(overrides: Partial<MatchmakerDetails> = {}): {
+  details: MatchmakerDetails;
+  store: InMemoryStore;
+  resumeFiles: InMemoryResumeFiles;
+} {
   const store = new InMemoryStore();
   const usage = new InMemoryUsageLedger();
   const spendLedger = new InMemorySpendLedger();
   const productEvents = new InMemoryProductEventLog();
   const clock = new SystemClock();
   const models = new UnchosenModelRuntime();
+  const resumeFiles = new InMemoryResumeFiles(() => clock.now());
   let id = 0;
   const details: MatchmakerDetails = {
     storage: store,
@@ -31,6 +38,7 @@ export function inMemoryDetails(overrides: Partial<MatchmakerDetails> = {}): { d
     spendAttribution: new AsyncSpendMeter(spendLedger, clock),
     personData: new JsonArchiveVault([
       { section: "profile", vault: store },
+      { section: "resumeFiles", vault: resumeFiles },
       { section: "dailyUsage", vault: usage },
       { section: "spend", vault: spendLedger },
       { section: "productEvents", vault: productEvents },
@@ -38,6 +46,9 @@ export function inMemoryDetails(overrides: Partial<MatchmakerDetails> = {}): { d
     productEvents,
     clock,
     ids: { next: (prefix) => `${prefix}-${++id}` },
+    resumeFiles,
+    reader: { read: async () => notYetBuilt("P1-T08: DocumentReader adapter") },
+    analyst: models,
     judge: models,
     narrator: new TemplateNarrator(),
     planner: models,
@@ -50,5 +61,5 @@ export function inMemoryDetails(overrides: Partial<MatchmakerDetails> = {}): { d
     onBackgroundError: (task, e) => console.error(`background task ${task} failed:`, e),
     ...overrides,
   };
-  return { details, store };
+  return { details, store, resumeFiles };
 }

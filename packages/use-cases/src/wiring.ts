@@ -22,4 +22,9 @@ export { CreatePersonInteractor, ListPeopleInteractor, OpenPersonInteractor, Ren
 export { DeletePersonInteractor, ExportPersonDataInteractor } from "./profiles/person-data.ts";
 export { SetMonthlyBudgetInteractor, ViewRunningCostInteractor } from "./spending/running-cost.ts";
 export { OperateSourcesInteractor } from "./operations/operate-sources.ts";
-export { MeasuredCreatePerson, MeasuredListResults, MeasuredRecordJobDecision } from "./measurement/measured-input-ports.ts";
+export {
+  MeasuredCorrectProfile,
+  MeasuredCreatePerson,
+  MeasuredListResults,
+  MeasuredRecordJobDecision,
+} from "./measurement/measured-input-ports.ts";

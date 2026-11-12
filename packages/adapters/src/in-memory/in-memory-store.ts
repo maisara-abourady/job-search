@@ -80,6 +80,10 @@ export class InMemoryStore
   async sellingPoints(personId: string) {
     return this.sellingPointsByPerson.get(personId) ?? [];
   }
+  /** Every saved version, oldest first (observation for tests; not a port method). */
+  versionsOf(personId: string): readonly ProfileVersion[] {
+    return this.profiles.get(personId) ?? [];
+  }
 
   // ---- postings ----
   async postingsByIds(ids: readonly string[]) {

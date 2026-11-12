@@ -18,7 +18,13 @@ import {
 import { composeMatchmaker, type Matchmaker } from "@matchmaker/main";
 import { postingIdentityKey, type JobPosting, type MatchJudgments, type ProfileVersion, type SourceTier } from "@matchmaker/rules";
 import type {
+  CorrectProfileResponse,
   CreatePersonResponse,
+  IntakeResumeResponse,
+  ProfileCorrection,
+  ReadDocumentResult,
+  ResumeUpload,
+  StructuredResume,
   FoundPosting,
   JobSource,
   ListResultsResponse,
@@ -31,7 +37,16 @@ import type {
   ViewJobDetailResponse,
   ViewRunningCostResponse,
 } from "@matchmaker/use-cases";
-import { aJobPosting, aProfile, enrichmentOf } from "./builders.ts";
+import {
+  aCandidate,
+  aJobPosting,
+  aProfile,
+  aStrengthAnswer,
+  aStructuredResume,
+  enrichmentOf,
+  type SellingPointCandidate,
+  type StrengthAnswer,
+} from "./builders.ts";
 
 /** What the judge says about a posting a test did not script: a middling, evidence-free judgment. */
 const MODEST_JUDGMENT: MatchJudgments = { requirements: [], experienceRelevance: 0.5, skillsAndTools: 0.5, scopeAlignment: 0.5 };
@@ -66,6 +81,17 @@ export class MatchmakerTestingApi {
   private readonly backgroundErrors: string[] = [];
   private plannerError: Error | null = null;
   private readonly requestedSearches: { personId: string; trigger: "onboarding" | "manual" | "scheduled" }[] = [];
+  private readonly requestedRescores: string[] = [];
+  /** Scripted reader: what it returns per file name; unscripted files read as their own text, in English. */
+  private readonly readerScripts = new Map<string, ReadDocumentResult>();
+  private analystScript: { structured: StructuredResume; candidates: readonly SellingPointCandidate[]; strength: StrengthAnswer } = {
+    structured: aStructuredResume(),
+    candidates: [aCandidate("ev-1", 3), aCandidate("ev-2", 2), aCandidate("ev-3", 2), aCandidate("ev-1", 1), aCandidate("ev-2", 1)],
+    strength: aStrengthAnswer(),
+  };
+  private analystSpendMicros = 0;
+  /** Every text the scripted analyst was asked to structure, in order. */
+  readonly analystReceived: string[] = [];
   readonly feed: ScoredJobNotice[] = [];
   private readonly app: Matchmaker;
 
@@ -93,6 +119,25 @@ export class MatchmakerTestingApi {
       productEvents: this.events,
       clock,
       ids: { next: (prefix) => `${prefix}-${++this.idCounter}` },
+      resumeFiles: this.resumeFiles,
+      reader: {
+        read: async (upload) => {
+          const scripted = this.readerScripts.get(upload.fileName);
+          if (scripted !== undefined) return scripted;
+          const text = upload.text ?? new TextDecoder().decode(upload.bytes ?? new Uint8Array());
+          return { outcome: "read", text, language: "en" };
+        },
+      },
+      analyst: {
+        structure: async (text) => {
+          this.analystReceived.push(text);
+          if (this.analystSpendMicros > 0)
+            await this.meter.record({ category: "model", provider: "scripted-analyst", amountMicros: this.analystSpendMicros });
+          return this.analystScript.structured;
+        },
+        sellingPointCandidates: async () => this.analystScript.candidates,
+        strengthRatios: async () => this.analystScript.strength,
+      },
       judge: {
         judge: async (_profile, posting) => {
           this.judgeCalls.push(posting.id);
@@ -128,6 +173,12 @@ export class MatchmakerTestingApi {
       this.requestedSearches.push({ personId, trigger });
       return requestSearch(personId, trigger);
     };
+    const rescoreRequests = this.app.requests.rescoreRequests;
+    const rescoreAll = rescoreRequests.rescoreAll;
+    rescoreRequests.rescoreAll = async (personId) => {
+      this.requestedRescores.push(personId);
+      return rescoreAll(personId);
+    };
   }
 
   // ---------- superpowers: force state ----------
@@ -156,6 +207,21 @@ export class MatchmakerTestingApi {
   }
   judgeWillSay(postingId: string, judgments: MatchJudgments): this {
     this.judgments.set(postingId, judgments);
+    return this;
+  }
+  /** The document reader's answer for an upload with this file name (unreadable, another language, given text). */
+  documentWillRead(fileName: string, result: ReadDocumentResult): this {
+    this.readerScripts.set(fileName, result);
+    return this;
+  }
+  /** What the resume analyst answers from now on; parts not given keep their current script. */
+  analystWillSay(o: { structured?: StructuredResume; candidates?: readonly SellingPointCandidate[]; strength?: StrengthAnswer }): this {
+    this.analystScript = { ...this.analystScript, ...o };
+    return this;
+  }
+  /** Every resume the analyst structures from now on costs this much model spend. */
+  analystCosts(micros: number): this {
+    this.analystSpendMicros = micros;
     return this;
   }
   /** `costPerCallMicros` makes the source a paid one: each call reports that much aggregator spend. */
@@ -270,6 +336,15 @@ export class MatchmakerTestingApi {
     await this.app.useCases.recordJobDecision.execute({ personId, postingId, decision: "applied" });
   }
 
+  /** The open profile uploads a resume (or pasted text). */
+  async intake(personId: string, upload: ResumeUpload, options: { overBudgetConfirmed?: boolean } = {}): Promise<IntakeResumeResponse> {
+    return this.app.useCases.intakeResume.execute({ personId, upload, ...options });
+  }
+  /** A correction from the selling-points card or a preferences screen. */
+  async correct(personId: string, correction: ProfileCorrection): Promise<CorrectProfileResponse> {
+    return this.app.useCases.correctProfile.execute({ personId, correction });
+  }
+
   /** What intake does once a profile is saved: request the first search in the background (P-1, onboarding trigger). */
   async onboardingSearch(personId: string): Promise<void> {
     await this.app.requests.searchRequests.requestSearch(personId, "onboarding");
@@ -279,6 +354,25 @@ export class MatchmakerTestingApi {
   /** Every search requested through Main's request port (onboarding and monitoring), in order. */
   searchesRequested(): readonly { personId: string; trigger: "onboarding" | "manual" | "scheduled" }[] {
     return this.requestedSearches;
+  }
+  /** Every re-score requested through Main's request port (corrections), in order. */
+  rescoresRequested(): readonly string[] {
+    return this.requestedRescores;
+  }
+  /** Every saved profile version of the person, oldest first; the last is active. */
+  profileVersions(personId: string): readonly ProfileVersion[] {
+    return this.store.versionsOf(personId);
+  }
+  /** The selling points saved with the active version. */
+  async sellingPoints(personId: string) {
+    return this.store.sellingPoints(personId);
+  }
+  /** Metadata of every original resume kept for the person (RP-8). */
+  async storedResumes(personId: string): Promise<readonly { resumeId: string; version: number; fileName: string }[]> {
+    const exported = JSON.parse(new TextDecoder().decode(await this.resumeFiles.exportAll(personId))) as {
+      resumes: { resumeId: string; version: number; fileName: string }[];
+    };
+    return exported.resumes;
   }
   lastSearchRun(): SearchRunRecord | undefined {
     return this.store.recordedRuns().at(-1);

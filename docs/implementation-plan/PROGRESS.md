@@ -1,8 +1,8 @@
 # Progress
 
 Current phase: 1 — Foundations (Phase 0 complete 2026-11-12)
-Next task: P1-T02
-Last updated: 2026-11-12 by execution (P1-T01)
+Next task: P1-T03
+Last updated: 2026-11-12 by execution (P1-T02)
 
 ## Status
 
@@ -33,7 +33,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (reason i
 
 ### Phase 1 — Foundations (exit: 20 resumes parse correctly)
 - [x] P1-T01 In-memory resume files and onboarding storage contracts
-- [ ] P1-T02 Wire intake and profile correction through Main and the testing API
+- [x] P1-T02 Wire intake and profile correction through Main and the testing API
 - [ ] P1-T03 Rules: choose 5 to 8 selling points and suggest a target seniority band
 - [ ] P1-T04 `IntakeResume` use case
 - [ ] P1-T05 `CorrectProfile`: facts and selling points
@@ -132,6 +132,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (reason i
 - 2026-11-12 (P0-T10): `/architect` wrote ADR 0009. Every model port runs on Claude Code headless with the owner's subscription. Large (`sonnet`): ResumeAnalyst, SearchPlanner, MatchJudge, Interviewer, ResumeWriter. Small (`haiku`): PostingEnricher, KeywordMatcher. No model: DocumentReader, MatchNarrator, and RelevanceRanker (in-process lexical, D3). Package `@matchmaker/model-runtime-claude-code`. Spend is the per-call `total_cost_usd` estimate. Main refuses to start model calls without the training-off confirmation (Privacy 4). New watch items W17 (one-posting-at-a-time enrichment and judging may miss the 60 s first result: decide before P2-T13), W18 (subscription usage limits), W19 (Claude Code self-updates). D1 and D3 decided in deferred.md; ADRs 0002, 0003, 0015 and 0016 carry an "amended by ADR 0009" line.
 - 2026-11-12 (H-2): the owner turned "Help improve Claude" off (Privacy 4). Real resumes may now be sent to the model.
 - 2026-11-12 (P1-T01): `InMemoryResumeFiles` (`packages/adapters/src/in-memory/in-memory-resume-files.ts`) keeps every upload as a numbered version and is a `PersonDataVault` part (export lists each version's id, version, time, kind, file name and size; the bytes are not exported). It joins the `JsonArchiveVault` as section `resumeFiles` in `main.dev.ts` and the testing API. Contract: `resumeFilesContract` (3 cases), a `sellingPoints` case in `profileVersionsContract`, and the vault suite on the new store and inside the composed vault. `pnpm test:contract`: 45 pass, 1 todo; `pnpm verify` green.
+- 2026-11-12 (P1-T02): `MatchmakerDetails` gains `resumeFiles`, `reader` and `analyst`; Main composes `IntakeResumeInteractor` (with `spending` and `spendAttribution`; `overBudgetConfirmed` added to its request) and `CorrectProfileInteractor` wrapped in the new `MeasuredCorrectProfile` (emits `preferences-saved` and `fact-fixed` after success). Dev and eval configurations pass a reader placeholder and `UnchosenModelRuntime`, which now also stands in for `ResumeAnalyst`. Testing API: scripted reader and analyst, `documentWillRead`, `analystWillSay`, `analystCosts`, `intake`, `correct`, `profileVersions`, `sellingPoints`, `storedResumes`, `rescoresRequested`, `analystReceived`; builders `aResumeUpload`, `aStructuredResume`, `aCandidate`, `aStrengthAnswer`. `InMemoryStore.versionsOf` (observation only, like `recordedRuns`). `onboarding.test.ts`: intake rejects with "Not yet built: RP-1". `pnpm verify` 45 tests + 45 contract cases, `pnpm smoke` green.
 
 ## Deviations log
 

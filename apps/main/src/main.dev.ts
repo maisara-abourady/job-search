@@ -14,6 +14,7 @@ import {
   UnchosenModelRuntime,
 } from "@matchmaker/adapters";
 import { presentRunningCost } from "@matchmaker/delivery";
+import { notYetBuilt } from "@matchmaker/rules";
 import { composeMatchmaker } from "./compose-matchmaker.ts";
 
 /**
@@ -51,6 +52,9 @@ export const matchmaker = composeMatchmaker({
   productEvents,
   clock,
   ids: new RandomIds(),
+  resumeFiles,
+  reader: { read: async () => notYetBuilt("P1-T08: DocumentReader adapter") },
+  analyst: models,
   judge: models,
   narrator: new TemplateNarrator(),
   planner: models,

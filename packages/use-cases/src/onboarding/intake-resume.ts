@@ -1,10 +1,16 @@
 import { notYetBuilt } from "@matchmaker/rules";
 import type { SpendAttribution } from "../shared/metering.ts";
+import type { SpendingGuard } from "../shared/spending-guard.ts";
 import type { Clock, IdGenerator } from "../shared/ports.ts";
 import type { DocumentReader, ProfileVersions, ResumeAnalyst, ResumeFiles, ResumeUpload, SearchRequests } from "./ports.ts";
 
 /** Flow 1 steps 1 to 3; RP-1..RP-6, RP-8. Searching starts as soon as the resume parses (principle 5). */
-export type IntakeResumeRequest = { readonly personId: string; readonly upload: ResumeUpload };
+export type IntakeResumeRequest = {
+  readonly personId: string;
+  readonly upload: ResumeUpload;
+  /** The owner said yes to spending past the monthly budget (ADR 0015 §5, "ask first"). */
+  readonly overBudgetConfirmed?: boolean;
+};
 export type SellingPointsCard = {
   readonly points: readonly { readonly statement: string; readonly tier: "signature" | "strong" | "supporting"; readonly proof: string }[];
   readonly resumeStrength: number;
@@ -24,6 +30,8 @@ export type IntakeResumeDependencies = {
   readonly files: ResumeFiles;
   readonly profiles: ProfileVersions;
   readonly searches: SearchRequests;
+  /** On demand and uncapped: asks first once the monthly budget is reached (ADR 0015 §5). */
+  readonly spending: SpendingGuard;
   /** Reader (OCR) and analyst spend is charged with purpose "intake" (ADR 0010). */
   readonly spend: SpendAttribution;
   readonly clock: Clock;
