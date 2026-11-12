@@ -25,7 +25,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (reason i
 - [x] P0-T09 Continuous integration
 - [~] S-1 Which runtime implements each model port?
 - [x] H-1 Runtime on the owner's machine chosen (subscription)
-- [ ] GATE 0A (technical)
+- [x] GATE 0A (technical) — approved by the owner 2026-11-12 (Phase 1 tasks P1-T01 to P1-T08 may start)
 - [ ] P0-T10 Record the model runtime decision (D1) in ADR 0009 (not yet written)
 - [ ] GATE 0B (decision)
 - [ ] H-2 Owner's model account, no-training setting, local credential (after P0-T10)
