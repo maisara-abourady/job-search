@@ -1,8 +1,8 @@
 # Progress
 
 Current phase: 1 — Foundations (Phase 0 complete 2026-11-12)
-Next task: P1-T08
-Last updated: 2026-11-12 by execution (P1-T07)
+Next task: P1-T09
+Last updated: 2026-11-12 by execution (P1-T08)
 
 ## Status
 
@@ -39,7 +39,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (reason i
 - [x] P1-T05 `CorrectProfile`: facts and selling points
 - [x] P1-T06 Profile and spending acceptance tests (built by the Architect; replaces account and trial tests)
 - [x] P1-T07 Onboarding controllers and presenters
-- [ ] P1-T08 Documents package: read text, DOCX, PDF and LinkedIn PDF
+- [x] P1-T08 Documents package: read text, DOCX, PDF and LinkedIn PDF
 - [ ] P1-T09 OCR for image-only PDFs
 - [ ] P1-T10 Model runtime package, configuration loader and the resume analyst
 - [ ] P1-T11 Parsing evaluation (exit test)
@@ -137,6 +137,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (reason i
 - 2026-11-12 (P1-T04): `IntakeResumeInteractor` built: `INTAKE_POLICY` (10 MB, English, three fixes); size check, then `SpendingGuard.beforeOnDemand(personId, null, confirmed)`, then everything inside `spend.charge(... "intake")`: store original, read, language check (ISO 639-1 prefix, so `en-GB` is English), structure, candidates and ratios in parallel, `selectSellingPoints`, `resumeStrength`, new version (same `profileId`; preferences kept on re-upload, `initialPreferences(suggestedSeniorityBand(...))` on first), onboarding search. Candidates citing an evidence id the resume does not hold are dropped (nothing invented). The original is stored even when unreadable (RP-8). `ResumeAnalyst.sellingPointCandidates` now returns the rules' `SellingPointCandidate`. 13 tests in `onboarding.test.ts`; new superpower `spendPurposes`. A mutation that skips the guard fails two tests. `pnpm verify`: 57 tests + 45 contract cases.
 - 2026-11-12 (P1-T05): `CorrectProfileInteractor`: `fact` replaces one evidence text, `selling-point` replaces one point's statement (matched by `evidenceId`, tier and evidence kept); both save version + 1 (the selling points travel with every version) and request one re-score. No active profile or unknown evidence → `not-found`, no version, no re-score. `preferences` stays `notYetBuilt`. 3 more tests (16 in `onboarding.test.ts`), including the `fact-fixed` product event. `pnpm verify`: 60 tests + 45 contract cases.
 - 2026-11-12 (P1-T07): `packages/delivery/src/onboarding/`: `IntakeController.upload` (turns a `monthly-budget-reached` refusal into the ask-first view model), `CorrectionController.correct` (a line's `proof` is a fact correction, its `statement` a selling-point correction), presenters and view models (kind-tagged; tier labels Signature/Strong/Supporting; "NN / 100"; level in words; a note when fewer than five points qualify). `SellingPointsCard` lines now carry `evidenceId` (the line id the view sends back), and `CorrectProfileResponse` returns the refreshed lines. `delivery/onboarding` added to `AREAS`. Main exposes `controllers.onboarding`; testing API `intakeScreen`, `correctionScreen`. 5 screen tests (21 in `onboarding.test.ts`). `pnpm metrics`: no SDP warning (the earlier delivery/use-cases watch warning is gone: delivery I=0.63, use-cases 0.46). `pnpm verify`: 65 tests + 45 contract cases.
+- 2026-11-12 (P1-T08): `/architect` wrote ADR 0017: document reading is its own adapter package `@matchmaker/documents` (area `reading/`; only Main and the contract suites depend on it); libraries are package details bound by constraints (pure JS/WASM, no native build, no network at any time, failures become `unreadable`, no library type crosses the surface); first picks `unpdf` 2.1.0, `mammoth` 1.13.0, `franc-min` 6.2.0 (and `tesseract.js` for P1-T09). It updated `components.mjs`, the README diagram and boundary table, deferred.md (D9 reading decided, W2 documents decided, new W20 OCR in a child process if it breaks the 20 s card, new W21 `und` policy stays in the use case). `LibraryDocumentReader` reads text, DOCX, PDF text layer and LinkedIn PDF (strips "Page N of M"); fewer than 50 letters/digits is `unreadable`; any library error is `unreadable`; language is ISO 639-1 or `und`. `IntakeResume` reads `und` as acceptable (`INTAKE_POLICY.readUndeterminedLanguage`, new test). `ScriptedDocumentReader` extracted from the testing API. `documentReaderContract` (11 cases) runs on both readers over fictional fixtures made with Chromium and python-docx: `resume.pdf`, `linkedin.pdf`, `resume.docx`, `resume.txt`, `resume-fr.txt`, `image-only.pdf`, `blank-image.pdf`, `corrupt.pdf`, `corrupt.docx`. ADR 0017 decision 7 applied: `check.mjs` no longer counts fan-in from Main and the testing API in the SDP comparison (regression test added; reverting the change makes it fail), so `pnpm metrics` shows `documents` I=0.33 and no SDP warning. `main.dev.ts` uses the real reader. `pnpm verify`: 67 tests + 67 contract cases; `pnpm smoke` green.
 
 ## Deviations log
 

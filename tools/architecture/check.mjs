@@ -60,6 +60,10 @@ const areaOf = (name, path) => {
 
 const pkgEdges = new Map(Object.keys(COMPONENTS).map((n) => [n, new Set()]));
 const fanIn = Object.fromEntries(Object.keys(COMPONENTS).map((n) => [n, 0]));
+// ADR 0017 decision 7: fan-in from composition (Main) and tests does not make a component hard to change, so the SDP
+// comparison uses I computed without it. The metrics table still shows the full fan-in.
+const productionFanIn = Object.fromEntries(Object.keys(COMPONENTS).map((n) => [n, 0]));
+const notADependent = (name) => name === "@matchmaker/testing-api" || COMPONENTS[name].circle === "4 main";
 const fanOut = Object.fromEntries(Object.keys(COMPONENTS).map((n) => [n, 0]));
 const areaEdges = {}; // component -> Map(area -> Set(area))
 
@@ -96,6 +100,7 @@ for (const [name, c] of Object.entries(COMPONENTS)) {
         if (pkg !== name) {
           pkgEdges.get(name).add(pkg);
           fanIn[pkg] = (fanIn[pkg] ?? 0) + 1;
+          if (!notADependent(name)) productionFanIn[pkg] = (productionFanIn[pkg] ?? 0) + 1;
           dependsOutside = true;
         }
         continue;
@@ -157,15 +162,16 @@ for (const name of Object.keys(COMPONENTS)) {
     (src.match(/^\s*export\s+type\s+\w+(?:<[^>]*>)?\s*=/gm) ?? []).length;
   const I = fanIn[name] + fanOut[name] === 0 ? 0 : fanOut[name] / (fanIn[name] + fanOut[name]);
   const A = na + concrete === 0 ? 0 : na / (na + concrete);
-  metrics[name] = { fanIn: fanIn[name], fanOut: fanOut[name], I, A, D: Math.abs(A + I - 1) };
+  const sdpI = productionFanIn[name] + fanOut[name] === 0 ? 0 : fanOut[name] / (productionFanIn[name] + fanOut[name]);
+  metrics[name] = { fanIn: fanIn[name], fanOut: fanOut[name], I, sdpI, A, D: Math.abs(A + I - 1) };
 }
 for (const [from, tos] of pkgEdges) {
   for (const to of tos) {
     // Tests and Main are the outermost, dirtiest components (§10.1, §10.3): nothing in production depends on them, so
     // their own I is not a stability anyone relies on (ADR 0010 records why Main is exempt as a source).
-    if (metrics[from].I <= metrics[to].I && from !== "@matchmaker/testing-api" && COMPONENTS[from].circle !== "4 main") {
+    if (metrics[from].sdpI <= metrics[to].sdpI && !notADependent(from)) {
       warn.push(
-        `SDP: ${from} (I=${metrics[from].I.toFixed(2)}) depends on ${to} (I=${metrics[to].I.toFixed(2)}), which is not more stable`,
+        `SDP: ${from} (I=${metrics[from].sdpI.toFixed(2)}) depends on ${to} (I=${metrics[to].sdpI.toFixed(2)}), which is not more stable`,
       );
     }
   }

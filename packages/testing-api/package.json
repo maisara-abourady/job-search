@@ -10,6 +10,7 @@
     "@matchmaker/use-cases": "workspace:*",
     "@matchmaker/delivery": "workspace:*",
     "@matchmaker/adapters": "workspace:*",
-    "@matchmaker/main": "workspace:*"
+    "@matchmaker/main": "workspace:*",
+    "@matchmaker/documents": "workspace:*"
   }
 }

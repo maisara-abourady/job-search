@@ -106,6 +106,12 @@ test("a resume not in English is refused with its language and requests no searc
   assert.deepEqual(api.analystReceived, [], "the analyst is not asked");
 });
 
+test("text too short to tell its language is read, not refused", async () => {
+  const { api, personId } = await aProfileOwner();
+  api.documentWillRead("short.pdf", { outcome: "read", text: "SQL, Python", language: "und" });
+  assert.equal((await api.intake(personId, aResumeUpload({ fileName: "short.pdf" }))).outcome, "parsed");
+});
+
 test("an upload over 10 MB is refused before anything is stored", async () => {
   const { api, personId } = await aProfileOwner();
   const tooBig = aResumeUpload({ bytes: new Uint8Array(10 * 1024 * 1024 + 1) });

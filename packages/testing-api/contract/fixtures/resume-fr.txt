@@ -1,0 +1,4 @@
+Camille Fictive
+Ingénieure logiciel chez Exemple SA depuis 2020
+J'ai conçu un service de paiement utilisé par trois équipes et réduit les temps de réponse de moitié.
+Compétences : Java, SQL, Kubernetes

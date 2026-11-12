@@ -50,6 +50,7 @@ import {
   type SellingPointCandidate,
   type StrengthAnswer,
 } from "./builders.ts";
+import { ScriptedDocumentReader } from "./scripted-document-reader.ts";
 
 /** What the judge says about a posting a test did not script: a middling, evidence-free judgment. */
 const MODEST_JUDGMENT: MatchJudgments = { requirements: [], experienceRelevance: 0.5, skillsAndTools: 0.5, scopeAlignment: 0.5 };
@@ -85,8 +86,7 @@ export class MatchmakerTestingApi {
   private plannerError: Error | null = null;
   private readonly requestedSearches: { personId: string; trigger: "onboarding" | "manual" | "scheduled" }[] = [];
   private readonly requestedRescores: string[] = [];
-  /** Scripted reader: what it returns per file name; unscripted files read as their own text, in English. */
-  private readonly readerScripts = new Map<string, ReadDocumentResult>();
+  private readonly reader = new ScriptedDocumentReader();
   private analystScript: { structured: StructuredResume; candidates: readonly SellingPointCandidate[]; strength: StrengthAnswer } = {
     structured: aStructuredResume(),
     candidates: [aCandidate("ev-1", 3), aCandidate("ev-2", 2), aCandidate("ev-3", 2), aCandidate("ev-1", 1), aCandidate("ev-2", 1)],
@@ -123,14 +123,7 @@ export class MatchmakerTestingApi {
       clock,
       ids: { next: (prefix) => `${prefix}-${++this.idCounter}` },
       resumeFiles: this.resumeFiles,
-      reader: {
-        read: async (upload) => {
-          const scripted = this.readerScripts.get(upload.fileName);
-          if (scripted !== undefined) return scripted;
-          const text = upload.text ?? new TextDecoder().decode(upload.bytes ?? new Uint8Array());
-          return { outcome: "read", text, language: "en" };
-        },
-      },
+      reader: this.reader,
       analyst: {
         structure: async (text) => {
           this.analystReceived.push(text);
@@ -214,7 +207,7 @@ export class MatchmakerTestingApi {
   }
   /** The document reader's answer for an upload with this file name (unreadable, another language, given text). */
   documentWillRead(fileName: string, result: ReadDocumentResult): this {
-    this.readerScripts.set(fileName, result);
+    this.reader.willRead(fileName, result);
     return this;
   }
   /** What the resume analyst answers from now on; parts not given keep their current script. */

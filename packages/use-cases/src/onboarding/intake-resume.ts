@@ -12,8 +12,17 @@ import type { Clock, IdGenerator } from "../shared/ports.ts";
 import type { SpendingGuard } from "../shared/spending-guard.ts";
 import type { DocumentReader, ProfileVersions, ResumeAnalyst, ResumeFiles, ResumeUpload, SearchRequests } from "./ports.ts";
 
-/** Application policy for intake: the upload limit and the one language v1 reads (PRD RP-1, "not in English"). */
-export const INTAKE_POLICY = { maxUploadBytes: 10 * 1024 * 1024, supportedLanguage: "en", fixesOnCard: 3 } as const;
+/**
+ * Application policy for intake: the upload limit and the one language v1 reads (PRD RP-1, "not in English").
+ * Text too short for the reader to tell its language ("und") is read: refusing a brief resume would be worse than
+ * letting the analyst read it (W21).
+ */
+export const INTAKE_POLICY = {
+  maxUploadBytes: 10 * 1024 * 1024,
+  supportedLanguage: "en",
+  readUndeterminedLanguage: true,
+  fixesOnCard: 3,
+} as const;
 
 /** Flow 1 steps 1 to 3; RP-1..RP-6, RP-8. Searching starts as soon as the resume parses (principle 5). */
 export type IntakeResumeRequest = {
@@ -135,5 +144,6 @@ function utf8Length(text: string): number {
 }
 /** Readers report ISO 639-1 codes, sometimes with a region ("en-GB"). */
 function isSupportedLanguage(language: string): boolean {
+  if (language === "und") return INTAKE_POLICY.readUndeterminedLanguage;
   return language.toLowerCase().split(/[-_]/)[0] === INTAKE_POLICY.supportedLanguage;
 }

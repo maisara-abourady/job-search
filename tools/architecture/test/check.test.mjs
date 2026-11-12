@@ -151,3 +151,16 @@ test("the real repository still passes", () => {
   assert.equal(r.status, 0, r.stdout + r.stderr);
   assert.match(r.stdout, /architecture ok/);
 });
+
+test("SDP ignores fan-in from Main and tests (ADR 0017 decision 7)", () => {
+  // Five Main files naming the adapters would make them look more stable than the use cases they plug into.
+  const mains = Object.fromEntries(
+    [1, 2, 3, 4, 5].map((i) => [
+      `apps/main/src/compose-${i}.ts`,
+      'import { MemoryStore } from "@matchmaker/adapters";\nexport const s = new MemoryStore();\n',
+    ]),
+  );
+  const { status, out } = check(workspace(mains));
+  assert.equal(status, 0, out);
+  assert.doesNotMatch(out, /SDP: @matchmaker\/adapters/, out);
+});

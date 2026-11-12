@@ -76,15 +76,15 @@ Application-specific policy lives in the owning use case, not in the rules: pref
    | @matchmaker/       | | @matchmaker/       | | @matchmaker/scraping-sources |  circle 3-4
    | delivery           | | adapters           | | (Tier 4, off by default)     |
    | controllers,       | | in-memory store,   | +------------------------------+
-   | presenters,        | | spend meter,       |
-   | view models,       | | model runtime,     |
-   | local-request check| | Tier 1-3 sources,  |
-   +--------------------+ | narration, work    |
-              ^           | queue and ticker,  |
-              |           | data export, clock |
-              |           +--------------------+
-              |                    ^
-           +----------------------------+
+   | presenters,        | | spend meter,       | +------------------------------+
+   | view models,       | | model runtime,     | | @matchmaker/documents        |  circle 3-4
+   | local-request check| | Tier 1-3 sources,  | | reading/: PDF, DOCX,         |  (ADR 0017)
+   +--------------------+ | narration, work    | | LinkedIn PDF, language, OCR  |
+              ^           | queue and ticker,  | +------------------------------+
+              |           | data export, clock |               ^
+              |           +--------------------+               |
+              |                    ^                           |
+           +----------------------------+----------------------+
            | @matchmaker/main (apps/main)|  circle 4  Main: composeMatchmaker + one file per configuration
            +----------------------------+
                         ^
@@ -96,7 +96,8 @@ Application-specific policy lives in the owning use case, not in the rules: pref
 Every arrow points toward higher-level policy. Instability decreases along every arrow, and the graph has no cycles: `pnpm metrics` reports this and `pnpm check:architecture` enforces it.
 
 - `delivery` depends only on `use-cases`; it never sees an Entity.
-- `adapters` and `scraping-sources` depend on `use-cases` and `rules`.
+- `adapters`, `scraping-sources` and `documents` depend on `use-cases` and `rules`, never on each other.
+- `documents` (ADR 0017) holds the `DocumentReader` adapter and every reading library: PDF text, DOCX, language detection and, from P1-T09, OCR. It has one area, `reading/`. Only Main and the testing API's contract suites import it; scenario tests script the reader. Its libraries are package-local details under fixed constraints: pure JS or WebAssembly, no native build, in-process, no network at any time.
 - Nothing depends on `main` except the testing API. Nothing depends on the testing API.
 - **Planned (ADR 0009, created by P1-T10):** `@matchmaker/model-runtime-claude-code`, circle 3-4, which may import `rules` and `use-cases`. Main and the testing API's contract suites depend on it. Its areas are `headless` (the humble CLI runner) and one area per use-case area it serves (`onboarding`, `discovery`, `matching`, `tailoring`), each of which may import only `headless`. `@matchmaker/adapters` gains the area `relevance`. `UnchosenModelRuntime` is deleted once every model port has its adapter.
 
@@ -111,6 +112,7 @@ Every arrow points toward higher-level policy. Instability decreases along every
 | Use cases and model runtime | Package (planned `model-runtime-claude-code`; the adapters drive the `claude` CLI as a child process per call) | Full: one port per judgment need; models receive only `ScoringProfile`; the runtime's configuration and its start check stay in Main (ADR 0003, 0009, 0016). The prefilter ranks lexically in `adapters/relevance`, with no model (ADR 0009) | Plain structures (`MatchJudgments`, `SearchPlan`, `Enrichment`, and so on), mapped from the CLI's `structured_output` inside the adapter; the envelope, cost fields and model ids never cross |
 | Use cases and job sources | Package | Full: `JobSource` port, tier as data, `SourceSwitchboard` (null means never switched; Tier 4 then off) | `FoundPosting` in the common schema |
 | Tier 4 and everything else | Separate package, optional per installation | Full at package level (ADR 0004) | Same `JobSource` port |
+| Use cases and document reading | Package `@matchmaker/documents` (source-level, same process; OCR on a worker thread, which is not a boundary) | Full: `DocumentReader` owned by `use-cases/onboarding`; library failures become `unreadable` inside the adapter (ADR 0017). Child process only if W20 fires | `ResumeUpload` in; `ReadDocumentResult` out: plain text and an ISO 639-1 language code (`und` when undetermined). The use case decides which languages it accepts |
 | Use-case areas among themselves | Folders in one package | **Partial** (enforced folder isolation; cross-area needs go through request ports wired in Main) | `SearchRequests`, `RescoreRequests`, `ScoringRequests` (carries `runId`), `MonitoringSearchRequests` |
 | Measurement and the areas it observes | Folder in one package | Full in direction: measurement imports other areas' input-port **types only** (checked); nothing imports measurement (ADR 0011) | Decorators implement the wrapped input port; `ProductEvents` port to a local destination |
 | Use cases and spend | Package | Full: `SpendMeter` (adapters report), `SpendAttribution` (use cases charge), `SpendLedger` (storage), all owned by `use-cases/shared` (ADR 0010); `SpendingGuard` reads the ledger's `totalSpent` and the budget (ADR 0015) | `Spend`, `ChargeTo`, `SpendRecord`: integer micros, provider as a label |

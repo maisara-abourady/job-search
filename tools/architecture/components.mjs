@@ -1,6 +1,6 @@
 /**
  * The architecture as data. The check script enforces it; docs/architecture/README.md explains it.
- * Changing this file is an architectural decision: it needs an ADR (latest: ADR 0014 replaced the account areas).
+ * Changing this file is an architectural decision: it needs an ADR (latest: ADR 0017 added @matchmaker/documents).
  */
 export const COMPONENTS = {
   "@matchmaker/rules": { dir: "packages/rules", circle: "1 entities", allowed: [], platform: false },
@@ -18,17 +18,39 @@ export const COMPONENTS = {
     allowed: ["@matchmaker/rules", "@matchmaker/use-cases"],
     platform: true,
   },
+  // ADR 0017: document reading (PDF, DOCX, language detection, OCR libraries) is its own adapter package (W2, D9).
+  "@matchmaker/documents": {
+    dir: "packages/documents",
+    circle: "3-4 adapters",
+    allowed: ["@matchmaker/rules", "@matchmaker/use-cases"],
+    platform: true,
+  },
   "@matchmaker/main": {
     dir: "apps/main",
     circle: "4 main",
     platform: true,
-    allowed: ["@matchmaker/rules", "@matchmaker/use-cases", "@matchmaker/delivery", "@matchmaker/adapters", "@matchmaker/scraping-sources"],
+    allowed: [
+      "@matchmaker/rules",
+      "@matchmaker/use-cases",
+      "@matchmaker/delivery",
+      "@matchmaker/adapters",
+      "@matchmaker/scraping-sources",
+      "@matchmaker/documents",
+    ],
   },
   "@matchmaker/testing-api": {
     dir: "packages/testing-api",
     circle: "tests",
     platform: true,
-    allowed: ["@matchmaker/rules", "@matchmaker/use-cases", "@matchmaker/delivery", "@matchmaker/adapters", "@matchmaker/main"],
+    // ADR 0017: only the contract suites import @matchmaker/documents; scenario tests script the reader.
+    allowed: [
+      "@matchmaker/rules",
+      "@matchmaker/use-cases",
+      "@matchmaker/delivery",
+      "@matchmaker/adapters",
+      "@matchmaker/main",
+      "@matchmaker/documents",
+    ],
   },
 };
 
@@ -73,6 +95,8 @@ export const AREAS = {
     metering: [],
     "data-controls": [],
   },
+  // ADR 0017: one area today. A second area (for example rendering/ in Phase 4) is declared here and may not import reading/.
+  "@matchmaker/documents": { reading: [] },
 };
 
 /**

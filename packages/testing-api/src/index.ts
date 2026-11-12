@@ -1,4 +1,5 @@
 export { MatchmakerTestingApi } from "./matchmaker-testing-api.ts";
+export { ScriptedDocumentReader } from "./scripted-document-reader.ts";
 export {
   aCandidate,
   aJobPosting,
