@@ -1,7 +1,7 @@
 # Progress
 
-Current phase: 0 — Verify and complete the walking skeleton
-Next task: Gate 0B review by the owner; Phase 1 (P1-T01 to P1-T08) in a fresh session
+Current phase: 1 — Foundations (Phase 0 complete 2026-11-12)
+Current phase: 1. Next task: P1-T01 (Phase 1 runs in a fresh session)
 Last updated: 2026-11-12 by execution (P0-T09)
 
 ## Status
@@ -27,7 +27,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (reason i
 - [x] H-1 Runtime on the owner's machine chosen (subscription)
 - [x] GATE 0A (technical) — approved by the owner 2026-11-12 (Phase 1 tasks P1-T01 to P1-T08 may start)
 - [x] P0-T10 Record the model runtime decision (D1) in ADR 0009
-- [ ] GATE 0B (decision)
+- [x] GATE 0B (decision) — approved by the owner 2026-11-12 (ADR 0009; P1-T09 and P1-T10 may start)
 - [~] H-2 Owner's model account, no-training setting, local credential: training setting turned OFF by the owner 2026-11-12; the signed-in Claude Code on the owner's machine is set up at install
 - [x] H-4 Parsing thresholds confirmed (default accepted)
 
