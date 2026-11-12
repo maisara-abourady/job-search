@@ -1,4 +1,5 @@
-import { notYetBuilt } from "@matchmaker/rules";
+import { notYetBuilt, type ProfileVersion, type SellingPoint } from "@matchmaker/rules";
+import { UseCaseError } from "../shared/errors.ts";
 import type { ProfileVersions, RescoreRequests } from "./ports.ts";
 
 /**
@@ -30,9 +31,41 @@ export class CorrectProfileInteractor implements CorrectProfile {
     this.profiles = profiles;
     this.rescore = rescore;
   }
-  async execute(_request: CorrectProfileRequest): Promise<CorrectProfileResponse> {
-    void this.profiles;
-    void this.rescore;
-    return notYetBuilt("RP-7, NF-5, PF-1..PF-5: profile correction");
+  async execute(request: CorrectProfileRequest): Promise<CorrectProfileResponse> {
+    const { personId, correction } = request;
+    const current = await this.profiles.active(personId);
+    if (current === null) throw new UseCaseError("not-found", `no profile for ${personId}`);
+    const points = await this.profiles.sellingPoints(personId);
+
+    const next = this.corrected(current, points, correction);
+    await this.profiles.saveNewVersion({ ...next.profile, version: current.version + 1 }, next.points);
+    await this.rescore.rescoreAll(personId);
+    return { newVersion: current.version + 1, rescoreRequested: true };
   }
+
+  /** The one rule: a correction changes a copy; the current version stays as it was (ADR 0005). */
+  private corrected(
+    profile: ProfileVersion,
+    points: readonly SellingPoint[],
+    correction: ProfileCorrection,
+  ): { profile: ProfileVersion; points: readonly SellingPoint[] } {
+    switch (correction.kind) {
+      case "fact": {
+        if (!profile.evidence.some((e) => e.id === correction.evidenceId)) throw notFound(correction.evidenceId);
+        const evidence = profile.evidence.map((e) => (e.id === correction.evidenceId ? { ...e, text: correction.newText } : e));
+        return { profile: { ...profile, evidence }, points };
+      }
+      case "selling-point": {
+        if (!points.some((p) => p.evidenceId === correction.evidenceId)) throw notFound(correction.evidenceId);
+        const changed = points.map((p) => (p.evidenceId === correction.evidenceId ? { ...p, statement: correction.newStatement } : p));
+        return { profile, points: changed };
+      }
+      case "preferences":
+        return notYetBuilt("PF-1..PF-5: preferences (Phase 3)");
+    }
+  }
+}
+
+function notFound(evidenceId: string): UseCaseError {
+  return new UseCaseError("not-found", `no evidence ${evidenceId} on the active profile`);
 }

@@ -1,8 +1,8 @@
 # Progress
 
 Current phase: 1 — Foundations (Phase 0 complete 2026-11-12)
-Next task: P1-T05
-Last updated: 2026-11-12 by execution (P1-T04)
+Next task: P1-T07
+Last updated: 2026-11-12 by execution (P1-T05)
 
 ## Status
 
@@ -36,7 +36,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (reason i
 - [x] P1-T02 Wire intake and profile correction through Main and the testing API
 - [x] P1-T03 Rules: choose 5 to 8 selling points and suggest a target seniority band
 - [x] P1-T04 `IntakeResume` use case
-- [ ] P1-T05 `CorrectProfile`: facts and selling points
+- [x] P1-T05 `CorrectProfile`: facts and selling points
 - [x] P1-T06 Profile and spending acceptance tests (built by the Architect; replaces account and trial tests)
 - [ ] P1-T07 Onboarding controllers and presenters
 - [ ] P1-T08 Documents package: read text, DOCX, PDF and LinkedIn PDF
@@ -135,6 +135,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (reason i
 - 2026-11-12 (P1-T02): `MatchmakerDetails` gains `resumeFiles`, `reader` and `analyst`; Main composes `IntakeResumeInteractor` (with `spending` and `spendAttribution`; `overBudgetConfirmed` added to its request) and `CorrectProfileInteractor` wrapped in the new `MeasuredCorrectProfile` (emits `preferences-saved` and `fact-fixed` after success). Dev and eval configurations pass a reader placeholder and `UnchosenModelRuntime`, which now also stands in for `ResumeAnalyst`. Testing API: scripted reader and analyst, `documentWillRead`, `analystWillSay`, `analystCosts`, `intake`, `correct`, `profileVersions`, `sellingPoints`, `storedResumes`, `rescoresRequested`, `analystReceived`; builders `aResumeUpload`, `aStructuredResume`, `aCandidate`, `aStrengthAnswer`. `InMemoryStore.versionsOf` (observation only, like `recordedRuns`). `onboarding.test.ts`: intake rejects with "Not yet built: RP-1". `pnpm verify` 45 tests + 45 contract cases, `pnpm smoke` green.
 - 2026-11-12 (P1-T03): `selectSellingPoints` and `SellingPointCandidate` in `rules/profile/selling-points.ts` (tiers with `sellingPointTier`, drops untiered, Signature then Strong then Supporting, stable, at most 8; `SELLING_POINTS_ON_CARD`); `suggestedSeniorityBand` and `initialPreferences` in the new `rules/profile/preference-defaults.ts` (top of the ladder suggests only itself). Typecheck, architecture check and `pnpm verify` green; behavior is asserted in P1-T04.
 - 2026-11-12 (P1-T04): `IntakeResumeInteractor` built: `INTAKE_POLICY` (10 MB, English, three fixes); size check, then `SpendingGuard.beforeOnDemand(personId, null, confirmed)`, then everything inside `spend.charge(... "intake")`: store original, read, language check (ISO 639-1 prefix, so `en-GB` is English), structure, candidates and ratios in parallel, `selectSellingPoints`, `resumeStrength`, new version (same `profileId`; preferences kept on re-upload, `initialPreferences(suggestedSeniorityBand(...))` on first), onboarding search. Candidates citing an evidence id the resume does not hold are dropped (nothing invented). The original is stored even when unreadable (RP-8). `ResumeAnalyst.sellingPointCandidates` now returns the rules' `SellingPointCandidate`. 13 tests in `onboarding.test.ts`; new superpower `spendPurposes`. A mutation that skips the guard fails two tests. `pnpm verify`: 57 tests + 45 contract cases.
+- 2026-11-12 (P1-T05): `CorrectProfileInteractor`: `fact` replaces one evidence text, `selling-point` replaces one point's statement (matched by `evidenceId`, tier and evidence kept); both save version + 1 (the selling points travel with every version) and request one re-score. No active profile or unknown evidence → `not-found`, no version, no re-score. `preferences` stays `notYetBuilt`. 3 more tests (16 in `onboarding.test.ts`), including the `fact-fixed` product event. `pnpm verify`: 60 tests + 45 contract cases.
 
 ## Deviations log
 

@@ -177,3 +177,55 @@ test("the analyst receives only the document's text; personal details stay on th
   assert.deepEqual(api.analystReceived, ["Fictional resume text"]);
   assert.equal(api.profileVersions(personId)[0]?.personal.name, "Dana Example");
 });
+
+// ---------- CorrectProfile: facts and selling points (RP-7, Flow 7, ADR 0005) ----------
+
+test("correcting a fact makes a new active version, leaves the old one unchanged, and requests one re-score", async () => {
+  const { api, personId } = await aProfileOwner();
+  await api.intake(personId, aResumeUpload());
+
+  const response = await api.correct(personId, { kind: "fact", evidenceId: "ev-3", newText: "Wrote SQL reporting for 45 stores" });
+
+  assert.deepEqual(response, { newVersion: 2, rescoreRequested: true });
+  const [v1, v2] = api.profileVersions(personId);
+  assert.equal(v1?.evidence.find((e) => e.id === "ev-3")?.text, "Wrote SQL reporting for 40 stores");
+  assert.equal(v2?.evidence.find((e) => e.id === "ev-3")?.text, "Wrote SQL reporting for 45 stores");
+  assert.deepEqual(api.rescoresRequested(), [personId]);
+  assert.deepEqual(
+    api.productEvents(personId).map((e) => e.name),
+    ["profile-created", "fact-fixed"],
+  );
+  await api.backgroundWorkSettled();
+});
+
+test("correcting a selling point changes its statement and keeps its proof", async () => {
+  const { api, personId } = await aProfileOwner();
+  api.analystWillSay({ candidates: [aCandidate("ev-1", 3, "Made the pipeline faster"), aCandidate("ev-2", 2)] });
+  await api.intake(personId, aResumeUpload());
+
+  await api.correct(personId, { kind: "selling-point", evidenceId: "ev-1", newStatement: "Cut nightly pipeline time by 89%" });
+
+  const points = await api.sellingPoints(personId);
+  assert.deepEqual(points[0], { statement: "Cut nightly pipeline time by 89%", tier: "signature", evidenceId: "ev-1" });
+  assert.equal(points.length, 2);
+  assert.equal(
+    api
+      .profileVersions(personId)
+      .at(-1)
+      ?.evidence.find((e) => e.id === "ev-1")?.text,
+    aStructuredResume().evidence[0]?.text,
+  );
+  await api.backgroundWorkSettled();
+});
+
+test("a correction naming unknown evidence, or for a profile with no resume, is not found and creates no version", async () => {
+  const { api, personId } = await aProfileOwner();
+  await assert.rejects(api.correct(personId, { kind: "fact", evidenceId: "ev-1", newText: "x" }), { code: "not-found" });
+  await api.intake(personId, aResumeUpload());
+  await assert.rejects(api.correct(personId, { kind: "fact", evidenceId: "ev-unknown", newText: "x" }), { code: "not-found" });
+  await assert.rejects(api.correct(personId, { kind: "selling-point", evidenceId: "ev-unknown", newStatement: "x" }), {
+    code: "not-found",
+  });
+  assert.equal(api.profileVersions(personId).length, 1);
+  assert.deepEqual(api.rescoresRequested(), []);
+});
