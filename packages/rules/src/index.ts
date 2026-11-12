@@ -10,6 +10,7 @@ export * from "./profile/profile.ts";
 export * from "./profile/scoring-profile.ts";
 export * from "./profile/selling-points.ts";
 export * from "./profile/resume-strength.ts";
+export * from "./profile/preference-defaults.ts";
 
 export * from "./jobs/job-posting.ts";
 export * from "./jobs/duplicates.ts";
