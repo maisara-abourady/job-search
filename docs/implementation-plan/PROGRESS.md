@@ -1,8 +1,8 @@
 # Progress
 
 Current phase: 0 — Verify and complete the walking skeleton
-Next task: P0-T09
-Last updated: 2026-11-12 by execution (P0-T08)
+Next task: Gate 0A review (S-1 needs the owner's machine; then P0-T10)
+Last updated: 2026-11-12 by execution (P0-T09)
 
 ## Status
 
@@ -22,7 +22,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (reason i
 - [x] P0-T06 Home for adapter contract suites, with the first storage suite
 - [x] P0-T07 Evaluation harness scaffold
 - [x] P0-T08 Formatter and lint check
-- [ ] P0-T09 Continuous integration
+- [x] P0-T09 Continuous integration
 - [ ] S-1 Which runtime implements each model port?
 - [x] H-1 Runtime on the owner's machine chosen (subscription)
 - [ ] GATE 0A (technical)
@@ -125,6 +125,8 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (reason i
 - 2026-11-12 (P0-T07): `pnpm eval <name> [--key=value]` runs `apps/main/eval/<name>/<name>.eval.ts`. An `Evaluation` has `name`, `description`, `configure(options)` returning `{ details, run(app) }` (the plan's `run(details)`: the runner composes the app from the evaluation's details) and `threshold(results)`. Reports go to `apps/main/eval/results/<name>-<timestamp>/` (gitignored; `EVAL_RESULTS_DIR` overrides). Exit 0 pass, 1 threshold failed, 2 unknown name. `eval/in-memory-details.ts` gives in-memory details for evaluations to override. The sample scores three scripted cases; `--break=<case>` forces a failure. 3 tests in `apps/main/test/eval-harness.test.ts`.
 - 2026-11-12 (metrics, watch): since P0-T05/T06, `pnpm check:architecture` prints a warning "SDP: delivery (I=0.50) depends on use-cases (I=0.50)". No production dependency changed: the checker counts test, contract and Main files as fan-in, so `main.dev.ts` importing delivery and the contract suite importing use-cases types moved both to 0.50. Warning only; raised at Gate 0.
 - 2026-11-12 (P0-T08): Biome 2.6.7 (config from `biome init`), limited to `.ts`, `.mjs`, `.json` so docs are untouched; 2-space indent, double quotes, line width 140. Recommended rules except `style/noNonNullAssertion` and `complexity/useLiteralKeys`, which fight the `!` and `["key"]` escapes the code uses for `noUncheckedIndexedAccess`. Two commits: a formatting-only reformat (every changed source equal to the old one once whitespace and punctuation are ignored), then two lint fixes (`self` alias in the testing API; `forEach` returning a value in `RunJobSearch.fetchAll`, now a `for` loop) and `pnpm lint` (`biome check .`) in `verify`. An unused variable or a misformatted file makes `pnpm lint` exit 1.
+- 2026-11-12 (P0-T09): `.github/workflows/verify.yml` (actions/checkout v7.0.1, actions/setup-node v7.1.0 with `.node-version`, pnpm through Corepack, frozen install, `pnpm verify`, `pnpm smoke`). Run 43181059712 on 71057d4 passed. A probe commit with a failing test (9cc7ddc) made run 43181144195 fail; the probe was removed in the next commit. CI has not run on `main` yet: the branch is not merged.
+- 2026-11-12 (S-1, P0-T10): S-1 has no task dependencies, but its measurements (structured output, latency, what spend headless calls report) must run Claude Code headless on the owner's subscription on the owner's machine. This container has neither, and a run here would not measure the owner's setup, so S-1 is left for the owner (or a session on their machine). P0-T10 and Gate 0B wait on it.
 
 ## Deviations log
 
@@ -143,3 +145,4 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (reason i
 | 2026-11-12 | 0, 5, HUMAN | H-1 done: runtime is Claude Code headless with the owner's subscription (API key route not explored, per owner). S-1 narrowed to how each port runs on it. P5-T02 acceptance adds the PRD's per-board blocking-risk table and human-pace session rules | Owner's instruction 2026-11-12; PRD revision of 2026-11-12 |
 | 2026-11-12 | P0-T02, P0-T03, P0-T04, P0-T05, Gate 0, P1-T01, Gate 2 | Verify commands of the form `node --test <directory>/` changed to quoted globs (`node --test "tools/architecture/test/*.test.mjs"`, `"packages/testing-api/test/*.test.ts"`, `"apps/main/test/*.test.ts"`) | Node 22 treats a directory argument to `node --test` as a module to load and fails with MODULE_NOT_FOUND |
 | 2026-11-12 | P0-T08 | Done as two commits (formatting-only reformat, then lint fixes plus `lint` in `verify`) | The task asks for a reformat commit that changes only whitespace and punctuation; the two lint fixes are small code edits and needed their own commit |
+| 2026-11-12 | P0-T09 | The "failing test makes CI fail" check ran as a probe commit on the working branch, removed in the next commit, instead of on a throwaway branch | This session may push only to its working branch |
