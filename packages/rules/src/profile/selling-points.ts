@@ -29,12 +29,16 @@ const TIER_ORDER: readonly SellingPointTier[] = ["signature", "strong", "support
 
 /**
  * What a career coach would lead with: every candidate that earns a tier, Signature before Strong before
- * Supporting (in the order given within a tier), at most 8. Candidates with no "yes" are not selling points.
+ * Supporting (in the order given within a tier), at most 8. Candidates with no "yes" are not selling points, and
+ * one proof makes one point: of candidates citing the same evidence, only the highest-tier (then first) is kept.
  */
 export function selectSellingPoints(candidates: readonly SellingPointCandidate[]): readonly SellingPoint[] {
   const tiered = candidates.flatMap((c) => {
     const tier = sellingPointTier(c);
     return tier === null ? [] : [{ statement: c.statement, tier, evidenceId: c.evidenceId }];
   });
-  return TIER_ORDER.flatMap((tier) => tiered.filter((p) => p.tier === tier)).slice(0, SELLING_POINTS_ON_CARD.max);
+  const ranked = TIER_ORDER.flatMap((tier) => tiered.filter((p) => p.tier === tier));
+  const proofs = new Set<string>();
+  const distinct = ranked.filter((p) => !proofs.has(p.evidenceId) && proofs.add(p.evidenceId));
+  return distinct.slice(0, SELLING_POINTS_ON_CARD.max);
 }

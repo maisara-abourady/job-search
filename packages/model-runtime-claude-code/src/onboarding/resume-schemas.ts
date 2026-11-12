@@ -2,7 +2,7 @@
  * Output schemas and fixed system prompts for the resume analyst (ADR 0009 decision 4: structured output and fixed
  * prompts). Changing a prompt changes what the analyst says: bump ANALYST_PROMPT_VERSION so evaluation reports show it.
  */
-export const ANALYST_PROMPT_VERSION = "analyst-1";
+export const ANALYST_PROMPT_VERSION = "analyst-2";
 
 const SENIORITY = ["intern", "entry", "mid", "senior", "lead-or-staff", "manager", "director", "vp", "executive"];
 const str = { type: "string" } as const;
@@ -58,7 +58,7 @@ export const CANDIDATES_SCHEMA = obj({
 
 export const CANDIDATES_PROMPT = [
   "You find the strongest selling points in a structured resume, the way a career coach would.",
-  "Propose 6 to 10 candidates. Each is one short statement about the resume's work (never about the person's character), citing exactly one evidence id that proves it.",
+  "Propose 6 to 10 candidates. Each is one short statement about the resume's work (never about the person's character), citing exactly one evidence id that proves it. Each candidate cites a different evidence id.",
   "Answer three tests per candidate, strictly from the cited evidence: quantified (it states a number, size or measurable result); withinLastThreeYears (the cited line belongs to a role that ended within three years of today, or is current); uncommonForRole (most people in that role could not claim it).",
   "Cite only evidence ids that exist in the input.",
 ].join("\n");

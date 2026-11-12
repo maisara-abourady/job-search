@@ -11,6 +11,7 @@
     "test:contract": "node --test \"packages/testing-api/contract/**/*.contract.test.ts\"",
     "eval": "node apps/main/eval/run-eval.ts",
     "smoke": "node apps/main/src/main.dev.ts smoke",
+    "dev": "node apps/main/src/main.dev.ts",
     "lint": "biome check .",
     "format": "biome format --write .",
     "verify": "pnpm run typecheck && pnpm run check:architecture && pnpm run lint && pnpm run test && pnpm run test:contract"

@@ -95,6 +95,8 @@ export function aStructuredResume(o: Partial<StructuredResume> = {}): Structured
       { id: "ev-1", source: "resume-line", text: "Cut nightly pipeline time from 6 hours to 40 minutes" },
       { id: "ev-2", source: "resume-line", text: "Built a Python data-quality service used by 12 teams" },
       { id: "ev-3", source: "resume-line", text: "Wrote SQL reporting for 40 stores" },
+      { id: "ev-4", source: "resume-line", text: "Mentored three junior engineers" },
+      { id: "ev-5", source: "resume-line", text: "Skills: SQL, Python, Airflow" },
     ],
     inferredSeniority: "senior",
     personal: { name: "Dana Example", photoRef: null, age: null, gender: null, nationality: null, maritalStatus: null },

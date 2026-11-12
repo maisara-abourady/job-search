@@ -13,11 +13,12 @@ import {
   TemplateNarrator,
   UnchosenModelRuntime,
 } from "@matchmaker/adapters";
-import { presentRunningCost } from "@matchmaker/delivery";
+import { presentRunningCost, type OnboardingViewModel } from "@matchmaker/delivery";
 import { LibraryDocumentReader } from "@matchmaker/documents";
 import { checkClaudeCodeReady, ClaudeCodeResumeAnalyst, HeadlessRunner } from "@matchmaker/model-runtime-claude-code";
-import type { ResumeAnalyst } from "@matchmaker/use-cases";
-import { dirname, join } from "node:path";
+import type { ResumeAnalyst, ResumeUpload } from "@matchmaker/use-cases";
+import { readFileSync } from "node:fs";
+import { basename, dirname, extname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { composeMatchmaker, type Matchmaker } from "./compose-matchmaker.ts";
 import { ConfigurationMissing, loadModelRuntimeConfig } from "./config.ts";
@@ -47,7 +48,10 @@ export const MONITORING_TICK_MS = 15 * 60_000;
 /** The model-backed ports this configuration has adapters for; the rest stay on the placeholder until their phase. */
 type Models = { readonly analyst: ResumeAnalyst };
 
-function composeDev(models: Models): Matchmaker {
+function composeDev(
+  models: Models,
+  onBackgroundError: (task: string, e: unknown) => void = (task, e) => console.error(task, e),
+): Matchmaker {
   return composeMatchmaker({
     storage: store,
     operatorConsole: { ...bind(store, "setEnabled", "states"), recent: async () => [] },
@@ -76,7 +80,7 @@ function composeDev(models: Models): Matchmaker {
     liveness: { isLive: async () => true },
     atsLinks: greenhouse,
     feed: { jobScored: (n) => console.log("scored", n) },
-    onBackgroundError: (task, e) => console.error(task, e),
+    onBackgroundError,
   });
 }
 
@@ -132,14 +136,83 @@ async function start(): Promise<void> {
   );
 }
 
+const INTAKE_USAGE = "usage: pnpm dev intake <path-to-resume (.pdf, .docx or .txt)> [--profile <name>] [--linkedin]";
+
+/**
+ * D-10 for onboarding (Flow 1 steps 1 to 3): creates or reuses a dev profile by name, opens it, uploads the file
+ * through the IntakeController and prints the selling-points card and the seconds it took.
+ */
+async function intake(args: readonly string[]): Promise<void> {
+  const path = args.find((a, i) => !a.startsWith("--") && args[i - 1] !== "--profile");
+  if (path === undefined) {
+    console.error(INTAKE_USAGE);
+    process.exitCode = 2;
+    return;
+  }
+  const profileFlag = args.indexOf("--profile");
+  const profileName = profileFlag >= 0 ? (args[profileFlag + 1] ?? "Dev") : "Dev";
+  const upload = uploadOf(path, args.includes("--linkedin"));
+  // The onboarding search needs the search planner, which arrives in Phase 2: one line instead of a stack trace.
+  const matchmaker = composeDev(await claudeCodeModels(), (task) =>
+    console.log(`(${task.split(":")[0]} requested; it fails until the search planner is built in Phase 2)`),
+  );
+
+  const existing = (await matchmaker.useCases.listPeople.execute()).people.find((p) => p.displayName === profileName);
+  const personId = existing?.personId ?? (await matchmaker.useCases.createPerson.execute({ displayName: profileName })).personId;
+  await matchmaker.useCases.openPerson.execute({ personId });
+
+  const started = performance.now();
+  const screen = await matchmaker.controllers.onboarding.intake.upload(personId, upload);
+  const seconds = (performance.now() - started) / 1000;
+  console.log(printable(screen));
+  console.log(`\nTime from upload to card: ${seconds.toFixed(1)} s`);
+  await matchmaker.work.drain();
+}
+
+function uploadOf(path: string, linkedin: boolean): ResumeUpload {
+  const fileName = basename(path);
+  const extension = extname(path).toLowerCase();
+  if (extension === ".txt" || extension === ".md") return { kind: "text", fileName, bytes: null, text: readFileSync(path, "utf8") };
+  const bytes = new Uint8Array(readFileSync(path));
+  if (extension === ".docx") return { kind: "docx", fileName, bytes, text: null };
+  return { kind: linkedin ? "linkedin-pdf" : "pdf", fileName, bytes, text: null };
+}
+
+/** The view model as a person would read it on screen. */
+function printable(screen: OnboardingViewModel): string {
+  switch (screen.kind) {
+    case "card":
+      return [
+        screen.heading,
+        "",
+        ...screen.points.map((p) => `  [${p.tierLabel}] ${p.statement}\n      proof: ${p.proof}`),
+        ...(screen.fewPointsNote === null ? [] : ["", screen.fewPointsNote]),
+        "",
+        `${screen.strengthLabel}: ${screen.strengthScore}`,
+        `${screen.fixesHeading}:`,
+        ...screen.fixes.map((f, i) => `  ${i + 1}. ${f}`),
+        "",
+        screen.suggestedLevel,
+      ].join("\n");
+    case "paste-text":
+      return `${screen.heading}\n${screen.prompt}`;
+    case "unsupported-language":
+      return `${screen.heading}\n${screen.message}`;
+    case "ask-first":
+      return screen.question;
+  }
+}
+
 if (import.meta.main) {
   const command = process.argv[2];
   if (command === "smoke") {
     await smoke();
+  } else if (command === "intake") {
+    await intake(process.argv.slice(3));
   } else if (command === undefined) {
     await start();
   } else {
-    console.error(`unknown command: ${command} (known: smoke)`);
+    console.error(`unknown command: ${command} (known: smoke, intake)`);
     process.exitCode = 2;
   }
 }

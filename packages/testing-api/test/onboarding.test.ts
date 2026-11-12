@@ -4,6 +4,17 @@ import { aCandidate, aResumeUpload, aStrengthAnswer, aStructuredResume, Matchmak
 
 // UC-1, UC-2: resume intake and profile correction (Flow 1 steps 1 to 3, Flow 7). Fictional people and resumes only.
 
+/** The default fictional resume with `n` evidence lines (ev-1 to ev-n). */
+function aResumeWithEvidence(n: number) {
+  const base = aStructuredResume();
+  const extra = Array.from({ length: n - base.evidence.length }, (_, i) => ({
+    id: `ev-${base.evidence.length + i + 1}`,
+    source: "resume-line" as const,
+    text: `Fictional achievement ${base.evidence.length + i + 1}`,
+  }));
+  return aStructuredResume({ evidence: [...base.evidence, ...extra] });
+}
+
 async function aProfileOwner(name = "Dana") {
   const api = new MatchmakerTestingApi();
   const { personId } = await api.createProfile(name);
@@ -17,10 +28,11 @@ test("a readable English resume becomes a card of tiered points with their proof
       aCandidate("ev-3", 1, "Wrote store reporting"),
       aCandidate("ev-2", 2, "Built a shared data-quality service"),
       aCandidate("ev-1", 3, "Cut pipeline time by 89%"),
-      aCandidate("ev-1", 2, "Owns the nightly pipeline"),
-      aCandidate("ev-2", 1, "Python"),
-      aCandidate("ev-3", 0, "Knows SQL"),
+      aCandidate("ev-4", 2, "Owns the nightly pipeline"),
+      aCandidate("ev-5", 1, "Python"),
+      aCandidate("ev-6", 0, "Knows SQL"),
     ],
+    structured: aResumeWithEvidence(6),
     strength: aStrengthAnswer({
       ratios: { impactEvidence: 1, skillsDepth: 0.5, clarityAndStructure: 0.75, careerTrajectory: 0.4, atsReadability: 0.2 },
     }),
@@ -58,13 +70,28 @@ test("a readable English resume becomes a card of tiered points with their proof
 
 test("the card keeps at most eight points, and shows only what qualifies when fewer than five do", async () => {
   const { api, personId } = await aProfileOwner();
-  api.analystWillSay({ candidates: Array.from({ length: 11 }, (_, i) => aCandidate("ev-1", 2, `Point ${i}`)) });
+  api.analystWillSay({
+    structured: aResumeWithEvidence(11),
+    candidates: Array.from({ length: 11 }, (_, i) => aCandidate(`ev-${i + 1}`, 2, `Point ${i}`)),
+  });
   const many = await api.intake(personId, aResumeUpload());
   assert.equal(many.outcome === "parsed" && many.card.points.length, 8);
 
   api.analystWillSay({ candidates: [aCandidate("ev-1", 1), aCandidate("ev-2", 0), aCandidate("ev-2", 2), aCandidate("ev-3", 3)] });
   const few = await api.intake(personId, aResumeUpload());
   assert.equal(few.outcome === "parsed" && few.card.points.length, 3);
+});
+
+test("one proof makes one point: of candidates citing the same evidence, the strongest is kept", async () => {
+  const { api, personId } = await aProfileOwner();
+  api.analystWillSay({
+    candidates: [aCandidate("ev-1", 1, "Pipeline, plainly"), aCandidate("ev-2", 2), aCandidate("ev-1", 3, "Pipeline, 89% faster")],
+  });
+  const response = await api.intake(personId, aResumeUpload());
+  assert.deepEqual(response.outcome === "parsed" && response.card.points.map((p) => p.statement), [
+    "Pipeline, 89% faster",
+    "Point on ev-2",
+  ]);
 });
 
 test("a candidate citing evidence the resume does not hold is not a selling point", async () => {
@@ -261,7 +288,7 @@ function onlyPlainValues(value: unknown): boolean {
 test("the card screen shows tier labels, proofs, the score out of 100, three fixes and the level in words", async () => {
   const { api, personId } = await aProfileOwner();
   api.analystWillSay({
-    candidates: [aCandidate("ev-1", 3), aCandidate("ev-2", 2), aCandidate("ev-3", 1), aCandidate("ev-2", 1), aCandidate("ev-1", 2)],
+    candidates: [aCandidate("ev-1", 3), aCandidate("ev-2", 2), aCandidate("ev-3", 1), aCandidate("ev-5", 1), aCandidate("ev-4", 2)],
   });
   const screen = await api.intakeScreen(personId, aResumeUpload());
 

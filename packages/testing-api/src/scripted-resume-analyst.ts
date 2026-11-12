@@ -8,7 +8,7 @@ import { aCandidate, aStrengthAnswer, aStructuredResume, type SellingPointCandid
 export class ScriptedResumeAnalyst implements ResumeAnalyst {
   private script: { structured: StructuredResume; candidates: readonly SellingPointCandidate[]; strength: StrengthAnswer } = {
     structured: aStructuredResume(),
-    candidates: [aCandidate("ev-1", 3), aCandidate("ev-2", 2), aCandidate("ev-3", 2), aCandidate("ev-1", 1), aCandidate("ev-2", 1)],
+    candidates: [aCandidate("ev-1", 3), aCandidate("ev-2", 2), aCandidate("ev-3", 2), aCandidate("ev-4", 1), aCandidate("ev-5", 1)],
     strength: aStrengthAnswer(),
   };
   private spendMicros = 0;

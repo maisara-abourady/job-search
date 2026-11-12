@@ -52,3 +52,9 @@ test("starting with the configuration but no Claude Code says so and exits 1", (
   assert.equal(r.status, 1, r.stderr);
   assert.match(r.stderr, /Claude Code was not found/);
 });
+
+test("the intake driver with no path prints its usage and exits 2", () => {
+  const r = spawnSync(process.execPath, [devMain, "intake"], { encoding: "utf8", timeout: 20_000, env: startEnvironment({}) });
+  assert.equal(r.status, 2, r.stderr);
+  assert.match(r.stderr, /usage: pnpm dev intake <path-to-resume/);
+});
