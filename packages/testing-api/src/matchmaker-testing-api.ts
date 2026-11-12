@@ -51,6 +51,7 @@ import {
   type StrengthAnswer,
 } from "./builders.ts";
 import { ScriptedDocumentReader } from "./scripted-document-reader.ts";
+import { ScriptedResumeAnalyst } from "./scripted-resume-analyst.ts";
 
 /** What the judge says about a posting a test did not script: a middling, evidence-free judgment. */
 const MODEST_JUDGMENT: MatchJudgments = { requirements: [], experienceRelevance: 0.5, skillsAndTools: 0.5, scopeAlignment: 0.5 };
@@ -87,20 +88,17 @@ export class MatchmakerTestingApi {
   private readonly requestedSearches: { personId: string; trigger: "onboarding" | "manual" | "scheduled" }[] = [];
   private readonly requestedRescores: string[] = [];
   private readonly reader = new ScriptedDocumentReader();
-  private analystScript: { structured: StructuredResume; candidates: readonly SellingPointCandidate[]; strength: StrengthAnswer } = {
-    structured: aStructuredResume(),
-    candidates: [aCandidate("ev-1", 3), aCandidate("ev-2", 2), aCandidate("ev-3", 2), aCandidate("ev-1", 1), aCandidate("ev-2", 1)],
-    strength: aStrengthAnswer(),
-  };
-  private analystSpendMicros = 0;
+  private readonly analyst: ScriptedResumeAnalyst;
   /** Every text the scripted analyst was asked to structure, in order. */
-  readonly analystReceived: string[] = [];
+  readonly analystReceived: readonly string[];
   readonly feed: ScoredJobNotice[] = [];
   private readonly app: Matchmaker;
 
   constructor() {
     const clock = { now: () => new Date(this.nowIso) };
     this.meter = new AsyncSpendMeter(this.spendLedger, clock);
+    this.analyst = new ScriptedResumeAnalyst(this.meter);
+    this.analystReceived = this.analyst.received;
     this.app = composeMatchmaker({
       storage: this.store,
       // Its own object: the store keeps exactly the methods its class gives it.
@@ -124,16 +122,7 @@ export class MatchmakerTestingApi {
       ids: { next: (prefix) => `${prefix}-${++this.idCounter}` },
       resumeFiles: this.resumeFiles,
       reader: this.reader,
-      analyst: {
-        structure: async (text) => {
-          this.analystReceived.push(text);
-          if (this.analystSpendMicros > 0)
-            await this.meter.record({ category: "model", provider: "scripted-analyst", amountMicros: this.analystSpendMicros });
-          return this.analystScript.structured;
-        },
-        sellingPointCandidates: async () => this.analystScript.candidates,
-        strengthRatios: async () => this.analystScript.strength,
-      },
+      analyst: this.analyst,
       judge: {
         judge: async (_profile, posting) => {
           this.judgeCalls.push(posting.id);
@@ -212,12 +201,12 @@ export class MatchmakerTestingApi {
   }
   /** What the resume analyst answers from now on; parts not given keep their current script. */
   analystWillSay(o: { structured?: StructuredResume; candidates?: readonly SellingPointCandidate[]; strength?: StrengthAnswer }): this {
-    this.analystScript = { ...this.analystScript, ...o };
+    this.analyst.willSay(o);
     return this;
   }
   /** Every resume the analyst structures from now on costs this much model spend. */
   analystCosts(micros: number): this {
-    this.analystSpendMicros = micros;
+    this.analyst.costs(micros);
     return this;
   }
   /** `costPerCallMicros` makes the source a paid one: each call reports that much aggregator spend. */

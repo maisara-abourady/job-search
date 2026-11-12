@@ -33,3 +33,22 @@ test("an unknown command exits 2", () => {
   assert.equal(r.status, 2);
   assert.match(r.stderr, /unknown command: nonsense/);
 });
+
+/** The environment of a start, without any of the owner's settings, plus `extra`. */
+function startEnvironment(extra: Record<string, string>): NodeJS.ProcessEnv {
+  const env = Object.fromEntries(Object.entries(process.env).filter(([k]) => !k.startsWith("MATCHMAKER_")));
+  return { ...env, MATCHMAKER_CONFIG: join(dirname(devMain), "no-such-config.json"), ...extra };
+}
+
+test("starting without the owner's configuration lists the missing settings and exits 1", () => {
+  const r = spawnSync(process.execPath, [devMain], { encoding: "utf8", timeout: 20_000, env: startEnvironment({}) });
+  assert.equal(r.status, 1, r.stderr);
+  assert.match(r.stderr, /MATCHMAKER_MODEL_TRAINING_OFF_CONFIRMED/);
+});
+
+test("starting with the configuration but no Claude Code says so and exits 1", () => {
+  const env = startEnvironment({ MATCHMAKER_MODEL_TRAINING_OFF_CONFIRMED: "2026-11-12", MATCHMAKER_CLAUDE_COMMAND: "/nonexistent/claude" });
+  const r = spawnSync(process.execPath, [devMain], { encoding: "utf8", timeout: 20_000, env });
+  assert.equal(r.status, 1, r.stderr);
+  assert.match(r.stderr, /Claude Code was not found/);
+});

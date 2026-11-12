@@ -11,6 +11,7 @@
     "@matchmaker/delivery": "workspace:*",
     "@matchmaker/adapters": "workspace:*",
     "@matchmaker/scraping-sources": "workspace:*",
-    "@matchmaker/documents": "workspace:*"
+    "@matchmaker/documents": "workspace:*",
+    "@matchmaker/model-runtime-claude-code": "workspace:*"
   }
 }

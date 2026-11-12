@@ -1,5 +1,6 @@
 export { MatchmakerTestingApi } from "./matchmaker-testing-api.ts";
 export { ScriptedDocumentReader } from "./scripted-document-reader.ts";
+export { ScriptedResumeAnalyst } from "./scripted-resume-analyst.ts";
 export {
   aCandidate,
   aJobPosting,

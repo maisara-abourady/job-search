@@ -11,6 +11,7 @@
     "@matchmaker/delivery": "workspace:*",
     "@matchmaker/adapters": "workspace:*",
     "@matchmaker/main": "workspace:*",
-    "@matchmaker/documents": "workspace:*"
+    "@matchmaker/documents": "workspace:*",
+    "@matchmaker/model-runtime-claude-code": "workspace:*"
   }
 }

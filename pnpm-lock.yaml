@@ -29,6 +29,9 @@ importers:
       '@matchmaker/documents':
         specifier: workspace:*
         version: link:../../packages/documents
+      '@matchmaker/model-runtime-claude-code':
+        specifier: workspace:*
+        version: link:../../packages/model-runtime-claude-code
       '@matchmaker/rules':
         specifier: workspace:*
         version: link:../../packages/rules
@@ -78,6 +81,15 @@ importers:
         specifier: 2.1.0
         version: 2.1.0
 
+  packages/model-runtime-claude-code:
+    dependencies:
+      '@matchmaker/rules':
+        specifier: workspace:*
+        version: link:../rules
+      '@matchmaker/use-cases':
+        specifier: workspace:*
+        version: link:../use-cases
+
   packages/rules: {}
 
   packages/scraping-sources:
@@ -103,6 +115,9 @@ importers:
       '@matchmaker/main':
         specifier: workspace:*
         version: link:../../apps/main
+      '@matchmaker/model-runtime-claude-code':
+        specifier: workspace:*
+        version: link:../model-runtime-claude-code
       '@matchmaker/rules':
         specifier: workspace:*
         version: link:../rules

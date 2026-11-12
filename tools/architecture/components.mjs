@@ -1,6 +1,6 @@
 /**
  * The architecture as data. The check script enforces it; docs/architecture/README.md explains it.
- * Changing this file is an architectural decision: it needs an ADR (latest: ADR 0017 added @matchmaker/documents).
+ * Changing this file is an architectural decision: it needs an ADR (latest: ADR 0009 added @matchmaker/model-runtime-claude-code, built by P1-T10).
  */
 export const COMPONENTS = {
   "@matchmaker/rules": { dir: "packages/rules", circle: "1 entities", allowed: [], platform: false },
@@ -14,6 +14,13 @@ export const COMPONENTS = {
   },
   "@matchmaker/scraping-sources": {
     dir: "packages/scraping-sources",
+    circle: "3-4 adapters",
+    allowed: ["@matchmaker/rules", "@matchmaker/use-cases"],
+    platform: true,
+  },
+  // ADR 0009 decision 2: every model port runs on Claude Code headless; the adapters change together with the CLI.
+  "@matchmaker/model-runtime-claude-code": {
+    dir: "packages/model-runtime-claude-code",
     circle: "3-4 adapters",
     allowed: ["@matchmaker/rules", "@matchmaker/use-cases"],
     platform: true,
@@ -36,6 +43,7 @@ export const COMPONENTS = {
       "@matchmaker/adapters",
       "@matchmaker/scraping-sources",
       "@matchmaker/documents",
+      "@matchmaker/model-runtime-claude-code",
     ],
   },
   "@matchmaker/testing-api": {
@@ -50,6 +58,7 @@ export const COMPONENTS = {
       "@matchmaker/adapters",
       "@matchmaker/main",
       "@matchmaker/documents",
+      "@matchmaker/model-runtime-claude-code",
     ],
   },
 };
@@ -62,6 +71,13 @@ export const RESTRICTED_SUBPATHS = { "@matchmaker/use-cases/wiring": ["@matchmak
  * Files directly under src/ (index.ts, wiring.ts) are the published surface and are exempt.
  */
 export const AREAS = {
+  "@matchmaker/model-runtime-claude-code": {
+    headless: [],
+    onboarding: ["headless"],
+    discovery: ["headless"],
+    matching: ["headless"],
+    tailoring: ["headless"],
+  },
   "@matchmaker/rules": {
     shared: [],
     profile: ["shared"],
