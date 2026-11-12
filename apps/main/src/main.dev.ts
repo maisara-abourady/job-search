@@ -2,6 +2,7 @@ import {
   AsyncSpendMeter, GreenhouseBoardSource, InMemoryProductEventLog, InMemorySpendLedger, InMemoryStore, InMemoryUsageLedger, IntervalTicker,
   JsonArchiveVault, RandomIds, SystemClock, TemplateNarrator, UnchosenModelRuntime,
 } from "@matchmaker/adapters";
+import { presentRunningCost } from "@matchmaker/delivery";
 import { composeMatchmaker } from "./compose-matchmaker.ts";
 
 /**
@@ -51,8 +52,28 @@ function bind<T extends object, K extends keyof T>(target: T, ...keys: K[]): Pic
   return Object.fromEntries(keys.map((k) => [k, (target[k] as (...a: unknown[]) => unknown).bind(target)])) as Pick<T, K>;
 }
 
+/**
+ * The walking skeleton (D-10): one request through every layer. Creates and opens a profile, reads the running
+ * cost and the (empty) results through their presenters and controller, and prints both view models.
+ */
+async function smoke(): Promise<void> {
+  const { personId } = await matchmaker.useCases.createPerson.execute({ displayName: "Smoke" });
+  await matchmaker.useCases.openPerson.execute({ personId });
+  const runningCost = presentRunningCost(await matchmaker.useCases.viewRunningCost.execute({}));
+  const results = await matchmaker.controllers.results.show(personId);
+  console.log(JSON.stringify({ runningCost, results }, null, 2));
+}
+
 if (import.meta.main) {
-  console.log("AI Job Matchmaker (dev):", Object.keys(matchmaker.useCases).join(", "));
-  // Monitoring while the app runs: a catch-up tick now, then every MONITORING_TICK_MS. The dev run does not stay alive for it.
-  new IntervalTicker((e) => console.error("monitoring", e)).start(() => matchmaker.useCases.runDueMonitoring.execute(), MONITORING_TICK_MS, { keepProcessAlive: false });
+  const command = process.argv[2];
+  if (command === "smoke") {
+    await smoke();
+  } else if (command === undefined) {
+    console.log("AI Job Matchmaker (dev):", Object.keys(matchmaker.useCases).join(", "));
+    // Monitoring while the app runs: a catch-up tick now, then every MONITORING_TICK_MS. The dev run does not stay alive for it.
+    new IntervalTicker((e) => console.error("monitoring", e)).start(() => matchmaker.useCases.runDueMonitoring.execute(), MONITORING_TICK_MS, { keepProcessAlive: false });
+  } else {
+    console.error(`unknown command: ${command} (known: smoke)`);
+    process.exitCode = 2;
+  }
 }

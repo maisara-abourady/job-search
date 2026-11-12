@@ -1,8 +1,8 @@
 # Progress
 
 Current phase: 0 — Verify and complete the walking skeleton
-Next task: P0-T05
-Last updated: 2026-11-12 by execution (P0-T04)
+Next task: P0-T06
+Last updated: 2026-11-12 by execution (P0-T05)
 
 ## Status
 
@@ -18,7 +18,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (reason i
 - [x] P0-T02 Regression tests for the architecture check
 - [x] P0-T03 Extend checker and test coverage to new directories
 - [x] P0-T04 Complete the testing API as a Main configuration
-- [ ] P0-T05 Walking skeleton through the dev Main
+- [x] P0-T05 Walking skeleton through the dev Main
 - [ ] P0-T06 Home for adapter contract suites, with the first storage suite
 - [ ] P0-T07 Evaluation harness scaffold
 - [ ] P0-T08 Formatter and lint check
@@ -120,6 +120,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (reason i
 - 2026-11-12 (P0-T02): `check.mjs` takes `--root <dir>` (or `ARCH_ROOT`) and reads `<root>/tools/architecture/components.mjs`; no rule changed. 11 checker tests (clean fixture, nine injected violations, real repo) in `tools/architecture/test/`, part of `pnpm test` (33 tests). A mutation that disables the `node:*` rule makes the matching case fail.
 - 2026-11-12 (P0-T03): the checker scans `src`, `test`, `contract` and `eval`; testing-api typechecks `contract/`, Main typechecks `eval/` and `test/`. `pnpm test` also globs `apps/*/test` and `tools/**/test`; `pnpm verify` ends with `test:contract` (0 files until P0-T06). 35 tests.
 - 2026-11-12 (P0-T04): the testing API collects background failures; `backgroundWorkSettled()` (and `appStarts()`) rejects once with every failed task named. `operatorConsole` is its own object delegating to the store. New superpowers: `searchPlannerFails`, `onboardingSearch`, `searchesRequested` (wraps the `searchRequests` port Main returns; monitoring looks it up per call). Header comment states the scripted-double rule. 4 tests in `skeleton.test.ts`; the 22 earlier tests unchanged. "No `recent` property on the store" cannot be asserted through the testing API (ADR 0008), so it was checked by a one-off probe (store has no `recent`). `UseCaseError` does not set `name`, so tests match on `code` only.
+- 2026-11-12 (P0-T05): `pnpm smoke` runs CreatePerson, OpenPerson, ViewRunningCost + `presentRunningCost`, and `ResultsController.show`, printing both view models (Smoke at $0.00, no budget; three empty tabs; empty-Apply heading set). No ticker in smoke; an unknown command exits 2. `apps/main/test/smoke.test.ts` spawns it inside `pnpm test` (41 tests).
 
 ## Deviations log
 

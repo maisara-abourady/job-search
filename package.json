@@ -9,6 +9,7 @@
     "metrics": "node tools/architecture/check.mjs --metrics",
     "test": "node --test \"packages/*/test/**/*.test.ts\" \"apps/*/test/**/*.test.ts\" \"tools/**/test/*.test.mjs\"",
     "test:contract": "node --test \"packages/testing-api/contract/**/*.contract.test.ts\"",
+    "smoke": "node apps/main/src/main.dev.ts smoke",
     "verify": "pnpm run typecheck && pnpm run check:architecture && pnpm run test && pnpm run test:contract"
   },
   "devDependencies": {
