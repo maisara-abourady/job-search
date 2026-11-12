@@ -1,8 +1,8 @@
 # Progress
 
 Current phase: 1 — Foundations (Phase 0 complete 2026-11-12)
-Current phase: 1. Next task: P1-T01 (Phase 1 runs in a fresh session)
-Last updated: 2026-11-12 by execution (P0-T09)
+Next task: P1-T01 (Phase 1 runs in a fresh session)
+Last updated: 2026-11-12 by execution (Gate 0B approved)
 
 ## Status
 
