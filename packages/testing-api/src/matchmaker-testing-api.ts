@@ -385,6 +385,13 @@ export class MatchmakerTestingApi {
   async spentBy(personId: string): Promise<number> {
     return this.spendLedger.spentBy(personId, "0000", "9999");
   }
+  /** Why each spend charged to the profile was spent, in order (ADR 0010 purposes). */
+  spendPurposes(personId: string): readonly string[] {
+    return this.spendLedger
+      .recorded()
+      .filter((r) => r.personId === personId)
+      .map((r) => r.purpose);
+  }
   /** Spend no use case charged: a cost-incurring use case forgot to open a charge (watch item W8). */
   unattributedSpendMicros(): number {
     return this.spendLedger

@@ -7,6 +7,7 @@ import type {
   RoleHeld,
   ScoringProfile,
   SellingPoint,
+  SellingPointCandidate,
   SeniorityLevel,
 } from "@matchmaker/rules";
 
@@ -36,11 +37,7 @@ export type StructuredResume = {
 export interface ResumeAnalyst {
   structure(text: string): Promise<StructuredResume>;
   /** Selling-point candidates with the three tier tests answered; the rules assign the tier. */
-  sellingPointCandidates(
-    resume: StructuredResume,
-  ): Promise<
-    readonly { statement: string; evidenceId: string; quantified: boolean; withinLastThreeYears: boolean; uncommonForRole: boolean }[]
-  >;
+  sellingPointCandidates(resume: StructuredResume): Promise<readonly SellingPointCandidate[]>;
   strengthRatios(resume: StructuredResume): Promise<{ ratios: ResumeStrengthRatios; topFixes: readonly string[] }>;
 }
 /** IN-1, IN-2: adaptive questions from gaps and ambiguities. */

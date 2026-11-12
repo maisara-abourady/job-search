@@ -1,8 +1,8 @@
 # Progress
 
 Current phase: 1 — Foundations (Phase 0 complete 2026-11-12)
-Next task: P1-T04
-Last updated: 2026-11-12 by execution (P1-T03)
+Next task: P1-T05
+Last updated: 2026-11-12 by execution (P1-T04)
 
 ## Status
 
@@ -35,7 +35,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (reason i
 - [x] P1-T01 In-memory resume files and onboarding storage contracts
 - [x] P1-T02 Wire intake and profile correction through Main and the testing API
 - [x] P1-T03 Rules: choose 5 to 8 selling points and suggest a target seniority band
-- [ ] P1-T04 `IntakeResume` use case
+- [x] P1-T04 `IntakeResume` use case
 - [ ] P1-T05 `CorrectProfile`: facts and selling points
 - [x] P1-T06 Profile and spending acceptance tests (built by the Architect; replaces account and trial tests)
 - [ ] P1-T07 Onboarding controllers and presenters
@@ -134,6 +134,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (reason i
 - 2026-11-12 (P1-T01): `InMemoryResumeFiles` (`packages/adapters/src/in-memory/in-memory-resume-files.ts`) keeps every upload as a numbered version and is a `PersonDataVault` part (export lists each version's id, version, time, kind, file name and size; the bytes are not exported). It joins the `JsonArchiveVault` as section `resumeFiles` in `main.dev.ts` and the testing API. Contract: `resumeFilesContract` (3 cases), a `sellingPoints` case in `profileVersionsContract`, and the vault suite on the new store and inside the composed vault. `pnpm test:contract`: 45 pass, 1 todo; `pnpm verify` green.
 - 2026-11-12 (P1-T02): `MatchmakerDetails` gains `resumeFiles`, `reader` and `analyst`; Main composes `IntakeResumeInteractor` (with `spending` and `spendAttribution`; `overBudgetConfirmed` added to its request) and `CorrectProfileInteractor` wrapped in the new `MeasuredCorrectProfile` (emits `preferences-saved` and `fact-fixed` after success). Dev and eval configurations pass a reader placeholder and `UnchosenModelRuntime`, which now also stands in for `ResumeAnalyst`. Testing API: scripted reader and analyst, `documentWillRead`, `analystWillSay`, `analystCosts`, `intake`, `correct`, `profileVersions`, `sellingPoints`, `storedResumes`, `rescoresRequested`, `analystReceived`; builders `aResumeUpload`, `aStructuredResume`, `aCandidate`, `aStrengthAnswer`. `InMemoryStore.versionsOf` (observation only, like `recordedRuns`). `onboarding.test.ts`: intake rejects with "Not yet built: RP-1". `pnpm verify` 45 tests + 45 contract cases, `pnpm smoke` green.
 - 2026-11-12 (P1-T03): `selectSellingPoints` and `SellingPointCandidate` in `rules/profile/selling-points.ts` (tiers with `sellingPointTier`, drops untiered, Signature then Strong then Supporting, stable, at most 8; `SELLING_POINTS_ON_CARD`); `suggestedSeniorityBand` and `initialPreferences` in the new `rules/profile/preference-defaults.ts` (top of the ladder suggests only itself). Typecheck, architecture check and `pnpm verify` green; behavior is asserted in P1-T04.
+- 2026-11-12 (P1-T04): `IntakeResumeInteractor` built: `INTAKE_POLICY` (10 MB, English, three fixes); size check, then `SpendingGuard.beforeOnDemand(personId, null, confirmed)`, then everything inside `spend.charge(... "intake")`: store original, read, language check (ISO 639-1 prefix, so `en-GB` is English), structure, candidates and ratios in parallel, `selectSellingPoints`, `resumeStrength`, new version (same `profileId`; preferences kept on re-upload, `initialPreferences(suggestedSeniorityBand(...))` on first), onboarding search. Candidates citing an evidence id the resume does not hold are dropped (nothing invented). The original is stored even when unreadable (RP-8). `ResumeAnalyst.sellingPointCandidates` now returns the rules' `SellingPointCandidate`. 13 tests in `onboarding.test.ts`; new superpower `spendPurposes`. A mutation that skips the guard fails two tests. `pnpm verify`: 57 tests + 45 contract cases.
 
 ## Deviations log
 
