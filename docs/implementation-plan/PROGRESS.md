@@ -1,7 +1,7 @@
 # Progress
 
 Current phase: 1 — Foundations (Phase 0 complete 2026-11-12)
-Next task: GATE 1 (waits on the owner: card-time decision, H-5, H-6, Gate approval)
+Next task: P1-T13 (then GATE 1)
 Last updated: 2026-11-12 by execution (P1-T11)
 
 ## Status
@@ -44,9 +44,10 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (reason i
 - [x] P1-T10 Model runtime package, configuration loader and the resume analyst
 - [x] P1-T11 Parsing evaluation (exit test)
 - [x] P1-T12 Dev intake driver
+- [ ] P1-T13 Selling-points card within 20 seconds (added at Gate 1)
 - [x] S-2 Initial Tier 1 company registry
-- [ ] H-5 Registry source chosen
-- [ ] H-6 Adzuna and USAJobs keys
+- [x] H-5 Registry source chosen: the MIT slug lists from S-2 (owner, 2026-11-12); the crawl for the other three ATS is P5-T09
+- [-] H-6 Adzuna and USAJobs keys (deferred with P2-T09 to P5-T10)
 - [ ] GATE 1
 
 ### Phase 2 — Matching core (exit: 95% score stability)
@@ -58,7 +59,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (reason i
 - [ ] P2-T06 Lever, Ashby and Workable adapters
 - [ ] P2-T07 SmartRecruiters and Recruitee adapters
 - [ ] P2-T08 Tier 2 keyless APIs
-- [ ] P2-T09 Tier 2 keyed APIs: Adzuna and USAJobs
+- [-] P2-T09 Tier 2 keyed APIs: Adzuna and USAJobs (deferred to P5-T10, not forgotten)
 - [ ] P2-T10 Tier 2 feeds: We Work Remotely and Hacker News
 - [ ] P2-T11 Search planner and posting enricher adapters
 - [ ] P2-T12 Match judge adapter
@@ -91,6 +92,8 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (reason i
 - [ ] P5-T06 Daily re-check of stored postings while the app runs
 - [ ] P5-T07 Inbox
 - [ ] P5-T08 Any-single-source-disabled test (exit test)
+- [ ] P5-T09 Registry: harvest Workable, SmartRecruiters and Recruitee boards
+- [ ] P5-T10 Tier 2 keyed APIs: Adzuna and USAJobs (moved from P2-T09)
 - [ ] S-7 Packaging for a one-command install
 - [ ] H-17 Fresh machine ready
 - [ ] GATE 5
@@ -172,3 +175,6 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (reason i
 | 2026-11-12 | P1-T12 | Acceptance "5 to 8 points" shown on the fictional S-1 sample (`tools/spikes/s1/samples/resume-a.txt`, 7 points); the plan's verify fixture `resume.pdf` honestly yields 3 points with the "fewer points" note | The PDF fixture holds only three achievement lines; padding the card would break "nothing invented" |
 | 2026-11-12 | P1-T03, P1-T04 | Selling points: one point per evidence item (the highest tier, then the first) | The first real run put two near-identical points on one proof line; a card of distinct proofs is what the PRD's "5 to 8 selling points" means |
 | 2026-11-12 | P1-T11 | The exit test runs on the 6 consented PDFs (PDF only, owner's decision 2026-11-12), not 20 varied resumes; expected files mark ambiguous roles `optional` and split skills into required and optional | H-3 cap of six; "stick to PDF for now"; skills lists have no single right granularity, so recall is measured on named tools and methods and precision forgives defensible extras |
+| 2026-11-12 | P1-T13 (new) | Added before Gate 1: get the selling-points card under 20 seconds | Owner chose to fix card speed now (P1-T11: median 32.8 s, max 56.4 s) |
+| 2026-11-12 | H-5, P5-T09 (new) | Registry seed is the S-2 MIT slug lists; harvesting Workable, SmartRecruiters and Recruitee is a tracked Phase 5 task | Owner's decision; the crawl was not to be forgotten |
+| 2026-11-12 | H-6, P2-T09, P5-T10 (new) | Adzuna and USAJobs deferred from Phase 2 to P5-T10 (asked again at Gate 4) | They do not cover the owner's markets as far as known; owner asked to keep them in the plan |

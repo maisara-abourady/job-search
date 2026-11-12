@@ -276,6 +276,22 @@ Amended 2026-11-11 for the scope revision: `userId` is `personId`; `AccessGuard`
 - **Feeds decision:** H-5 (PRD open question 6); the seed list and format for P2-T05 to P2-T07
 - **Deliverable:** a short written answer appended to PLAN.md "Spike answers"; code on a throwaway branch, not merged.
 
+### P1-T13 — Selling-points card within 20 seconds (added 2026-11-12)
+
+- **Traces to:** NFR "selling-points card within 20 seconds", ADR 0009 (review trigger: the 20 s card), RP-2
+- **Layer:** Interface adapters (`@matchmaker/model-runtime-claude-code`, `onboarding/`) — no port changes
+- **Depends on:** P1-T11
+- **Size:** M
+- **Context:** The P1-T11 run took a median of 32.8 s and a maximum of 56.4 s to card. The `structure` call writes about 7,700 output tokens (about 2,900 thinking) for the longest resume, about 42 s. Citing line ranges and `--effort low` did not help. Split the work the analyst does into calls that run in parallel inside the adapter (for example roles and evidence in one call, skills in another), keeping the `ResumeAnalyst` port unchanged, and measure.
+- **Acceptance criteria:**
+  - [ ] `pnpm eval parsing` still passes the H-4 thresholds on the six resumes
+  - [ ] Median seconds to card under 20 in the cloud session; PROGRESS.md records median and maximum
+  - [ ] The analyst contract passes on newly recorded envelopes (fictional sample)
+- **Verify:**
+  ```bash
+  pnpm test:contract && pnpm verify && pnpm eval parsing
+  ```
+
 ## Gate 1
 
 - **Exit criteria:**

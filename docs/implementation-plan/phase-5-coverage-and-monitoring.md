@@ -45,6 +45,15 @@ Amended 2026-11-11 for the scope revision (ADRs 0015, 0016): no legal review per
 - **Traces to:** DS-2, Availability NFR · **Size:** M
 - **Acceptance:** A testing-API test runs one search per configured source with only that source switched off and every run completes; the same is shown live in the local app via the sources screen.
 
+### P5-T09 — Registry: harvest Workable, SmartRecruiters and Recruitee boards (added 2026-11-12)
+- **Traces to:** S-2, H-5, ADR 0004 §7 · **Depends on:** P2-T06, P2-T07 · **Size:** M
+- **Context:** The Tier 1 seed (S-2) covers Greenhouse, Lever and Ashby only. Harvest public board slugs for the other three ATS from the Common Crawl index, validate them against the live boards, and register them.
+- **Acceptance:** each of the three ATS has registered, validated companies; stale slugs are marked inactive.
+
+### P5-T10 — Tier 2 keyed APIs: Adzuna and USAJobs (moved from P2-T09, added 2026-11-12)
+- **Traces to:** A-18, P-10, ADR 0004 · **Depends on:** H-6 · **Size:** M
+- **Context:** Build P2-T09 as written when the owner targets a market these sources cover (Adzuna: about 19 countries; USAJobs: US federal jobs). Ask the owner at Gate 4 whether that is the case.
+
 ### SPIKE S-5 — Tier 4 bridge (see PLAN.md; run in Phase 4 only if a board was named)
 ### SPIKE S-7 — Packaging for a one-command local install and start (see PLAN.md; feeds P6-T07)
 

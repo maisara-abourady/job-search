@@ -174,7 +174,9 @@ Mid-phase checkpoint (no stop required): once P2-T05, P2-T11, P2-T12 and P2-T13 
   pnpm test:contract && pnpm verify
   ```
 
-### P2-T09 — Tier 2 keyed APIs: Adzuna and USAJobs
+### P2-T09 — Tier 2 keyed APIs: Adzuna and USAJobs — DEFERRED to P5-T10 (owner, 2026-11-12)
+
+- **Status:** skipped in Phase 2. Adzuna does not cover the owner's markets (Egypt, the Gulf) as far as known, and USAJobs lists only US federal jobs. P5-T10 keeps it for later.
 
 - **Traces to:** A-18, P-10, X-2, ADR 0004
 - **Layer:** Interface adapters (`adapters/job-sources`) and Main configuration — as P2-T06
