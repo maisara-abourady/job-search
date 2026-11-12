@@ -346,3 +346,21 @@ Run with `node tools/spikes/s1/run-s1.mjs` (fictional samples only: 2 resumes, 5
 - **Spend:** every call reports `total_cost_usd` (a priced estimate; about 0.007 USD per call at p50, 0.22 USD for all 25). Under the subscription it is not a charge, so the monthly budget (ADR 0015) can run on these estimates.
 - **Embeddings (D3):** Claude Code has none. A small-model ranking call over the postings stood in for `RelevanceRanker` (5.9 s for 5 postings); in-process lexical ranking is the alternative.
 - **Still open (owner's machine):** latency on the owner's machine and network, whether these calls count against the subscription's usage limits, and the account's model-training setting (Privacy 4). The cloud run uses the same account and CLI, so the structured-output, consistency and spend findings should carry over; latency may differ.
+
+### S-2 — Where the initial Tier 1 company registry comes from (2026-11-12, cloud session)
+
+**Answer: seed from an MIT-licensed public slug list; grow from links (ADR 0004 §7).** This session's network reaches GitHub but not the ATS APIs, the Tier 2 sources or most data sites, so counts below are as published, not validated against live boards.
+
+| Candidate | What it is | Size (as fetched) | Terms | Verdict |
+|---|---|---|---|---|
+| `feashliaa/job-board-aggregator`, `data/{greenhouse,lever,ashby}_companies.json` on GitHub | Plain JSON arrays of public board slugs, used daily by that project's scraper | Greenhouse 8,333; Lever 4,368; Ashby 3,161 (15,862) | MIT | **Recommended seed** for Greenhouse, Lever and Ashby. Slugs only (no company names or countries); some will be stale |
+| LastRound AI "ATS directory" on DataHub | Companies mapped to their ATS and board slug, built from the public board APIs | 9,935 companies (snapshot Aug 2026, per its listing) | CC BY 4.0 (attribution) | Good second source; not fetched (host blocked here) |
+| Common Crawl CDX index | Harvest `boards.greenhouse.io/*`, `jobs.lever.co/*`, `jobs.ashbyhq.com/*`, `apply.workable.com/*`, `jobs.smartrecruiters.com/*`, `*.recruitee.com` | Tens of thousands of slugs (one project reports ~95,000 across 20+ ATS) | Common Crawl terms of use | Only route that covers **Workable, SmartRecruiters and Recruitee**; a one-off harvest script, not run here |
+| `ConorsCode/open-jobs-data` | Fetcher for about 90 well-known companies | ~90 | see repo | Reference for endpoints only |
+| Tier 2 links (ADR 0004 §7 growth path) | Tier 2 postings whose apply URL is an ATS board | Not measured: Tier 2 hosts are blocked in this session | — | Measure in P2-T08/P2-T10 when the adapters run (`AtsLinkRecognizer` already exists) |
+
+**Seed format for P2-T05 to P2-T07:** one JSON file per ATS under the registry seed folder, `[{ "ats": "greenhouse", "companyId": "<slug>" }]`, loaded through `CompanyRegistry.register` at first start. Names come from the first board fetch (each board API returns the company name).
+
+**Risks:** stale or renamed slugs (a board returning 404 is marked inactive, never retried every run); the lists are US-tech heavy, so the owner's markets may be thin until Tier 2 links add employers; Workable, SmartRecruiters and Recruitee have no seed until a Common Crawl harvest runs.
+
+**Decision needed (H-5):** accept the MIT lists as the seed (and optionally the CC BY 4.0 directory with attribution), and say whether a one-off Common Crawl harvest for the other three ATS is wanted in Phase 2.
