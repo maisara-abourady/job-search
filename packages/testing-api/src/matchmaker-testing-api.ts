@@ -68,15 +68,14 @@ export class MatchmakerTestingApi {
   private readonly app: Matchmaker;
 
   constructor() {
-    const self = this;
-    const clock = { now: () => new Date(self.nowIso) };
+    const clock = { now: () => new Date(this.nowIso) };
     this.meter = new AsyncSpendMeter(this.spendLedger, clock);
     this.app = composeMatchmaker({
       storage: this.store,
       // Its own object: the store keeps exactly the methods its class gives it.
       operatorConsole: {
-        setEnabled: (sourceName, enabled, reason) => self.store.setEnabled(sourceName, enabled, reason),
-        states: () => self.store.states(),
+        setEnabled: (sourceName, enabled, reason) => this.store.setEnabled(sourceName, enabled, reason),
+        states: () => this.store.states(),
         recent: async () => [],
       },
       usage: this.usage,
@@ -90,19 +89,19 @@ export class MatchmakerTestingApi {
       ]),
       productEvents: this.events,
       clock,
-      ids: { next: (prefix) => `${prefix}-${++self.idCounter}` },
+      ids: { next: (prefix) => `${prefix}-${++this.idCounter}` },
       judge: {
         judge: async (_profile, posting) => {
-          self.judgeCalls.push(posting.id);
-          if (self.judgeSpendMicros > 0)
-            await self.meter.record({ category: "model", provider: "scripted-judge", amountMicros: self.judgeSpendMicros });
-          return self.judgments.get(posting.id) ?? MODEST_JUDGMENT;
+          this.judgeCalls.push(posting.id);
+          if (this.judgeSpendMicros > 0)
+            await this.meter.record({ category: "model", provider: "scripted-judge", amountMicros: this.judgeSpendMicros });
+          return this.judgments.get(posting.id) ?? MODEST_JUDGMENT;
         },
       },
       narrator: new TemplateNarrator(),
       planner: {
         plan: async (_p, widen) => {
-          if (self.plannerError) throw self.plannerError;
+          if (this.plannerError) throw this.plannerError;
           return {
             queries: [{ titles: ["engineer"], keywords: [], locations: [], includeRemote: true }],
             adjacentTitlesUsed: widen ? ["adjacent role"] : [],
@@ -114,16 +113,16 @@ export class MatchmakerTestingApi {
       sources: this.sources,
       liveness: { isLive: async () => true },
       atsLinks: { recognize: () => null },
-      feed: { jobScored: (n) => self.feed.push(n) },
+      feed: { jobScored: (n) => this.feed.push(n) },
       onBackgroundError: (task, e) => {
-        self.backgroundErrors.push(`background task ${task} failed: ${String(e)}`);
+        this.backgroundErrors.push(`background task ${task} failed: ${String(e)}`);
       },
     });
     // Observe the search request port Main wired (monitoring and onboarding reach discovery through it).
     const searchRequests = this.app.requests.searchRequests;
     const requestSearch = searchRequests.requestSearch;
     searchRequests.requestSearch = async (personId, trigger) => {
-      self.requestedSearches.push({ personId, trigger });
+      this.requestedSearches.push({ personId, trigger });
       return requestSearch(personId, trigger);
     };
   }

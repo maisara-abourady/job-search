@@ -210,7 +210,10 @@ export class RunJobSearchInteractor implements RunJobSearch {
     const settled = await Promise.allSettled(sources.map((s) => s.search(queries, SEARCH_POLICY.sourceTimeoutMs)));
     const found: FoundPosting[] = [];
     const failed: string[] = [];
-    settled.forEach((r, i) => (r.status === "fulfilled" ? found.push(...r.value) : failed.push(sources[i]!.descriptor.name)));
+    for (const [i, r] of settled.entries()) {
+      if (r.status === "fulfilled") found.push(...r.value);
+      else failed.push(sources[i]!.descriptor.name);
+    }
     return { found, failed };
   }
 }

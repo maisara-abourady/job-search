@@ -1,8 +1,8 @@
 # Progress
 
 Current phase: 0 — Verify and complete the walking skeleton
-Next task: P0-T08
-Last updated: 2026-11-12 by execution (P0-T07)
+Next task: P0-T09
+Last updated: 2026-11-12 by execution (P0-T08)
 
 ## Status
 
@@ -21,7 +21,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (reason i
 - [x] P0-T05 Walking skeleton through the dev Main
 - [x] P0-T06 Home for adapter contract suites, with the first storage suite
 - [x] P0-T07 Evaluation harness scaffold
-- [ ] P0-T08 Formatter and lint check
+- [x] P0-T08 Formatter and lint check
 - [ ] P0-T09 Continuous integration
 - [ ] S-1 Which runtime implements each model port?
 - [x] H-1 Runtime on the owner's machine chosen (subscription)
@@ -124,6 +124,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (reason i
 - 2026-11-12 (P0-T06): `packages/testing-api/contract/storage-contracts.ts` holds factory-taking suites for `PostingCatalog`+`PostingsForScoring`, `ProfileVersions`, `MatchRecords`, `ResultsReadModel`, `People`, `MonitoringRoster`, `MonthlyBudgetControl`, `UsageLedger`, `SpendLedger`, `SourceSwitchControl` and `PersonDataVault` (opaque exports checked by markers). Run against `InMemoryStore`, the three in-memory ledgers and `JsonArchiveVault` over them: 39 pass, 1 todo (tier default, P5-T03). Mutations to `latestVerdictBefore` and to `eraseAll` make the suites fail. `pnpm verify`: 41 tests + 40 contract cases.
 - 2026-11-12 (P0-T07): `pnpm eval <name> [--key=value]` runs `apps/main/eval/<name>/<name>.eval.ts`. An `Evaluation` has `name`, `description`, `configure(options)` returning `{ details, run(app) }` (the plan's `run(details)`: the runner composes the app from the evaluation's details) and `threshold(results)`. Reports go to `apps/main/eval/results/<name>-<timestamp>/` (gitignored; `EVAL_RESULTS_DIR` overrides). Exit 0 pass, 1 threshold failed, 2 unknown name. `eval/in-memory-details.ts` gives in-memory details for evaluations to override. The sample scores three scripted cases; `--break=<case>` forces a failure. 3 tests in `apps/main/test/eval-harness.test.ts`.
 - 2026-11-12 (metrics, watch): since P0-T05/T06, `pnpm check:architecture` prints a warning "SDP: delivery (I=0.50) depends on use-cases (I=0.50)". No production dependency changed: the checker counts test, contract and Main files as fan-in, so `main.dev.ts` importing delivery and the contract suite importing use-cases types moved both to 0.50. Warning only; raised at Gate 0.
+- 2026-11-12 (P0-T08): Biome 2.6.7 (config from `biome init`), limited to `.ts`, `.mjs`, `.json` so docs are untouched; 2-space indent, double quotes, line width 140. Recommended rules except `style/noNonNullAssertion` and `complexity/useLiteralKeys`, which fight the `!` and `["key"]` escapes the code uses for `noUncheckedIndexedAccess`. Two commits: a formatting-only reformat (every changed source equal to the old one once whitespace and punctuation are ignored), then two lint fixes (`self` alias in the testing API; `forEach` returning a value in `RunJobSearch.fetchAll`, now a `for` loop) and `pnpm lint` (`biome check .`) in `verify`. An unused variable or a misformatted file makes `pnpm lint` exit 1.
 
 ## Deviations log
 
@@ -141,3 +142,4 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (reason i
 | 2026-11-11 | Phases 3, 4, 5 | Phase 3: no sign-up, authentication or staging; local database (SQLite default) with schema versioning instead of Postgres with encryption; data-folder files instead of encrypted object storage; local web Main with loopback bind, the local-request hook (W15), a minimal profile picker and the ticker; product events stored locally (D14). Phase 4: daily cap through `SpendingGuard`; files in the data folder. Phase 5: Tier 4 conditional on the owner naming boards, no proxy pool or markets; switches without a restart; S-7 added | ADRs 0014, 0015, 0016; deferred.md D2, D5, D8, D11, D14, D15, W15 |
 | 2026-11-12 | 0, 5, HUMAN | H-1 done: runtime is Claude Code headless with the owner's subscription (API key route not explored, per owner). S-1 narrowed to how each port runs on it. P5-T02 acceptance adds the PRD's per-board blocking-risk table and human-pace session rules | Owner's instruction 2026-11-12; PRD revision of 2026-11-12 |
 | 2026-11-12 | P0-T02, P0-T03, P0-T04, P0-T05, Gate 0, P1-T01, Gate 2 | Verify commands of the form `node --test <directory>/` changed to quoted globs (`node --test "tools/architecture/test/*.test.mjs"`, `"packages/testing-api/test/*.test.ts"`, `"apps/main/test/*.test.ts"`) | Node 22 treats a directory argument to `node --test` as a module to load and fails with MODULE_NOT_FOUND |
+| 2026-11-12 | P0-T08 | Done as two commits (formatting-only reformat, then lint fixes plus `lint` in `verify`) | The task asks for a reformat commit that changes only whitespace and punctuation; the two lint fixes are small code edits and needed their own commit |
