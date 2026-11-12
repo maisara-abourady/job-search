@@ -28,7 +28,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (reason i
 - [x] GATE 0A (technical) — approved by the owner 2026-11-12 (Phase 1 tasks P1-T01 to P1-T08 may start)
 - [x] P0-T10 Record the model runtime decision (D1) in ADR 0009
 - [ ] GATE 0B (decision)
-- [ ] H-2 Owner's model account, no-training setting, local credential (after P0-T10)
+- [~] H-2 Owner's model account, no-training setting, local credential: training setting turned OFF by the owner 2026-11-12; the signed-in Claude Code on the owner's machine is set up at install
 - [x] H-4 Parsing thresholds confirmed (default accepted)
 
 ### Phase 1 — Foundations (exit: 20 resumes parse correctly)
@@ -130,6 +130,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (reason i
 - 2026-11-12 (S-1): spike script `tools/spikes/s1/run-s1.mjs` with fictional samples. First run in this cloud session on the owner's account: all 25 calls schema-valid, latencies well inside the NFRs, every call reports a cost estimate, one of two repeated judgments flipped one requirement. Answer in PLAN.md "Spike answers". Left: a run on the owner's machine for latency and the hand-filled facts (usage limits, training setting).
 - 2026-11-12 (S-1, owner): plan is Claude Ultra. "Help improve Claude" is currently ON, which breaks PRD Privacy 4; turning it off is part of H-2 and must happen before any real resume reaches the model (P1-T10, P1-T11). The owner accepts the cloud-session latency numbers as the S-1 latency answer. The owner will install and run the app on their machine at the end (ADR 0016) without working in the repository.
 - 2026-11-12 (P0-T10): `/architect` wrote ADR 0009. Every model port runs on Claude Code headless with the owner's subscription. Large (`sonnet`): ResumeAnalyst, SearchPlanner, MatchJudge, Interviewer, ResumeWriter. Small (`haiku`): PostingEnricher, KeywordMatcher. No model: DocumentReader, MatchNarrator, and RelevanceRanker (in-process lexical, D3). Package `@matchmaker/model-runtime-claude-code`. Spend is the per-call `total_cost_usd` estimate. Main refuses to start model calls without the training-off confirmation (Privacy 4). New watch items W17 (one-posting-at-a-time enrichment and judging may miss the 60 s first result: decide before P2-T13), W18 (subscription usage limits), W19 (Claude Code self-updates). D1 and D3 decided in deferred.md; ADRs 0002, 0003, 0015 and 0016 carry an "amended by ADR 0009" line.
+- 2026-11-12 (H-2): the owner turned "Help improve Claude" off (Privacy 4). Real resumes may now be sent to the model.
 
 ## Deviations log
 
