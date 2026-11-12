@@ -1,0 +1,28 @@
+# X-4: every push and pull request runs the full check. Evaluations (pnpm eval) cost money and need keys: not run here.
+name: verify
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version-file: .node-version
+          package-manager-cache: false
+      # Node 22 ships Corepack; it provides the pnpm pinned in package.json's packageManager field.
+      - run: corepack enable
+      - run: pnpm --version
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm verify
+      - run: pnpm smoke
