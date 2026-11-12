@@ -8,8 +8,10 @@
   "dependencies": {
     "@matchmaker/rules": "workspace:*",
     "@matchmaker/use-cases": "workspace:*",
+    "@tesseract.js-data/eng": "1.0.0",
     "franc-min": "6.2.0",
     "mammoth": "1.13.0",
+    "tesseract.js": "7.0.0",
     "unpdf": "2.1.0"
   }
 }

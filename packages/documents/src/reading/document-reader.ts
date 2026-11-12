@@ -2,6 +2,7 @@ import type { DocumentReader, ReadDocumentResult, ResumeUpload } from "@matchmak
 import mammoth from "mammoth";
 import { extractText, getDocumentProxy } from "unpdf";
 import { detectLanguage } from "./language.ts";
+import { ocrText, type OcrTiming } from "./ocr.ts";
 
 /** Below this many letters and digits a document has no usable text layer (a scan, or an empty file). */
 export const MIN_READABLE_CHARACTERS = 50;
@@ -9,9 +10,15 @@ export const MIN_READABLE_CHARACTERS = 50;
 /**
  * RP-1: text from pasted text, DOCX, PDF (text layer) and LinkedIn's "Save to PDF" export, plus the language it
  * is written in. Never throws for a bad file: anything it cannot read is "unreadable", and the use case asks for
- * pasted text. Image-only PDFs are unreadable here until OCR arrives (P1-T09).
+ * pasted text. A PDF without a usable text layer is read by OCR (RP-3); if that yields too little, it is unreadable.
  */
 export class LibraryDocumentReader implements DocumentReader {
+  private readonly onOcr: ((timing: OcrTiming) => void) | undefined;
+  /** `onOcr` hears how long each OCR run took (the 20 s card budget, W20). */
+  constructor(options: { onOcr?: (timing: OcrTiming) => void } = {}) {
+    this.onOcr = options.onOcr;
+  }
+
   async read(upload: ResumeUpload): Promise<ReadDocumentResult> {
     let text: string;
     try {
@@ -23,6 +30,13 @@ export class LibraryDocumentReader implements DocumentReader {
     return { outcome: "read", text, language: detectLanguage(text) };
   }
 
+  private async pdfText(bytes: Uint8Array): Promise<string> {
+    // A plain copy: pdf.js refuses Node Buffers and may detach what it is given; the upload's bytes stay the caller's.
+    const pdf = await getDocumentProxy(new Uint8Array(bytes), { verbosity: 0 }); // no console warnings for damaged files
+    const layer = (await extractText(pdf, { mergePages: false })).text.join("\n");
+    return countReadable(layer) >= MIN_READABLE_CHARACTERS ? layer : ocrText(pdf, this.onOcr);
+  }
+
   private async textOf(upload: ResumeUpload): Promise<string> {
     switch (upload.kind) {
       case "text":
@@ -30,9 +44,9 @@ export class LibraryDocumentReader implements DocumentReader {
       case "docx":
         return (await mammoth.extractRawText({ buffer: Buffer.from(bytesOf(upload)) })).value;
       case "pdf":
-        return pdfText(bytesOf(upload));
+        return this.pdfText(bytesOf(upload));
       case "linkedin-pdf":
-        return withoutLinkedInFurniture(await pdfText(bytesOf(upload)));
+        return withoutLinkedInFurniture(await this.pdfText(bytesOf(upload)));
     }
   }
 }
@@ -40,13 +54,6 @@ export class LibraryDocumentReader implements DocumentReader {
 function bytesOf(upload: ResumeUpload): Uint8Array {
   if (upload.bytes === null) throw new Error(`${upload.kind} upload without bytes`);
   return upload.bytes;
-}
-
-async function pdfText(bytes: Uint8Array): Promise<string> {
-  // A plain copy: pdf.js refuses Node Buffers and may detach what it is given; the upload's bytes stay the caller's.
-  const pdf = await getDocumentProxy(new Uint8Array(bytes), { verbosity: 0 }); // no console warnings for damaged files
-  const { text } = await extractText(pdf, { mergePages: false });
-  return text.join("\n");
 }
 
 /** LinkedIn's export puts a "Page N of M" footer on every page; it is layout, not resume content. */

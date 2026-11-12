@@ -31,11 +31,11 @@ export const READABLE_FIXTURES = [
     language: "en",
   },
   { fileName: "resume-fr.txt", kind: "text", sentence: "J'ai conçu un service de paiement utilisé par trois équipes", language: "fr" },
+  { fileName: "image-only.pdf", kind: "pdf", sentence: "Reduced cloud storage costs by thirty percent in one year.", language: "en" },
 ] as const;
 
-/** Fixtures with no readable text before OCR (P1-T09 moves image-only.pdf to the readable list). */
+/** Fixtures with no readable text, even by OCR. */
 export const UNREADABLE_FIXTURES = [
-  { fileName: "image-only.pdf", kind: "pdf" },
   { fileName: "blank-image.pdf", kind: "pdf" },
   { fileName: "corrupt.pdf", kind: "pdf" },
   { fileName: "corrupt.docx", kind: "docx" },
