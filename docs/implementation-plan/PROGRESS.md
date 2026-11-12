@@ -1,8 +1,8 @@
 # Progress
 
 Current phase: 0 — Verify and complete the walking skeleton
-Next task: P0-T07
-Last updated: 2026-11-12 by execution (P0-T06)
+Next task: P0-T08
+Last updated: 2026-11-12 by execution (P0-T07)
 
 ## Status
 
@@ -20,7 +20,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (reason i
 - [x] P0-T04 Complete the testing API as a Main configuration
 - [x] P0-T05 Walking skeleton through the dev Main
 - [x] P0-T06 Home for adapter contract suites, with the first storage suite
-- [ ] P0-T07 Evaluation harness scaffold
+- [x] P0-T07 Evaluation harness scaffold
 - [ ] P0-T08 Formatter and lint check
 - [ ] P0-T09 Continuous integration
 - [ ] S-1 Which runtime implements each model port?
@@ -122,6 +122,8 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (reason i
 - 2026-11-12 (P0-T04): the testing API collects background failures; `backgroundWorkSettled()` (and `appStarts()`) rejects once with every failed task named. `operatorConsole` is its own object delegating to the store. New superpowers: `searchPlannerFails`, `onboardingSearch`, `searchesRequested` (wraps the `searchRequests` port Main returns; monitoring looks it up per call). Header comment states the scripted-double rule. 4 tests in `skeleton.test.ts`; the 22 earlier tests unchanged. "No `recent` property on the store" cannot be asserted through the testing API (ADR 0008), so it was checked by a one-off probe (store has no `recent`). `UseCaseError` does not set `name`, so tests match on `code` only.
 - 2026-11-12 (P0-T05): `pnpm smoke` runs CreatePerson, OpenPerson, ViewRunningCost + `presentRunningCost`, and `ResultsController.show`, printing both view models (Smoke at $0.00, no budget; three empty tabs; empty-Apply heading set). No ticker in smoke; an unknown command exits 2. `apps/main/test/smoke.test.ts` spawns it inside `pnpm test` (41 tests).
 - 2026-11-12 (P0-T06): `packages/testing-api/contract/storage-contracts.ts` holds factory-taking suites for `PostingCatalog`+`PostingsForScoring`, `ProfileVersions`, `MatchRecords`, `ResultsReadModel`, `People`, `MonitoringRoster`, `MonthlyBudgetControl`, `UsageLedger`, `SpendLedger`, `SourceSwitchControl` and `PersonDataVault` (opaque exports checked by markers). Run against `InMemoryStore`, the three in-memory ledgers and `JsonArchiveVault` over them: 39 pass, 1 todo (tier default, P5-T03). Mutations to `latestVerdictBefore` and to `eraseAll` make the suites fail. `pnpm verify`: 41 tests + 40 contract cases.
+- 2026-11-12 (P0-T07): `pnpm eval <name> [--key=value]` runs `apps/main/eval/<name>/<name>.eval.ts`. An `Evaluation` has `name`, `description`, `configure(options)` returning `{ details, run(app) }` (the plan's `run(details)`: the runner composes the app from the evaluation's details) and `threshold(results)`. Reports go to `apps/main/eval/results/<name>-<timestamp>/` (gitignored; `EVAL_RESULTS_DIR` overrides). Exit 0 pass, 1 threshold failed, 2 unknown name. `eval/in-memory-details.ts` gives in-memory details for evaluations to override. The sample scores three scripted cases; `--break=<case>` forces a failure. 3 tests in `apps/main/test/eval-harness.test.ts`.
+- 2026-11-12 (metrics, watch): since P0-T05/T06, `pnpm check:architecture` prints a warning "SDP: delivery (I=0.50) depends on use-cases (I=0.50)". No production dependency changed: the checker counts test, contract and Main files as fan-in, so `main.dev.ts` importing delivery and the contract suite importing use-cases types moved both to 0.50. Warning only; raised at Gate 0.
 
 ## Deviations log
 
