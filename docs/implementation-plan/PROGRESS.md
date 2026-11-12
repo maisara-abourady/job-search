@@ -11,7 +11,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (reason i
 ### HUMAN tasks to start now
 - [x] H-0 Commit the scope-revision work (PRD, ADRs 0014 to 0016, README, deferred.md, code) and this plan amendment
 - [x] H-1 Runtime: Claude Code headless with the owner's existing subscription (2026-11-12)
-- [ ] H-3 20 consented test resumes
+- [~] H-3 Consented test resumes: 6 received (owner's cap, 2026-11-12; consent confirmation pending)
 
 ### Phase 0 — Verify and complete the walking skeleton
 - [x] P0-T01 Baseline the toolchain from a clean clone
@@ -146,3 +146,4 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (reason i
 | 2026-11-12 | P0-T02, P0-T03, P0-T04, P0-T05, Gate 0, P1-T01, Gate 2 | Verify commands of the form `node --test <directory>/` changed to quoted globs (`node --test "tools/architecture/test/*.test.mjs"`, `"packages/testing-api/test/*.test.ts"`, `"apps/main/test/*.test.ts"`) | Node 22 treats a directory argument to `node --test` as a module to load and fails with MODULE_NOT_FOUND |
 | 2026-11-12 | P0-T08 | Done as two commits (formatting-only reformat, then lint fixes plus `lint` in `verify`) | The task asks for a reformat commit that changes only whitespace and punctuation; the two lint fixes are small code edits and needed their own commit |
 | 2026-11-12 | P0-T09 | The "failing test makes CI fail" check ran as a probe commit on the working branch, removed in the next commit, instead of on a throwaway branch | This session may push only to its working branch |
+| 2026-11-12 | H-3, P1-T11, Gate 1 | The parsing test set is 6 real resumes, not 20 (all PDFs). Variety the plan asked for (DOCX, pasted text, LinkedIn export, scanned PDF; new graduate, career changer, long history, gaps) is not yet covered; how to fill it is an open question for the owner | The owner can supply at most 6 |
