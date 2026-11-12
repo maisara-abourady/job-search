@@ -21,6 +21,9 @@ export function inMemoryDetails(overrides: Partial<MatchmakerDetails> = {}): {
   details: MatchmakerDetails;
   store: InMemoryStore;
   resumeFiles: InMemoryResumeFiles;
+  /** The meter real adapters report spend to (ADR 0010). */
+  meter: AsyncSpendMeter;
+  spendLedger: InMemorySpendLedger;
 } {
   const store = new InMemoryStore();
   const usage = new InMemoryUsageLedger();
@@ -29,13 +32,14 @@ export function inMemoryDetails(overrides: Partial<MatchmakerDetails> = {}): {
   const clock = new SystemClock();
   const models = new UnchosenModelRuntime();
   const resumeFiles = new InMemoryResumeFiles(() => clock.now());
+  const meter = new AsyncSpendMeter(spendLedger, clock);
   let id = 0;
   const details: MatchmakerDetails = {
     storage: store,
     operatorConsole: { setEnabled: (n, e, r) => store.setEnabled(n, e, r), states: () => store.states(), recent: async () => [] },
     usage,
     spendLedger,
-    spendAttribution: new AsyncSpendMeter(spendLedger, clock),
+    spendAttribution: meter,
     personData: new JsonArchiveVault([
       { section: "profile", vault: store },
       { section: "resumeFiles", vault: resumeFiles },
@@ -61,5 +65,5 @@ export function inMemoryDetails(overrides: Partial<MatchmakerDetails> = {}): {
     onBackgroundError: (task, e) => console.error(`background task ${task} failed:`, e),
     ...overrides,
   };
-  return { details, store, resumeFiles };
+  return { details, store, resumeFiles, meter, spendLedger };
 }

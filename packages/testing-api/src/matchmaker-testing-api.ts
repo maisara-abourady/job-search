@@ -40,16 +40,7 @@ import type {
   ViewJobDetailResponse,
   ViewRunningCostResponse,
 } from "@matchmaker/use-cases";
-import {
-  aCandidate,
-  aJobPosting,
-  aProfile,
-  aStrengthAnswer,
-  aStructuredResume,
-  enrichmentOf,
-  type SellingPointCandidate,
-  type StrengthAnswer,
-} from "./builders.ts";
+import { aJobPosting, aProfile, enrichmentOf, type SellingPointCandidate, type StrengthAnswer } from "./builders.ts";
 import { ScriptedDocumentReader } from "./scripted-document-reader.ts";
 import { ScriptedResumeAnalyst } from "./scripted-resume-analyst.ts";
 

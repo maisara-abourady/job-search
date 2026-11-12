@@ -63,7 +63,14 @@ async function main(argv: readonly string[]): Promise<number> {
   }
   const evaluation = ((await import(pathToFileURL(join(evalDir, name, `${name}.eval.ts`)).href)) as { default: Evaluation }).default;
   const startedAt = new Date().toISOString();
-  const configured = evaluation.configure(options);
+  let configured: ReturnType<Evaluation["configure"]>;
+  try {
+    configured = evaluation.configure(options);
+  } catch (e) {
+    // A configuration the owner must complete (for example the training-off confirmation): say what, not where.
+    console.error(e instanceof Error ? e.message : String(e));
+    return 2;
+  }
   const app = composeMatchmaker(configured.details);
   const results = await configured.run(app);
   await app.work.drain();
