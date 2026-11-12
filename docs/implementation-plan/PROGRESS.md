@@ -23,7 +23,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (reason i
 - [x] P0-T07 Evaluation harness scaffold
 - [x] P0-T08 Formatter and lint check
 - [x] P0-T09 Continuous integration
-- [~] S-1 Which runtime implements each model port?
+- [x] S-1 Which runtime implements each model port?
 - [x] H-1 Runtime on the owner's machine chosen (subscription)
 - [x] GATE 0A (technical) — approved by the owner 2026-11-12 (Phase 1 tasks P1-T01 to P1-T08 may start)
 - [ ] P0-T10 Record the model runtime decision (D1) in ADR 0009 (not yet written)
@@ -128,6 +128,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (reason i
 - 2026-11-12 (P0-T09): `.github/workflows/verify.yml` (actions/checkout v7.0.1, actions/setup-node v7.1.0 with `.node-version`, pnpm through Corepack, frozen install, `pnpm verify`, `pnpm smoke`). Run 43181059712 on 71057d4 passed. A probe commit with a failing test (9cc7ddc) made run 43181144195 fail; the probe was removed in the next commit. Merged to `main` on the owner's instruction (fast-forward to 7d13c3f); CI run 43182882370 on `main` passed.
 - 2026-11-12 (S-1, P0-T10): S-1 has no task dependencies, but its measurements (structured output, latency, what spend headless calls report) must run Claude Code headless on the owner's subscription on the owner's machine. This container has neither, and a run here would not measure the owner's setup, so S-1 is left for the owner (or a session on their machine). P0-T10 and Gate 0B wait on it.
 - 2026-11-12 (S-1): spike script `tools/spikes/s1/run-s1.mjs` with fictional samples. First run in this cloud session on the owner's account: all 25 calls schema-valid, latencies well inside the NFRs, every call reports a cost estimate, one of two repeated judgments flipped one requirement. Answer in PLAN.md "Spike answers". Left: a run on the owner's machine for latency and the hand-filled facts (usage limits, training setting).
+- 2026-11-12 (S-1, owner): plan is Claude Ultra. "Help improve Claude" is currently ON, which breaks PRD Privacy 4; turning it off is part of H-2 and must happen before any real resume reaches the model (P1-T10, P1-T11). The owner accepts the cloud-session latency numbers as the S-1 latency answer. The owner will install and run the app on their machine at the end (ADR 0016) without working in the repository.
 
 ## Deviations log
 
