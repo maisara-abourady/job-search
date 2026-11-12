@@ -62,7 +62,7 @@ export const AREAS = {
     // ADR 0011: measurement observes other areas' input ports (types only, see TYPE_ONLY_AREA_IMPORTS); nothing imports it.
     measurement: ["shared", "onboarding", "results", "tailoring", "profiles"],
   },
-  "@matchmaker/delivery": { results: [], spending: [], "local-only": [] },
+  "@matchmaker/delivery": { results: [], spending: [], "local-only": [], onboarding: [] },
   "@matchmaker/adapters": {
     "in-memory": [],
     system: [],

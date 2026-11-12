@@ -1,5 +1,6 @@
 import { notYetBuilt, type ProfileVersion, type SellingPoint } from "@matchmaker/rules";
 import { UseCaseError } from "../shared/errors.ts";
+import type { SellingPointLine } from "./intake-resume.ts";
 import type { ProfileVersions, RescoreRequests } from "./ports.ts";
 
 /**
@@ -20,7 +21,12 @@ export type ProfileCorrection =
   | { readonly kind: "preferences"; readonly preferences: PreferencesInput }
   | { readonly kind: "selling-point"; readonly evidenceId: string; readonly newStatement: string };
 export type CorrectProfileRequest = { readonly personId: string; readonly correction: ProfileCorrection };
-export type CorrectProfileResponse = { readonly newVersion: number; readonly rescoreRequested: boolean };
+/** `points` are the card's lines as the new version has them (a correction does not change Resume Strength or its fixes). */
+export type CorrectProfileResponse = {
+  readonly newVersion: number;
+  readonly rescoreRequested: boolean;
+  readonly points: readonly SellingPointLine[];
+};
 export interface CorrectProfile {
   execute(request: CorrectProfileRequest): Promise<CorrectProfileResponse>;
 }
@@ -40,7 +46,17 @@ export class CorrectProfileInteractor implements CorrectProfile {
     const next = this.corrected(current, points, correction);
     await this.profiles.saveNewVersion({ ...next.profile, version: current.version + 1 }, next.points);
     await this.rescore.rescoreAll(personId);
-    return { newVersion: current.version + 1, rescoreRequested: true };
+    const proofs = new Map(next.profile.evidence.map((e) => [e.id, e.text]));
+    return {
+      newVersion: current.version + 1,
+      rescoreRequested: true,
+      points: next.points.map((p) => ({
+        evidenceId: p.evidenceId,
+        statement: p.statement,
+        tier: p.tier,
+        proof: proofs.get(p.evidenceId) ?? "",
+      })),
+    };
   }
 
   /** The one rule: a correction changes a copy; the current version stays as it was (ADR 0005). */

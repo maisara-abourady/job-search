@@ -186,7 +186,13 @@ test("correcting a fact makes a new active version, leaves the old one unchanged
 
   const response = await api.correct(personId, { kind: "fact", evidenceId: "ev-3", newText: "Wrote SQL reporting for 45 stores" });
 
-  assert.deepEqual(response, { newVersion: 2, rescoreRequested: true });
+  assert.equal(response.newVersion, 2);
+  assert.equal(response.rescoreRequested, true);
+  assert.equal(
+    response.points.find((p) => p.evidenceId === "ev-3")?.proof,
+    "Wrote SQL reporting for 45 stores",
+    "the line shows the fixed proof",
+  );
   const [v1, v2] = api.profileVersions(personId);
   assert.equal(v1?.evidence.find((e) => e.id === "ev-3")?.text, "Wrote SQL reporting for 40 stores");
   assert.equal(v2?.evidence.find((e) => e.id === "ev-3")?.text, "Wrote SQL reporting for 45 stores");
@@ -228,4 +234,94 @@ test("a correction naming unknown evidence, or for a profile with no resume, is 
   });
   assert.equal(api.profileVersions(personId).length, 1);
   assert.deepEqual(api.rescoresRequested(), []);
+});
+
+// ---------- the onboarding screens (D-3): view models through the controllers ----------
+
+/** Every string in a view model, however deeply nested. */
+function stringsIn(value: unknown): string[] {
+  if (typeof value === "string") return [value];
+  if (Array.isArray(value)) return value.flatMap(stringsIn);
+  if (typeof value === "object" && value !== null) return Object.values(value).flatMap(stringsIn);
+  return [];
+}
+function onlyPlainValues(value: unknown): boolean {
+  if (["string", "boolean"].includes(typeof value) || value === null) return true;
+  if (Array.isArray(value)) return value.every(onlyPlainValues);
+  if (typeof value === "object") return Object.values(value as object).every(onlyPlainValues);
+  return false;
+}
+
+test("the card screen shows tier labels, proofs, the score out of 100, three fixes and the level in words", async () => {
+  const { api, personId } = await aProfileOwner();
+  api.analystWillSay({
+    candidates: [aCandidate("ev-1", 3), aCandidate("ev-2", 2), aCandidate("ev-3", 1), aCandidate("ev-2", 1), aCandidate("ev-1", 2)],
+  });
+  const screen = await api.intakeScreen(personId, aResumeUpload());
+
+  assert.equal(screen.kind, "card");
+  if (screen.kind !== "card") return;
+  assert.ok(onlyPlainValues(screen), "strings, booleans and enums only");
+  assert.equal(screen.heading, "Here is what you are selling");
+  assert.deepEqual(
+    screen.points.map((p) => p.tierLabel),
+    ["Signature", "Strong", "Strong", "Supporting", "Supporting"],
+  );
+  assert.equal(screen.points[0]?.proof, "Cut nightly pipeline time from 6 hours to 40 minutes");
+  assert.equal(screen.strengthScore, "50 / 100");
+  assert.equal(screen.fixes.length, 3);
+  assert.match(screen.suggestedLevel, /Senior/);
+  assert.equal(screen.fewPointsNote, null);
+});
+
+test("screen copy describes the resume, never the person", async () => {
+  const { api, personId } = await aProfileOwner();
+  api.analystWillSay({ candidates: [aCandidate("ev-1", 3)], structured: aStructuredResume({ roles: [], inferredSeniority: null }) });
+  api.documentWillRead("scan.pdf", { outcome: "unreadable" });
+  api.documentWillRead("cv.pdf", { outcome: "read", text: "Lebenslauf", language: "de" });
+  const screens = [
+    await api.intakeScreen(personId, aResumeUpload()),
+    await api.intakeScreen(personId, aResumeUpload({ fileName: "scan.pdf" })),
+    await api.intakeScreen(personId, aResumeUpload({ fileName: "cv.pdf" })),
+    await api.correctionScreen(personId, { lineId: "ev-1", part: "statement", newText: "Cut pipeline time by 89%" }),
+  ];
+  const copy = screens.flatMap(stringsIn);
+  // The plan's heading "what you are selling" names what is on offer; no sentence says what the person is.
+  for (const line of copy) assert.doesNotMatch(line, /\byou(?: are|'re)\b(?! selling)/i, line);
+  assert.ok(
+    copy.some((l) => /fewer|1 clear selling point/.test(l)),
+    "a short card says so",
+  );
+  await api.backgroundWorkSettled();
+});
+
+test("the language screen says English is the only language in v1", async () => {
+  const { api, personId } = await aProfileOwner();
+  api.documentWillRead("cv.pdf", { outcome: "read", text: "Ingénieure", language: "fr" });
+  const screen = await api.intakeScreen(personId, aResumeUpload({ fileName: "cv.pdf" }));
+  assert.equal(screen.kind, "unsupported-language");
+  assert.match(stringsIn(screen).join(" "), /English is the only language in v1/);
+});
+
+test("past the monthly budget the screen asks first; resending with the flag returns the card", async () => {
+  const { api, personId } = await aProfileOwner();
+  await api.setMonthlyBudget(1);
+  api.analystCosts(5);
+  await api.intakeScreen(personId, aResumeUpload());
+
+  const asked = await api.intakeScreen(personId, aResumeUpload());
+  assert.equal(asked.kind, "ask-first");
+  assert.equal(asked.kind === "ask-first" && asked.resendWithOverBudgetConfirmed, true);
+  assert.equal((await api.intakeScreen(personId, aResumeUpload(), { overBudgetConfirmed: true })).kind, "card");
+});
+
+test("correcting a proof on the card shows the refreshed line", async () => {
+  const { api, personId } = await aProfileOwner();
+  api.analystWillSay({ candidates: [aCandidate("ev-3", 2, "Store reporting")] });
+  await api.intakeScreen(personId, aResumeUpload());
+  const screen = await api.correctionScreen(personId, { lineId: "ev-3", part: "proof", newText: "Wrote SQL reporting for 45 stores" });
+  assert.deepEqual(screen.points, [
+    { lineId: "ev-3", tierLabel: "Strong", statement: "Store reporting", proof: "Wrote SQL reporting for 45 stores" },
+  ]);
+  await api.backgroundWorkSettled();
 });

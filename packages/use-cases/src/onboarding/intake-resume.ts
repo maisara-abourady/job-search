@@ -22,8 +22,15 @@ export type IntakeResumeRequest = {
   /** The owner said yes to spending past the monthly budget (ADR 0015 §5, "ask first"). */
   readonly overBudgetConfirmed?: boolean;
 };
+/** One line of the card. `evidenceId` names the line when the person corrects it (CorrectProfile). */
+export type SellingPointLine = {
+  readonly evidenceId: string;
+  readonly statement: string;
+  readonly tier: SellingPointTier;
+  readonly proof: string;
+};
 export type SellingPointsCard = {
-  readonly points: readonly { readonly statement: string; readonly tier: SellingPointTier; readonly proof: string }[];
+  readonly points: readonly SellingPointLine[];
   readonly resumeStrength: number;
   readonly topFixes: readonly string[];
   readonly suggestedSeniority: string | null;
@@ -101,7 +108,12 @@ export class IntakeResumeInteractor implements IntakeResume {
     return {
       outcome: "parsed",
       card: {
-        points: points.map((p) => ({ statement: p.statement, tier: p.tier, proof: proofs.get(p.evidenceId) ?? "" })),
+        points: points.map((p) => ({
+          evidenceId: p.evidenceId,
+          statement: p.statement,
+          tier: p.tier,
+          proof: proofs.get(p.evidenceId) ?? "",
+        })),
         resumeStrength: resumeStrength(strength.ratios).total,
         topFixes: strength.topFixes.slice(0, INTAKE_POLICY.fixesOnCard),
         suggestedSeniority: resume.inferredSeniority,

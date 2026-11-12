@@ -7,3 +7,11 @@ export { presentResults, presentCard } from "./results/results-presenter.ts";
 export type { ResultCardViewModel, ResultsTabViewModel, ResultsViewModel } from "./results/results-view-model.ts";
 export { formatMicros, presentRunningCost, type RunningCostViewModel } from "./spending/running-cost-presenter.ts";
 export { acceptsLocalRequest, LOOPBACK_BIND_ADDRESS } from "./local-only/local-request.ts";
+export { CorrectionController, IntakeController, type CorrectedLine } from "./onboarding/intake-controller.ts";
+export { presentCard as presentSellingPointsCard, presentCorrection, presentIntake } from "./onboarding/selling-points-presenter.ts";
+export type {
+  CorrectedPointsViewModel,
+  OnboardingViewModel,
+  SellingPointLineViewModel,
+  SellingPointsCardViewModel,
+} from "./onboarding/onboarding-view-model.ts";

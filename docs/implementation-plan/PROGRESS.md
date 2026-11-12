@@ -1,8 +1,8 @@
 # Progress
 
 Current phase: 1 — Foundations (Phase 0 complete 2026-11-12)
-Next task: P1-T07
-Last updated: 2026-11-12 by execution (P1-T05)
+Next task: P1-T08
+Last updated: 2026-11-12 by execution (P1-T07)
 
 ## Status
 
@@ -38,7 +38,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (reason i
 - [x] P1-T04 `IntakeResume` use case
 - [x] P1-T05 `CorrectProfile`: facts and selling points
 - [x] P1-T06 Profile and spending acceptance tests (built by the Architect; replaces account and trial tests)
-- [ ] P1-T07 Onboarding controllers and presenters
+- [x] P1-T07 Onboarding controllers and presenters
 - [ ] P1-T08 Documents package: read text, DOCX, PDF and LinkedIn PDF
 - [ ] P1-T09 OCR for image-only PDFs
 - [ ] P1-T10 Model runtime package, configuration loader and the resume analyst
@@ -136,6 +136,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (reason i
 - 2026-11-12 (P1-T03): `selectSellingPoints` and `SellingPointCandidate` in `rules/profile/selling-points.ts` (tiers with `sellingPointTier`, drops untiered, Signature then Strong then Supporting, stable, at most 8; `SELLING_POINTS_ON_CARD`); `suggestedSeniorityBand` and `initialPreferences` in the new `rules/profile/preference-defaults.ts` (top of the ladder suggests only itself). Typecheck, architecture check and `pnpm verify` green; behavior is asserted in P1-T04.
 - 2026-11-12 (P1-T04): `IntakeResumeInteractor` built: `INTAKE_POLICY` (10 MB, English, three fixes); size check, then `SpendingGuard.beforeOnDemand(personId, null, confirmed)`, then everything inside `spend.charge(... "intake")`: store original, read, language check (ISO 639-1 prefix, so `en-GB` is English), structure, candidates and ratios in parallel, `selectSellingPoints`, `resumeStrength`, new version (same `profileId`; preferences kept on re-upload, `initialPreferences(suggestedSeniorityBand(...))` on first), onboarding search. Candidates citing an evidence id the resume does not hold are dropped (nothing invented). The original is stored even when unreadable (RP-8). `ResumeAnalyst.sellingPointCandidates` now returns the rules' `SellingPointCandidate`. 13 tests in `onboarding.test.ts`; new superpower `spendPurposes`. A mutation that skips the guard fails two tests. `pnpm verify`: 57 tests + 45 contract cases.
 - 2026-11-12 (P1-T05): `CorrectProfileInteractor`: `fact` replaces one evidence text, `selling-point` replaces one point's statement (matched by `evidenceId`, tier and evidence kept); both save version + 1 (the selling points travel with every version) and request one re-score. No active profile or unknown evidence → `not-found`, no version, no re-score. `preferences` stays `notYetBuilt`. 3 more tests (16 in `onboarding.test.ts`), including the `fact-fixed` product event. `pnpm verify`: 60 tests + 45 contract cases.
+- 2026-11-12 (P1-T07): `packages/delivery/src/onboarding/`: `IntakeController.upload` (turns a `monthly-budget-reached` refusal into the ask-first view model), `CorrectionController.correct` (a line's `proof` is a fact correction, its `statement` a selling-point correction), presenters and view models (kind-tagged; tier labels Signature/Strong/Supporting; "NN / 100"; level in words; a note when fewer than five points qualify). `SellingPointsCard` lines now carry `evidenceId` (the line id the view sends back), and `CorrectProfileResponse` returns the refreshed lines. `delivery/onboarding` added to `AREAS`. Main exposes `controllers.onboarding`; testing API `intakeScreen`, `correctionScreen`. 5 screen tests (21 in `onboarding.test.ts`). `pnpm metrics`: no SDP warning (the earlier delivery/use-cases watch warning is gone: delivery I=0.63, use-cases 0.46). `pnpm verify`: 65 tests + 45 contract cases.
 
 ## Deviations log
 
@@ -160,3 +161,4 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (reason i
 | 2026-11-12 | P1-T10 | Package fixed to `packages/model-runtime-claude-code`; no-training criterion now the start-up refusal plus the H-2 date; new criterion to confirm the sign-in check and settings-isolation flag against current docs | ADR 0009 |
 | 2026-11-12 | P2-T11, P2-T12, P2-T13, P4-T04, P6-T03, P6-T08 | To apply when Phase 2 is re-read at Gate 1 and later phases are detailed: P2-T11/P2-T12 make enrichment and judging concurrent in the use cases (runner bounds at `maxConcurrentCalls`, default 5); P2-T13 ranker is lexical in `packages/adapters/src/relevance/` with no spend line; decide W17 before P2-T13; P4-T04 deletes `UnchosenModelRuntime` and the adapters' `model-runtime` area; P6-T03/P6-T08 label model spend as an estimate and the README states the training rule | ADR 0009 hand-offs |
 | 2026-11-12 | P1-T01 | `ResumeFiles` port gained `original(personId, resumeId)` | The acceptance criterion "both remain retrievable" cannot be checked through a port that only stores; tailoring (Phase 4) needs to read the original back anyway |
+| 2026-11-12 | P1-T07 | `CorrectionController` returns the refreshed selling-point lines, not a whole card; the "no you are" check allows the plan-mandated heading "Here is what you are selling" | Resume Strength and its fixes are not stored and a correction does not re-run the analyst, so they cannot change; the heading names what is on offer, not what the person is |

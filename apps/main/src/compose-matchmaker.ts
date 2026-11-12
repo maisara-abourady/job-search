@@ -1,4 +1,4 @@
-import { ResultsController } from "@matchmaker/delivery";
+import { CorrectionController, IntakeController, ResultsController } from "@matchmaker/delivery";
 import { InProcessWorkQueue } from "@matchmaker/adapters";
 import type {
   AtsLinkRecognizer,
@@ -213,7 +213,10 @@ export function composeMatchmaker(d: MatchmakerDetails) {
       // (ADR 0011 hand-off), and pass them spendAttribution; TailorResume also gets `spending`.
     },
     requests: { searchRequests, rescoreRequests },
-    controllers: { results: new ResultsController(listResults, recordJobDecision) },
+    controllers: {
+      results: new ResultsController(listResults, recordJobDecision),
+      onboarding: { intake: new IntakeController(intakeResume), correction: new CorrectionController(correctProfile) },
+    },
     work,
   };
 }

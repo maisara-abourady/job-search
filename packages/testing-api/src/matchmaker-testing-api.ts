@@ -1,5 +1,8 @@
 import {
   acceptsLocalRequest,
+  type CorrectedLine,
+  type CorrectedPointsViewModel,
+  type OnboardingViewModel,
   presentResults,
   presentRunningCost,
   type ResultsViewModel,
@@ -339,6 +342,18 @@ export class MatchmakerTestingApi {
   /** The open profile uploads a resume (or pasted text). */
   async intake(personId: string, upload: ResumeUpload, options: { overBudgetConfirmed?: boolean } = {}): Promise<IntakeResumeResponse> {
     return this.app.useCases.intakeResume.execute({ personId, upload, ...options });
+  }
+  /** The onboarding screen after an upload (D-3): the card, a paste-text prompt, the language limit, or "ask first". */
+  async intakeScreen(
+    personId: string,
+    upload: ResumeUpload,
+    options: { overBudgetConfirmed?: boolean } = {},
+  ): Promise<OnboardingViewModel> {
+    return this.app.controllers.onboarding.intake.upload(personId, upload, options.overBudgetConfirmed ?? false);
+  }
+  /** The card after the person edits one of its lines. */
+  async correctionScreen(personId: string, line: CorrectedLine): Promise<CorrectedPointsViewModel> {
+    return this.app.controllers.onboarding.correction.correct(personId, line);
   }
   /** A correction from the selling-points card or a preferences screen. */
   async correct(personId: string, correction: ProfileCorrection): Promise<CorrectProfileResponse> {

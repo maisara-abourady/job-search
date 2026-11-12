@@ -20,7 +20,13 @@ export type {
 } from "./shared/metering.ts";
 
 // Onboarding (job seeker): resume intake, profile correction and preferences, AI interview
-export type { IntakeResume, IntakeResumeRequest, IntakeResumeResponse, SellingPointsCard } from "./onboarding/intake-resume.ts";
+export type {
+  IntakeResume,
+  IntakeResumeRequest,
+  IntakeResumeResponse,
+  SellingPointLine,
+  SellingPointsCard,
+} from "./onboarding/intake-resume.ts";
 export type {
   CorrectProfile,
   CorrectProfileRequest,
