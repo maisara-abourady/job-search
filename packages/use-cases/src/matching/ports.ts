@@ -36,7 +36,10 @@ export interface MatchJudge {
 }
 
 /** Plain-language copy for a decided verdict. Never decides anything; describes the match, never the person. */
-export type Narration = { readonly reason: string; readonly pointsToCapitalize: readonly { readonly point: string; readonly evidenceId: string }[] };
+export type Narration = {
+  readonly reason: string;
+  readonly pointsToCapitalize: readonly { readonly point: string; readonly evidenceId: string }[];
+};
 export interface MatchNarrator {
   narrate(input: { profile: ScoringProfile; posting: JobPosting; assessment: MatchAssessment }): Promise<Narration>;
 }

@@ -1,1 +1,3 @@
-export class MemoryStore { readonly rows: string[] = []; }
+export class MemoryStore {
+  readonly rows: string[] = [];
+}

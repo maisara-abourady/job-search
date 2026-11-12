@@ -1,14 +1,34 @@
-import { acceptsLocalRequest, presentResults, presentRunningCost, type ResultsViewModel, type RunningCostViewModel } from "@matchmaker/delivery";
 import {
-  AsyncSpendMeter, InMemoryProductEventLog, InMemorySpendLedger, InMemoryStore, InMemoryUsageLedger, JsonArchiveVault, TemplateNarrator,
+  acceptsLocalRequest,
+  presentResults,
+  presentRunningCost,
+  type ResultsViewModel,
+  type RunningCostViewModel,
+} from "@matchmaker/delivery";
+import {
+  AsyncSpendMeter,
+  InMemoryProductEventLog,
+  InMemorySpendLedger,
+  InMemoryStore,
+  InMemoryUsageLedger,
+  JsonArchiveVault,
+  TemplateNarrator,
 } from "@matchmaker/adapters";
 import { composeMatchmaker, type Matchmaker } from "@matchmaker/main";
-import {
-  postingIdentityKey, type JobPosting, type MatchJudgments, type ProfileVersion, type SourceTier,
-} from "@matchmaker/rules";
+import { postingIdentityKey, type JobPosting, type MatchJudgments, type ProfileVersion, type SourceTier } from "@matchmaker/rules";
 import type {
-  CreatePersonResponse, FoundPosting, JobSource, ListResultsResponse, PersonSummary, ProductEvent, RunDueMonitoringResponse,
-  RunJobSearchResponse, ScoredJobNotice, SearchRunRecord, ViewJobDetailResponse, ViewRunningCostResponse,
+  CreatePersonResponse,
+  FoundPosting,
+  JobSource,
+  ListResultsResponse,
+  PersonSummary,
+  ProductEvent,
+  RunDueMonitoringResponse,
+  RunJobSearchResponse,
+  ScoredJobNotice,
+  SearchRunRecord,
+  ViewJobDetailResponse,
+  ViewRunningCostResponse,
 } from "@matchmaker/use-cases";
 import { aJobPosting, aProfile, enrichmentOf } from "./builders.ts";
 
@@ -63,8 +83,10 @@ export class MatchmakerTestingApi {
       spendLedger: this.spendLedger,
       spendAttribution: this.meter,
       personData: new JsonArchiveVault([
-        { section: "profile", vault: this.store }, { section: "dailyUsage", vault: this.usage },
-        { section: "spend", vault: this.spendLedger }, { section: "productEvents", vault: this.events },
+        { section: "profile", vault: this.store },
+        { section: "dailyUsage", vault: this.usage },
+        { section: "spend", vault: this.spendLedger },
+        { section: "productEvents", vault: this.events },
       ]),
       productEvents: this.events,
       clock,
@@ -72,15 +94,21 @@ export class MatchmakerTestingApi {
       judge: {
         judge: async (_profile, posting) => {
           self.judgeCalls.push(posting.id);
-          if (self.judgeSpendMicros > 0) await self.meter.record({ category: "model", provider: "scripted-judge", amountMicros: self.judgeSpendMicros });
+          if (self.judgeSpendMicros > 0)
+            await self.meter.record({ category: "model", provider: "scripted-judge", amountMicros: self.judgeSpendMicros });
           return self.judgments.get(posting.id) ?? MODEST_JUDGMENT;
         },
       },
       narrator: new TemplateNarrator(),
-      planner: { plan: async (_p, widen) => {
-        if (self.plannerError) throw self.plannerError;
-        return { queries: [{ titles: ["engineer"], keywords: [], locations: [], includeRemote: true }], adjacentTitlesUsed: widen ? ["adjacent role"] : [] };
-      } },
+      planner: {
+        plan: async (_p, widen) => {
+          if (self.plannerError) throw self.plannerError;
+          return {
+            queries: [{ titles: ["engineer"], keywords: [], locations: [], includeRemote: true }],
+            adjacentTitlesUsed: widen ? ["adjacent role"] : [],
+          };
+        },
+      },
       enricher: { enrich: async (found) => enrichmentOf(found) },
       ranker: { rank: async (_p, postings) => postings.map((p) => p.id) },
       sources: this.sources,
@@ -131,8 +159,16 @@ export class MatchmakerTestingApi {
   /** `costPerCallMicros` makes the source a paid one: each call reports that much aggregator spend. */
   sourceReturns(name: string, tier: SourceTier, postings: readonly Partial<FoundPosting>[], costPerCallMicros = 0): this {
     const result = postings.map((p, i) => ({
-      sourceName: name, tier, url: `https://${name}.example/${i}`, employer: "Acme", title: "Engineer", location: "Berlin",
-      description: "Build things.", postedAt: this.nowIso, fetchedAt: this.nowIso, ...p,
+      sourceName: name,
+      tier,
+      url: `https://${name}.example/${i}`,
+      employer: "Acme",
+      title: "Engineer",
+      location: "Berlin",
+      description: "Build things.",
+      postedAt: this.nowIso,
+      fetchedAt: this.nowIso,
+      ...p,
     }));
     const meter = this.meter;
     const queried = this.queriedSources;
@@ -158,7 +194,13 @@ export class MatchmakerTestingApi {
   }
   sourceFails(name: string, tier: SourceTier): this {
     const queried = this.queriedSources;
-    this.sources.push({ descriptor: { name, tier }, search: async () => { queried.push(name); throw new Error(`${name} is down`); } });
+    this.sources.push({
+      descriptor: { name, tier },
+      search: async () => {
+        queried.push(name);
+        throw new Error(`${name} is down`);
+      },
+    });
     return this;
   }
 
@@ -249,7 +291,10 @@ export class MatchmakerTestingApi {
   }
   /** Spend no use case charged: a cost-incurring use case forgot to open a charge (watch item W8). */
   unattributedSpendMicros(): number {
-    return this.spendLedger.recorded().filter((r) => r.personId === null && r.purpose === "unattributed").reduce((t, r) => t + r.amountMicros, 0);
+    return this.spendLedger
+      .recorded()
+      .filter((r) => r.personId === null && r.purpose === "unattributed")
+      .reduce((t, r) => t + r.amountMicros, 0);
   }
   productEvents(personId: string): readonly ProductEvent[] {
     return this.events.recorded().filter((e) => e.personId === personId);

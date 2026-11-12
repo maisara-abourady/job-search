@@ -1,1 +1,5 @@
-{ "name": "@matchmaker/rules", "private": true, "type": "module" }
+{
+  "name": "@matchmaker/rules",
+  "private": true,
+  "type": "module"
+}

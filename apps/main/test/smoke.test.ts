@@ -17,7 +17,14 @@ test("the smoke command prints the running cost and an empty three-tab results s
   assert.deepEqual(runningCost.rows, [{ name: "Smoke", amount: "$0.00" }]);
   assert.equal(runningCost.budgetLine, "No monthly budget set");
   assert.equal(runningCost.budgetReached, false);
-  assert.deepEqual(results.tabs.map((t) => [t.label, t.countLabel]), [["Apply", "0"], ["Within reach", "0"], ["Not a fit", "0"]]);
+  assert.deepEqual(
+    results.tabs.map((t) => [t.label, t.countLabel]),
+    [
+      ["Apply", "0"],
+      ["Within reach", "0"],
+      ["Not a fit", "0"],
+    ],
+  );
   assert.ok(results.emptyApplyHeading);
 });
 

@@ -1,6 +1,13 @@
 import {
-  AsyncSpendMeter, InMemoryProductEventLog, InMemorySpendLedger, InMemoryStore, InMemoryUsageLedger, JsonArchiveVault, SystemClock,
-  TemplateNarrator, UnchosenModelRuntime,
+  AsyncSpendMeter,
+  InMemoryProductEventLog,
+  InMemorySpendLedger,
+  InMemoryStore,
+  InMemoryUsageLedger,
+  JsonArchiveVault,
+  SystemClock,
+  TemplateNarrator,
+  UnchosenModelRuntime,
 } from "@matchmaker/adapters";
 import type { MatchmakerDetails } from "../src/compose-matchmaker.ts";
 
@@ -23,8 +30,10 @@ export function inMemoryDetails(overrides: Partial<MatchmakerDetails> = {}): { d
     spendLedger,
     spendAttribution: new AsyncSpendMeter(spendLedger, clock),
     personData: new JsonArchiveVault([
-      { section: "profile", vault: store }, { section: "dailyUsage", vault: usage },
-      { section: "spend", vault: spendLedger }, { section: "productEvents", vault: productEvents },
+      { section: "profile", vault: store },
+      { section: "dailyUsage", vault: usage },
+      { section: "spend", vault: spendLedger },
+      { section: "productEvents", vault: productEvents },
     ]),
     productEvents,
     clock,

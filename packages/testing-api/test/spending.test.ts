@@ -57,10 +57,19 @@ test("the running-cost panel shows spend per profile for the month", async () =>
   await api.scorePostings(ben, [job.id]);
 
   const november = await api.runningCost("2026-11-15T00:00:00.000Z");
-  assert.deepEqual(november.perPerson.map((p) => [p.displayName, p.spentMicros]), [["Ana", 1_250_000], ["Ben", 0]]);
+  assert.deepEqual(
+    november.perPerson.map((p) => [p.displayName, p.spentMicros]),
+    [
+      ["Ana", 1_250_000],
+      ["Ben", 0],
+    ],
+  );
   assert.equal(november.budget, "no-budget");
   const screen = await api.runningCostScreen();
   assert.equal(screen.monthLabel, "December 2026");
-  assert.deepEqual(screen.rows, [{ name: "Ana", amount: "$0.00" }, { name: "Ben", amount: "$1.25" }]);
+  assert.deepEqual(screen.rows, [
+    { name: "Ana", amount: "$0.00" },
+    { name: "Ben", amount: "$1.25" },
+  ]);
   await assert.rejects(api.setMonthlyBudget(0), { code: "invalid-input" });
 });

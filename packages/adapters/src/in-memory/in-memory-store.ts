@@ -1,10 +1,36 @@
 import {
-  profileVersionKey, type JobPosting, type MonthlyBudget, type Person, type ProfileVersion, type SellingPoint, type Verdict,
+  profileVersionKey,
+  type JobPosting,
+  type MonthlyBudget,
+  type Person,
+  type ProfileVersion,
+  type SellingPoint,
+  type Verdict,
 } from "@matchmaker/rules";
 import type {
-  AtsCompany, CappedAction, CompanyRegistry, JobDetailRow, MatchRecords, MonitoredPerson, MonitoringRoster, MonthlyBudgetControl, People,
-  PersonDataVault, PostingCatalog, PostingsForScoring, ProfileVersions, ProfilesForScoring, ProfilesForSearch, ResultRow, ResultsReadModel,
-  SearchRunRecord, SearchRuns, SourceSwitchControl, SourceSwitchboard, StoredMatch, UsageLedger,
+  AtsCompany,
+  CappedAction,
+  CompanyRegistry,
+  JobDetailRow,
+  MatchRecords,
+  MonitoredPerson,
+  MonitoringRoster,
+  MonthlyBudgetControl,
+  People,
+  PersonDataVault,
+  PostingCatalog,
+  PostingsForScoring,
+  ProfileVersions,
+  ProfilesForScoring,
+  ProfilesForSearch,
+  ResultRow,
+  ResultsReadModel,
+  SearchRunRecord,
+  SearchRuns,
+  SourceSwitchControl,
+  SourceSwitchboard,
+  StoredMatch,
+  UsageLedger,
 } from "@matchmaker/use-cases";
 
 /**
@@ -13,8 +39,21 @@ import type {
  */
 export class InMemoryStore
   implements
-    ProfilesForScoring, ProfilesForSearch, ProfileVersions, PostingsForScoring, PostingCatalog, MatchRecords, ResultsReadModel,
-    SearchRuns, People, MonitoringRoster, MonthlyBudgetControl, PersonDataVault, CompanyRegistry, SourceSwitchboard, SourceSwitchControl
+    ProfilesForScoring,
+    ProfilesForSearch,
+    ProfileVersions,
+    PostingsForScoring,
+    PostingCatalog,
+    MatchRecords,
+    ResultsReadModel,
+    SearchRuns,
+    People,
+    MonitoringRoster,
+    MonthlyBudgetControl,
+    PersonDataVault,
+    CompanyRegistry,
+    SourceSwitchboard,
+    SourceSwitchControl
 {
   private readonly profiles = new Map<string, ProfileVersion[]>(); // personId -> versions, last is active
   private readonly sellingPointsByPerson = new Map<string, readonly SellingPoint[]>();
@@ -98,12 +137,23 @@ export class InMemoryStore
   private rowOf(m: StoredMatch): ResultRow[] {
     const p = this.postings.get(m.postingId);
     if (!p) return [];
-    return [{
-      postingId: p.id, title: p.title, employer: p.employer, location: p.location, postingUrl: p.sources[0]?.url ?? "",
-      requirements: p.requirements, assessment: m.assessment, reason: m.narration.reason,
-      pointsToCapitalize: m.narration.pointsToCapitalize, verdictChangedFrom: m.verdictChangedFrom, userState: m.userState,
-      postingOpen: p.status === "open", scoredAt: m.scoredAt,
-    }];
+    return [
+      {
+        postingId: p.id,
+        title: p.title,
+        employer: p.employer,
+        location: p.location,
+        postingUrl: p.sources[0]?.url ?? "",
+        requirements: p.requirements,
+        assessment: m.assessment,
+        reason: m.narration.reason,
+        pointsToCapitalize: m.narration.pointsToCapitalize,
+        verdictChangedFrom: m.verdictChangedFrom,
+        userState: m.userState,
+        postingOpen: p.status === "open",
+        scoredAt: m.scoredAt,
+      },
+    ];
   }
   async setUserState(personId: string, postingId: string, state: "applied" | "dismissed") {
     this.matches.forEach((m, i) => {
@@ -158,7 +208,9 @@ export class InMemoryStore
   async peopleWithMonitoringOn(): Promise<readonly MonitoredPerson[]> {
     return [...this.people.values()].flatMap((p) => {
       const last = this.runs.filter((r) => r.personId === p.personId).at(-1);
-      return last === undefined ? [] : [{ personId: p.personId, lastSearchAt: last.startedAt, lastOpenedAt: p.lastOpenedAt ?? p.createdAt }];
+      return last === undefined
+        ? []
+        : [{ personId: p.personId, lastSearchAt: last.startedAt, lastOpenedAt: p.lastOpenedAt ?? p.createdAt }];
     });
   }
 

@@ -1,5 +1,13 @@
 import type {
-  Credential, Evidence, EvidencedSkill, ProfileVersion, ResumeStrengthRatios, RoleHeld, ScoringProfile, SellingPoint, SeniorityLevel,
+  Credential,
+  Evidence,
+  EvidencedSkill,
+  ProfileVersion,
+  ResumeStrengthRatios,
+  RoleHeld,
+  ScoringProfile,
+  SellingPoint,
+  SeniorityLevel,
 } from "@matchmaker/rules";
 
 export type ResumeUpload = {
@@ -28,11 +36,26 @@ export type StructuredResume = {
 export interface ResumeAnalyst {
   structure(text: string): Promise<StructuredResume>;
   /** Selling-point candidates with the three tier tests answered; the rules assign the tier. */
-  sellingPointCandidates(resume: StructuredResume): Promise<readonly { statement: string; evidenceId: string; quantified: boolean; withinLastThreeYears: boolean; uncommonForRole: boolean }[]>;
+  sellingPointCandidates(
+    resume: StructuredResume,
+  ): Promise<
+    readonly { statement: string; evidenceId: string; quantified: boolean; withinLastThreeYears: boolean; uncommonForRole: boolean }[]
+  >;
   strengthRatios(resume: StructuredResume): Promise<{ ratios: ResumeStrengthRatios; topFixes: readonly string[] }>;
 }
 /** IN-1, IN-2: adaptive questions from gaps and ambiguities. */
-export type InterviewQuestion = { readonly id: string; readonly text: string; readonly topic: "unlisted-skills" | "unquantified-achievements" | "scope" | "target-roles" | "roles-to-avoid" | "projects-and-education" | "target-field" };
+export type InterviewQuestion = {
+  readonly id: string;
+  readonly text: string;
+  readonly topic:
+    | "unlisted-skills"
+    | "unquantified-achievements"
+    | "scope"
+    | "target-roles"
+    | "roles-to-avoid"
+    | "projects-and-education"
+    | "target-field";
+};
 export type InterviewTurn = { readonly question: InterviewQuestion; readonly answer: string | null };
 export interface Interviewer {
   nextQuestion(profile: ScoringProfile, transcript: readonly InterviewTurn[]): Promise<InterviewQuestion | null>;

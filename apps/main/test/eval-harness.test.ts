@@ -12,7 +12,11 @@ const resultsDir = mkdtempSync(join(tmpdir(), "eval-results-"));
 after(() => rmSync(resultsDir, { recursive: true, force: true }));
 
 const runEval = (...args: string[]) =>
-  spawnSync(process.execPath, [runner, ...args], { encoding: "utf8", timeout: 30_000, env: { ...process.env, EVAL_RESULTS_DIR: resultsDir } });
+  spawnSync(process.execPath, [runner, ...args], {
+    encoding: "utf8",
+    timeout: 30_000,
+    env: { ...process.env, EVAL_RESULTS_DIR: resultsDir },
+  });
 const latestReport = (): { dir: string; md: string; json: { results: { id: string; passed: boolean }[] } } => {
   const dir = join(resultsDir, readdirSync(resultsDir).sort().at(-1) ?? "");
   return { dir, md: readFileSync(join(dir, "report.md"), "utf8"), json: JSON.parse(readFileSync(join(dir, "results.json"), "utf8")) };
@@ -33,7 +37,10 @@ test("a failing threshold exits 1 and the report names the failed case", () => {
   const { md, json } = latestReport();
   assert.match(md, /Result: FAILED/);
   assert.match(md, /## Failed cases\n\n- \*\*uncited-requirement\*\*/);
-  assert.deepEqual(json.results.filter((c) => !c.passed).map((c) => c.id), ["uncited-requirement"]);
+  assert.deepEqual(
+    json.results.filter((c) => !c.passed).map((c) => c.id),
+    ["uncited-requirement"],
+  );
 });
 
 test("an unknown evaluation exits 2 and lists the known ones", () => {

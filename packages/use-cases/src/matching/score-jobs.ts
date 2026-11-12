@@ -1,5 +1,10 @@
 import {
-  assessCutAtPrefilter, assessMatch, evaluateGates, needsJudgment, profileVersionKey, toScoringProfile,
+  assessCutAtPrefilter,
+  assessMatch,
+  evaluateGates,
+  needsJudgment,
+  profileVersionKey,
+  toScoringProfile,
   type MatchAssessment,
 } from "@matchmaker/rules";
 import { UseCaseError } from "../shared/errors.ts";
@@ -32,7 +37,10 @@ export type ScoreJobsDependencies = {
   readonly clock: Clock;
 };
 
-const CUT_NARRATION: Narration = { reason: "This role was outside the closest matches to your profile in this search.", pointsToCapitalize: [] };
+const CUT_NARRATION: Narration = {
+  reason: "This role was outside the closest matches to your profile in this search.",
+  pointsToCapitalize: [],
+};
 
 /** Application rules of scoring: cache per (profile version, posting revision), cheap gates first, then judge, then the rules decide. */
 export class ScoreJobsInteractor implements ScoreJobs {
@@ -52,7 +60,9 @@ export class ScoreJobsInteractor implements ScoreJobs {
     const scoringProfile = toScoringProfile(profile);
     const cut = new Set(request.cutAtPrefilter);
     const postings = await this.d.postings.postingsByIds([...request.postingIds, ...request.cutAtPrefilter]);
-    let scored = 0, reused = 0, verdictChanges = 0;
+    let scored = 0,
+      reused = 0,
+      verdictChanges = 0;
 
     for (const posting of postings) {
       if (await this.d.matches.findMatch(key, posting.id, posting.revision)) {
@@ -67,14 +77,27 @@ export class ScoreJobsInteractor implements ScoreJobs {
       } else {
         const gates = evaluateGates(posting, profile.preferences);
         const judgments = needsJudgment(posting, gates) ? await this.d.judge.judge(scoringProfile, posting) : null;
-        assessment = assessMatch({ job: posting, profile: scoringProfile, preferences: profile.preferences, gates, judgments, now: this.d.clock.now() });
+        assessment = assessMatch({
+          job: posting,
+          profile: scoringProfile,
+          preferences: profile.preferences,
+          gates,
+          judgments,
+          now: this.d.clock.now(),
+        });
         narration = await this.d.narrator.narrate({ profile: scoringProfile, posting, assessment });
       }
       const previous = await this.d.matches.latestVerdictBefore(request.personId, posting.id, key);
       const changed = previous !== null && previous !== assessment.verdict;
       await this.d.matches.saveMatch({
-        personId: request.personId, profileVersionKey: key, postingId: posting.id, postingRevision: posting.revision,
-        assessment, narration, verdictChangedFrom: changed ? previous : null, userState: "new",
+        personId: request.personId,
+        profileVersionKey: key,
+        postingId: posting.id,
+        postingRevision: posting.revision,
+        assessment,
+        narration,
+        verdictChangedFrom: changed ? previous : null,
+        userState: "new",
         scoredAt: this.d.clock.now().toISOString(),
       });
       this.d.feed.jobScored({ personId: request.personId, postingId: posting.id, verdict: assessment.verdict, verdictChanged: changed });

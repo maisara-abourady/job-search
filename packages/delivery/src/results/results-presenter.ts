@@ -35,7 +35,9 @@ export function presentCard(card: ResultCard): ResultCardViewModel {
       ? null
       : card.pointsToApply > 0
         ? `${card.pointsToApply} points from Apply${lever}`
-        : lever !== "" ? `One step from Apply${lever}` : null;
+        : lever !== ""
+          ? `One step from Apply${lever}`
+          : null;
   return {
     postingId: card.postingId,
     title: card.title,

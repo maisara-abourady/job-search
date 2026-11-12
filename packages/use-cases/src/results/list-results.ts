@@ -58,8 +58,15 @@ function toCard(r: ResultRow): ResultCard {
   if (a.confidence === "low") flags.push("thin-posting");
   const lever = a.lever === null ? null : (r.requirements.find((q) => q.id === a.lever?.requirementId)?.text ?? null);
   return {
-    postingId: r.postingId, title: r.title, employer: r.employer, location: r.location,
-    verdict: a.verdict, reason: r.reason, pointsToApply: a.pointsToApply, leverRequirement: lever,
-    verdictChanged: r.verdictChangedFrom !== null, flags,
+    postingId: r.postingId,
+    title: r.title,
+    employer: r.employer,
+    location: r.location,
+    verdict: a.verdict,
+    reason: r.reason,
+    pointsToApply: a.pointsToApply,
+    leverRequirement: lever,
+    verdictChanged: r.verdictChangedFrom !== null,
+    flags,
   };
 }

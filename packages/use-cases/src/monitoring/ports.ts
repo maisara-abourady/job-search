@@ -12,5 +12,8 @@ export interface MonitoringSearchRequests {
 export interface InboxSource {
   lastVisitAt(personId: string): Promise<string | null>;
   recordVisit(personId: string, at: string): Promise<void>;
-  matchesSince(personId: string, since: string | null): Promise<readonly { postingId: string; title: string; employer: string; verdict: "apply" | "stretch"; reason: string }[]>;
+  matchesSince(
+    personId: string,
+    since: string | null,
+  ): Promise<readonly { postingId: string; title: string; employer: string; verdict: "apply" | "stretch"; reason: string }[]>;
 }

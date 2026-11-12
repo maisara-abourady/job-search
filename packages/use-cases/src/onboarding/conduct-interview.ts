@@ -16,7 +16,10 @@ export interface ConductInterview {
 export const INTERVIEW_POLICY = { minQuestions: 5, maxQuestions: 7 } as const;
 export class ConductInterviewInteractor implements ConductInterview {
   private readonly d: {
-    interviewer: Interviewer; transcripts: InterviewTranscripts; profiles: ProfileVersions; rescore: RescoreRequests;
+    interviewer: Interviewer;
+    transcripts: InterviewTranscripts;
+    profiles: ProfileVersions;
+    rescore: RescoreRequests;
     /** Interviewer spend is charged with purpose "interview" (ADR 0010). */
     spend: SpendAttribution;
   };

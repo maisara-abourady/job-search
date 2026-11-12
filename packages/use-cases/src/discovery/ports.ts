@@ -39,7 +39,16 @@ export interface SearchPlanner {
 /** DS-6: what a small model extracts from a description. */
 export type Enrichment = Pick<
   JobPosting,
-  "requirements" | "seniority" | "seniorityText" | "authorization" | "salary" | "workMode" | "country" | "language" | "completeness" | "legitimacy"
+  | "requirements"
+  | "seniority"
+  | "seniorityText"
+  | "authorization"
+  | "salary"
+  | "workMode"
+  | "country"
+  | "language"
+  | "completeness"
+  | "legitimacy"
 >;
 export interface PostingEnricher {
   enrich(posting: FoundPosting): Promise<Enrichment>;
@@ -92,5 +101,10 @@ export interface CompanyRegistry {
 /** Discovery hands scoring to the matching area through a port it owns; Main wires it. */
 export interface ScoringRequests {
   /** `runId` lets scoring spend be charged to the search run that asked for it (ADR 0010). */
-  score(request: { personId: string; runId: string | null; postingIds: readonly string[]; cutAtPrefilter: readonly string[] }): Promise<void>;
+  score(request: {
+    personId: string;
+    runId: string | null;
+    postingIds: readonly string[];
+    cutAtPrefilter: readonly string[];
+  }): Promise<void>;
 }

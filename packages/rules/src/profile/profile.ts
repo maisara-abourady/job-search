@@ -12,7 +12,12 @@ export type RoleHeld = {
   readonly achievementEvidenceIds: readonly string[];
 };
 export type EvidencedSkill = { readonly name: string; readonly evidenceIds: readonly string[] };
-export type Credential = { readonly kind: "degree" | "certification"; readonly name: string; readonly issuer: string; readonly year: string | null };
+export type Credential = {
+  readonly kind: "degree" | "certification";
+  readonly name: string;
+  readonly issuer: string;
+  readonly year: string | null;
+};
 
 /** PF-1..PF-4. Location, work mode and salary are soft; authorization and seniority are hard gates. */
 export type Preferences = {

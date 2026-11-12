@@ -19,7 +19,12 @@ export type TailoredResumeResponse =
   | { readonly outcome: "rejected-by-guard"; readonly violations: readonly string[] };
 export interface TailorResume {
   missingKeywords(request: { personId: string; postingId: string }): Promise<MissingKeywordsResponse>;
-  generate(request: { personId: string; postingId: string; confirmed: ConfirmedKeywords; overBudgetConfirmed?: boolean }): Promise<TailoredResumeResponse>;
+  generate(request: {
+    personId: string;
+    postingId: string;
+    confirmed: ConfirmedKeywords;
+    overBudgetConfirmed?: boolean;
+  }): Promise<TailoredResumeResponse>;
   export(request: { personId: string; tailoredResumeId: string; format: "pdf" | "docx" }): Promise<{ fileRef: string }>;
 }
 export type TailorResumeDependencies = {
@@ -44,7 +49,12 @@ export class TailorResumeInteractor implements TailorResume {
     void this.d;
     return notYetBuilt("TR-2: missing keywords to confirm");
   }
-  async generate(_r: { personId: string; postingId: string; confirmed: ConfirmedKeywords; overBudgetConfirmed?: boolean }): Promise<TailoredResumeResponse> {
+  async generate(_r: {
+    personId: string;
+    postingId: string;
+    confirmed: ConfirmedKeywords;
+    overBudgetConfirmed?: boolean;
+  }): Promise<TailoredResumeResponse> {
     // spending.beforeOnDemand(personId, "tailoredResumes", overBudgetConfirmed === true); writer.rewrite(); checkTailoredResume() must return no
     // violations or the result is rejected (and retried by the adapter at most once); keywordCoverage() before and after.
     return notYetBuilt("TR-1, TR-3, TR-4: generate tailored resume");

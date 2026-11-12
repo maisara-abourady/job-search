@@ -1,1 +1,9 @@
-{ "name": "@matchmaker/main", "private": true, "type": "module", "dependencies": { "@matchmaker/use-cases": "workspace:*", "@matchmaker/adapters": "workspace:*" } }
+{
+  "name": "@matchmaker/main",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@matchmaker/use-cases": "workspace:*",
+    "@matchmaker/adapters": "workspace:*"
+  }
+}

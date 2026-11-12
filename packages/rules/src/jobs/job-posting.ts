@@ -5,7 +5,12 @@ export type SourceTier = 1 | 2 | 3 | 4;
 export type SourceLink = { readonly sourceName: string; readonly tier: SourceTier; readonly url: string; readonly fetchedAt: string };
 
 export type RequirementKind = "must-have" | "nice-to-have";
-export type JobRequirement = { readonly id: string; readonly text: string; readonly kind: RequirementKind; readonly keywords: readonly string[] };
+export type JobRequirement = {
+  readonly id: string;
+  readonly text: string;
+  readonly kind: RequirementKind;
+  readonly keywords: readonly string[];
+};
 
 export type AuthorizationSignal = {
   readonly kind: "sponsorship-offered" | "authorization-required" | "silent";
@@ -31,6 +36,11 @@ export type JobPosting = {
   readonly sources: readonly SourceLink[];
   readonly requirements: readonly JobRequirement[];
   readonly authorization: AuthorizationSignal;
-  readonly completeness: { readonly responsibilities: boolean; readonly requirements: boolean; readonly location: boolean; readonly employerName: boolean };
+  readonly completeness: {
+    readonly responsibilities: boolean;
+    readonly requirements: boolean;
+    readonly location: boolean;
+    readonly employerName: boolean;
+  };
   readonly legitimacy: { readonly identifiableEmployer: boolean; readonly asksForPayment: boolean; readonly matchesScamPattern: boolean };
 };

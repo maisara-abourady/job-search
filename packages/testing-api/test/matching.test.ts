@@ -12,7 +12,9 @@ const strongJudgment = {
     { requirementId: "r-cloud", judgment: "met" as const, evidenceIds: ["ev-ts"], closableByUser: true },
     { requirementId: "r-go", judgment: "partial" as const, evidenceIds: ["ev-ts"], closableByUser: true },
   ],
-  experienceRelevance: 0.9, skillsAndTools: 0.9, scopeAlignment: 0.8,
+  experienceRelevance: 0.9,
+  skillsAndTools: 0.9,
+  scopeAlignment: 0.8,
 };
 
 test("a strong, evidenced match is Apply and shows first in the Apply tab", async () => {

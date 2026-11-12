@@ -34,7 +34,13 @@ export class SpendingGuard {
   private readonly budget: MonthlyBudgetSetting;
   private readonly spend: Pick<SpendLedger, "totalSpent">;
   private readonly clock: Clock;
-  constructor(d: { people: PeopleForSpending; usage: UsageLedger; budget: MonthlyBudgetSetting; spend: Pick<SpendLedger, "totalSpent">; clock: Clock }) {
+  constructor(d: {
+    people: PeopleForSpending;
+    usage: UsageLedger;
+    budget: MonthlyBudgetSetting;
+    spend: Pick<SpendLedger, "totalSpent">;
+    clock: Clock;
+  }) {
     this.people = d.people;
     this.usage = d.usage;
     this.budget = d.budget;
@@ -58,7 +64,8 @@ export class SpendingGuard {
   /** Throws "not-found" or "monthly-budget-reached": background work never asks, it pauses. */
   async beforeBackground(personId: string): Promise<void> {
     if (!(await this.people.exists(personId))) throw new UseCaseError("not-found", `no profile ${personId}`);
-    if (await this.monthlyBudgetReached()) throw new UseCaseError("monthly-budget-reached", "monitoring is paused until next month or a higher budget");
+    if (await this.monthlyBudgetReached())
+      throw new UseCaseError("monthly-budget-reached", "monitoring is paused until next month or a higher budget");
   }
 
   async monthlyBudgetReached(): Promise<boolean> {

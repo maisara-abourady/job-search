@@ -10,7 +10,10 @@ test("the owner creates, renames and lists profiles; a profile needs a name", as
   const me = await api.createProfile("Me");
   await api.renameProfile(ana.personId, "Ana B.");
 
-  assert.deepEqual((await api.profiles()).map((p) => p.displayName), ["Ana B.", "Me"]);
+  assert.deepEqual(
+    (await api.profiles()).map((p) => p.displayName),
+    ["Ana B.", "Me"],
+  );
   assert.equal((await api.openProfile(me.personId)).displayName, "Me");
   await assert.rejects(api.createProfile("   "), { code: "invalid-input" });
   await assert.rejects(api.openProfile("nobody"), { code: "not-found" });
@@ -48,7 +51,10 @@ test("export holds one person's data; delete removes it and keeps the owner's sp
 
   await api.deleteProfile(ana);
 
-  assert.deepEqual((await api.profiles()).map((p) => p.displayName), ["Ben"]);
+  assert.deepEqual(
+    (await api.profiles()).map((p) => p.displayName),
+    ["Ben"],
+  );
   await assert.rejects(api.exportProfile(ana), { code: "not-found" });
   assert.equal((await api.results(ana)).notAFitCount, 0);
   assert.deepEqual(api.productEvents(ana), []);

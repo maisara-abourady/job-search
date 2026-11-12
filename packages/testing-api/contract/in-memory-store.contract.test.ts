@@ -3,9 +3,21 @@ import { InMemoryProductEventLog, InMemorySpendLedger, InMemoryStore, InMemoryUs
 import { profileVersionKey } from "@matchmaker/rules";
 import { aJobPosting, aProfile } from "../src/builders.ts";
 import {
-  aSearchRun, aSpendRecord, aStoredMatch, matchRecordsContract, monitoringRosterContract, monthlyBudgetContract, peopleContract,
-  personDataVaultContract, postingCatalogContract, profileVersionsContract, resultsReadModelContract, sourceSwitchesContract,
-  spendLedgerContract, usageLedgerContract, type VaultUnderTest,
+  aSearchRun,
+  aSpendRecord,
+  aStoredMatch,
+  matchRecordsContract,
+  monitoringRosterContract,
+  monthlyBudgetContract,
+  peopleContract,
+  personDataVaultContract,
+  postingCatalogContract,
+  profileVersionsContract,
+  resultsReadModelContract,
+  sourceSwitchesContract,
+  spendLedgerContract,
+  usageLedgerContract,
+  type VaultUnderTest,
 } from "./storage-contracts.ts";
 
 // The in-memory fakes against the storage contracts. Phase 3 runs the same suites against the local database.
@@ -74,7 +86,10 @@ personDataVaultContract("InMemoryProductEventLog", (): VaultUnderTest => {
 personDataVaultContract("JsonArchiveVault over the in-memory stores", (): VaultUnderTest => {
   const [s, u, l, e] = [new InMemoryStore(), new InMemoryUsageLedger(), new InMemorySpendLedger(), new InMemoryProductEventLog()];
   const vault = new JsonArchiveVault([
-    { section: "profile", vault: s }, { section: "dailyUsage", vault: u }, { section: "spend", vault: l }, { section: "productEvents", vault: e },
+    { section: "profile", vault: s },
+    { section: "dailyUsage", vault: u },
+    { section: "spend", vault: l },
+    { section: "productEvents", vault: e },
   ]);
   return {
     vault,

@@ -4,7 +4,12 @@ import type { Enrichment, FoundPosting } from "@matchmaker/use-cases";
 /** Sensible defaults so a test states only what it is about. */
 export function aProfile(o: Partial<ProfileVersion> & { personId: string }): ProfileVersion {
   return {
-    profileId: `profile-${o.personId}`, version: 1, roles: [], skills: [], credentials: [], languages: ["en"],
+    profileId: `profile-${o.personId}`,
+    version: 1,
+    roles: [],
+    skills: [],
+    credentials: [],
+    languages: ["en"],
     evidence: [
       { id: "ev-sql", source: "resume-line", text: "Built SQL reporting for 40 stores" },
       { id: "ev-ts", source: "resume-line", text: "Led a TypeScript migration of 200k lines" },
@@ -12,8 +17,12 @@ export function aProfile(o: Partial<ProfileVersion> & { personId: string }): Pro
     ],
     inferredSeniority: "senior",
     preferences: {
-      locations: ["Berlin"], workModes: ["hybrid", "remote"], authorizedCountries: ["DE"], acceptsSponsorship: false,
-      targetSeniority: ["senior", "lead-or-staff"], salaryFloor: null,
+      locations: ["Berlin"],
+      workModes: ["hybrid", "remote"],
+      authorizedCountries: ["DE"],
+      acceptsSponsorship: false,
+      targetSeniority: ["senior", "lead-or-staff"],
+      salaryFloor: null,
     },
     personal: { name: "Test Person", photoRef: null, age: null, gender: null, nationality: null, maritalStatus: null },
     ...o,
@@ -22,10 +31,22 @@ export function aProfile(o: Partial<ProfileVersion> & { personId: string }): Pro
 
 export function aJobPosting(o: Partial<JobPosting> & { id: string }): JobPosting {
   return {
-    revision: 1, employer: "Acme", title: "Senior Engineer", location: "Berlin", country: "DE", workMode: "hybrid",
-    seniority: "senior", seniorityText: "Senior", salary: null, description: "Build things.", language: "en",
-    postedAt: "2026-11-10T00:00:00.000Z", status: "open",
-    sources: [{ sourceName: "greenhouse", tier: 1, url: `https://boards.greenhouse.io/acme/${o.id}`, fetchedAt: "2026-11-10T00:00:00.000Z" }],
+    revision: 1,
+    employer: "Acme",
+    title: "Senior Engineer",
+    location: "Berlin",
+    country: "DE",
+    workMode: "hybrid",
+    seniority: "senior",
+    seniorityText: "Senior",
+    salary: null,
+    description: "Build things.",
+    language: "en",
+    postedAt: "2026-11-10T00:00:00.000Z",
+    status: "open",
+    sources: [
+      { sourceName: "greenhouse", tier: 1, url: `https://boards.greenhouse.io/acme/${o.id}`, fetchedAt: "2026-11-10T00:00:00.000Z" },
+    ],
     requirements: [
       { id: "r-sql", text: "SQL", kind: "must-have", keywords: ["SQL"] },
       { id: "r-ts", text: "TypeScript", kind: "must-have", keywords: ["TypeScript"] },
@@ -41,6 +62,7 @@ export function aJobPosting(o: Partial<JobPosting> & { id: string }): JobPosting
 }
 
 export function enrichmentOf(_found: FoundPosting): Enrichment {
-  const { requirements, seniority, seniorityText, authorization, salary, workMode, country, language, completeness, legitimacy } = aJobPosting({ id: "x" });
+  const { requirements, seniority, seniorityText, authorization, salary, workMode, country, language, completeness, legitimacy } =
+    aJobPosting({ id: "x" });
   return { requirements, seniority, seniorityText, authorization, salary, workMode, country, language, completeness, legitimacy };
 }

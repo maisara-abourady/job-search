@@ -7,7 +7,13 @@ import { inMemoryDetails } from "../in-memory-details.ts";
  * exercised without keys or spend. `--break=<caseId>` expects the wrong verdict for that case (to see a failure).
  */
 const profile: ProfileVersion = {
-  personId: "sample-person", profileId: "sample-profile", version: 1, roles: [], skills: [], credentials: [], languages: ["en"],
+  personId: "sample-person",
+  profileId: "sample-profile",
+  version: 1,
+  roles: [],
+  skills: [],
+  credentials: [],
+  languages: ["en"],
   evidence: [
     { id: "ev-sql", source: "resume-line", text: "Built SQL reporting for 40 stores" },
     { id: "ev-ts", source: "resume-line", text: "Led a TypeScript migration of 200k lines" },
@@ -15,16 +21,31 @@ const profile: ProfileVersion = {
   ],
   inferredSeniority: "senior",
   preferences: {
-    locations: ["Berlin"], workModes: ["hybrid", "remote"], authorizedCountries: ["DE"], acceptsSponsorship: false,
-    targetSeniority: ["senior", "lead-or-staff"], salaryFloor: null,
+    locations: ["Berlin"],
+    workModes: ["hybrid", "remote"],
+    authorizedCountries: ["DE"],
+    acceptsSponsorship: false,
+    targetSeniority: ["senior", "lead-or-staff"],
+    salaryFloor: null,
   },
   personal: { name: "Sample Person", photoRef: null, age: null, gender: null, nationality: null, maritalStatus: null },
 };
 
 const posting = (id: string, o: Partial<JobPosting> = {}): JobPosting => ({
-  id, revision: 1, employer: "Acme", title: "Senior Engineer", location: "Berlin", country: "DE", workMode: "hybrid",
-  seniority: "senior", seniorityText: "Senior", salary: null, description: "Build things.", language: "en",
-  postedAt: "2026-11-10T00:00:00.000Z", status: "open",
+  id,
+  revision: 1,
+  employer: "Acme",
+  title: "Senior Engineer",
+  location: "Berlin",
+  country: "DE",
+  workMode: "hybrid",
+  seniority: "senior",
+  seniorityText: "Senior",
+  salary: null,
+  description: "Build things.",
+  language: "en",
+  postedAt: "2026-11-10T00:00:00.000Z",
+  status: "open",
   sources: [{ sourceName: "greenhouse", tier: 1, url: `https://boards.greenhouse.io/acme/${id}`, fetchedAt: "2026-11-10T00:00:00.000Z" }],
   requirements: [
     { id: "r-sql", text: "SQL", kind: "must-have", keywords: ["SQL"] },
@@ -38,18 +59,35 @@ const posting = (id: string, o: Partial<JobPosting> = {}): JobPosting => ({
   ...o,
 });
 
-const met = (requirementId: string, evidenceId: string) => ({ requirementId, judgment: "met" as const, evidenceIds: [evidenceId], closableByUser: true });
+const met = (requirementId: string, evidenceId: string) => ({
+  requirementId,
+  judgment: "met" as const,
+  evidenceIds: [evidenceId],
+  closableByUser: true,
+});
 const strong: MatchJudgments = {
   requirements: [met("r-sql", "ev-sql"), met("r-ts", "ev-ts"), met("r-lead", "ev-lead"), met("r-cloud", "ev-ts")],
-  experienceRelevance: 0.9, skillsAndTools: 0.9, scopeAlignment: 0.8,
+  experienceRelevance: 0.9,
+  skillsAndTools: 0.9,
+  scopeAlignment: 0.8,
 };
 const cases: readonly { id: string; posting: JobPosting; judgment: MatchJudgments; expected: Verdict }[] = [
   { id: "strong-evidenced-match", posting: posting("job-strong"), judgment: strong, expected: "apply" },
   {
-    id: "uncited-requirement", posting: posting("job-uncited"), expected: "stretch",
-    judgment: { ...strong, requirements: strong.requirements.map((r) => (r.requirementId === "r-cloud" ? { ...r, evidenceIds: ["not-in-profile"] } : r)) },
+    id: "uncited-requirement",
+    posting: posting("job-uncited"),
+    expected: "stretch",
+    judgment: {
+      ...strong,
+      requirements: strong.requirements.map((r) => (r.requirementId === "r-cloud" ? { ...r, evidenceIds: ["not-in-profile"] } : r)),
+    },
   },
-  { id: "authorization-gate", posting: posting("job-us", { country: "US", location: "New York" }), judgment: strong, expected: "not-a-fit" },
+  {
+    id: "authorization-gate",
+    posting: posting("job-us", { country: "US", location: "New York" }),
+    judgment: strong,
+    expected: "not-a-fit",
+  },
 ];
 const OTHER: Record<Verdict, Verdict> = { apply: "not-a-fit", stretch: "apply", "not-a-fit": "apply" };
 
@@ -67,7 +105,12 @@ const sample: Evaluation = {
         await store.add({ personId: profile.personId, displayName: "Sample", createdAt: "2026-11-11T09:00:00.000Z" });
         await store.saveNewVersion(profile, []);
         for (const c of cases) await store.save(c.posting, postingIdentityKey(c.posting));
-        await app.useCases.scoreJobs.execute({ personId: profile.personId, runId: null, postingIds: cases.map((c) => c.posting.id), cutAtPrefilter: [] });
+        await app.useCases.scoreJobs.execute({
+          personId: profile.personId,
+          runId: null,
+          postingIds: cases.map((c) => c.posting.id),
+          cutAtPrefilter: [],
+        });
         const rows = await store.currentResults(profile.personId);
         return cases.map((c): CaseResult => {
           const expected = options["break"] === c.id ? OTHER[c.expected] : c.expected;

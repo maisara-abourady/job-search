@@ -2,6 +2,10 @@
   "name": "@matchmaker/delivery",
   "private": true,
   "type": "module",
-  "exports": { ".": "./src/index.ts" },
-  "dependencies": { "@matchmaker/use-cases": "workspace:*" }
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@matchmaker/use-cases": "workspace:*"
+  }
 }

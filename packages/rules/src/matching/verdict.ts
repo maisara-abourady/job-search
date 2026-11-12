@@ -4,14 +4,26 @@ import type { ScoringProfile } from "../profile/scoring-profile.ts";
 import { anyGateFails, type GateResults } from "./gates.ts";
 import { enforceEvidence, type MatchJudgments, type RequirementJudgment } from "./judgments.ts";
 import {
-  FIT_WEIGHTS, confidence, fit, jobQuality, preferencesFit, priority,
-  type Confidence, type FitBreakdown, type JobQualityBreakdown,
+  FIT_WEIGHTS,
+  confidence,
+  fit,
+  jobQuality,
+  preferencesFit,
+  priority,
+  type Confidence,
+  type FitBreakdown,
+  type JobQualityBreakdown,
 } from "./scores.ts";
 
 export type Verdict = "apply" | "stretch" | "not-a-fit";
 export type NotAFitReason =
-  | "work-authorization" | "seniority-mismatch" | "missing-must-haves" | "low-overall-fit"
-  | "low-relevance" | "poor-posting" | "unsupported-language";
+  | "work-authorization"
+  | "seniority-mismatch"
+  | "missing-must-haves"
+  | "low-overall-fit"
+  | "low-relevance"
+  | "poor-posting"
+  | "unsupported-language";
 
 /** The single change that would move a job up, e.g. "6 points from Apply: confirm your SQL experience". */
 export type Lever = { readonly requirementId: string; readonly pointsGained: number };
@@ -69,7 +81,8 @@ export function assessMatch(input: {
   const mustHave = judged.filter((j) => kindOf.get(j.requirementId) === "must-have");
   const niceToHave = judged.filter((j) => kindOf.get(j.requirementId) === "nice-to-have");
   const fitBreakdown = fit({
-    mustHave, niceToHave,
+    mustHave,
+    niceToHave,
     experienceRelevance: input.judgments.experienceRelevance,
     skillsAndTools: input.judgments.skillsAndTools,
     scopeAlignment: input.judgments.scopeAlignment,
@@ -81,13 +94,18 @@ export function assessMatch(input: {
 
   // ASSUMPTION (precedence of primary reasons when several Not a fit triggers hold): posting, coverage, fit.
   if (quality.total < MIN_JOB_QUALITY) return notAFit("poor-posting", gates, fitBreakdown, conf, quality, judged, lever);
-  if (fitBreakdown.mustHaveCoverage < MIN_MUST_HAVE_COVERAGE) return notAFit("missing-must-haves", gates, fitBreakdown, conf, quality, judged, lever);
+  if (fitBreakdown.mustHaveCoverage < MIN_MUST_HAVE_COVERAGE)
+    return notAFit("missing-must-haves", gates, fitBreakdown, conf, quality, judged, lever);
   if (fitBreakdown.total < STRETCH_FIT) return notAFit("low-overall-fit", gates, fitBreakdown, conf, quality, judged, lever);
 
   const isApply = fitBreakdown.total >= APPLY_FIT && missingMustHaves === 0 && conf !== "low";
   // ASSUMPTION: Fit >= 80 with two or more Missing must-haves (coverage still >= 50%) is Stretch, like one Missing.
   return {
-    gates, fit: fitBreakdown, confidence: conf, quality, judgments: judged,
+    gates,
+    fit: fitBreakdown,
+    confidence: conf,
+    quality,
+    judgments: judged,
     verdict: isApply ? "apply" : "stretch",
     primaryReason: null,
     priority: priority(fitBreakdown.total, quality.total),
@@ -109,12 +127,22 @@ export function biggestLever(mustHave: readonly RequirementJudgment[], niceToHav
 }
 
 function notAFit(
-  reason: NotAFitReason, gates: GateResults | null, fitB: FitBreakdown | null, conf: Confidence | null,
-  quality: JobQualityBreakdown | null, judgments: readonly RequirementJudgment[], lever: Lever | null = null,
+  reason: NotAFitReason,
+  gates: GateResults | null,
+  fitB: FitBreakdown | null,
+  conf: Confidence | null,
+  quality: JobQualityBreakdown | null,
+  judgments: readonly RequirementJudgment[],
+  lever: Lever | null = null,
 ): MatchAssessment {
   return {
-    gates, fit: fitB, confidence: conf, quality, judgments,
-    verdict: "not-a-fit", primaryReason: reason,
+    gates,
+    fit: fitB,
+    confidence: conf,
+    quality,
+    judgments,
+    verdict: "not-a-fit",
+    primaryReason: reason,
     priority: fitB !== null && quality !== null ? priority(fitB.total, quality.total) : 0,
     pointsToApply: fitB !== null ? Math.max(0, APPLY_FIT - fitB.total) : null,
     lever,

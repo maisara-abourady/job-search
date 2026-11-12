@@ -1,7 +1,11 @@
 import type { ResultsReadModel } from "./ports.ts";
 
 /** MR-7: mark a job applied or dismiss it. */
-export type RecordJobDecisionRequest = { readonly personId: string; readonly postingId: string; readonly decision: "applied" | "dismissed" };
+export type RecordJobDecisionRequest = {
+  readonly personId: string;
+  readonly postingId: string;
+  readonly decision: "applied" | "dismissed";
+};
 export interface RecordJobDecision {
   execute(request: RecordJobDecisionRequest): Promise<void>;
 }

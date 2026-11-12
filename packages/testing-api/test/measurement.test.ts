@@ -12,7 +12,9 @@ const strongJudgment = {
     { requirementId: "r-cloud", judgment: "met" as const, evidenceIds: ["ev-ts"], closableByUser: true },
     { requirementId: "r-go", judgment: "partial" as const, evidenceIds: ["ev-ts"], closableByUser: true },
   ],
-  experienceRelevance: 0.9, skillsAndTools: 0.9, scopeAlignment: 0.8,
+  experienceRelevance: 0.9,
+  skillsAndTools: 0.9,
+  scopeAlignment: 0.8,
 };
 
 test("time to first strong match is measurable: profile created, then the first results screen with an Apply verdict", async () => {
@@ -46,5 +48,8 @@ test("marking a job applied is a product event; dismissing is not", async () => 
 
   await api.markApplied(u1, job.id);
 
-  assert.deepEqual(api.productEvents(u1).map((e) => e.name), ["profile-created", "job-marked-applied"]);
+  assert.deepEqual(
+    api.productEvents(u1).map((e) => e.name),
+    ["profile-created", "job-marked-applied"],
+  );
 });

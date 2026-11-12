@@ -10,8 +10,22 @@ import assert from "node:assert/strict";
 import { describe, test } from "node:test";
 import { profileVersionKey, type MatchAssessment, type ProfileVersion, type Verdict } from "@matchmaker/rules";
 import type {
-  MatchRecords, MonitoringRoster, MonthlyBudgetControl, People, PersonDataVault, PostingCatalog, PostingsForScoring, ProfileVersions,
-  ResultsReadModel, SearchRunRecord, SearchRuns, SourceSwitchControl, SpendLedger, SpendRecord, StoredMatch, UsageLedger,
+  MatchRecords,
+  MonitoringRoster,
+  MonthlyBudgetControl,
+  People,
+  PersonDataVault,
+  PostingCatalog,
+  PostingsForScoring,
+  ProfileVersions,
+  ResultsReadModel,
+  SearchRunRecord,
+  SearchRuns,
+  SourceSwitchControl,
+  SpendLedger,
+  SpendRecord,
+  StoredMatch,
+  UsageLedger,
 } from "@matchmaker/use-cases";
 import { aJobPosting, aProfile } from "../src/builders.ts";
 
@@ -19,22 +33,55 @@ type Factory<T> = () => T | Promise<T>;
 
 // ---------- builders for stored records ----------
 export function anAssessment(verdict: Verdict): MatchAssessment {
-  return { gates: null, fit: null, confidence: null, quality: null, judgments: [], verdict, primaryReason: null, priority: 0, pointsToApply: null, lever: null };
+  return {
+    gates: null,
+    fit: null,
+    confidence: null,
+    quality: null,
+    judgments: [],
+    verdict,
+    primaryReason: null,
+    priority: 0,
+    pointsToApply: null,
+    lever: null,
+  };
 }
 export function aStoredMatch(o: Partial<StoredMatch> & Pick<StoredMatch, "personId" | "profileVersionKey" | "postingId">): StoredMatch {
   return {
-    postingRevision: 1, assessment: anAssessment("apply"), narration: { reason: "Strong fit", pointsToCapitalize: [] },
-    verdictChangedFrom: null, userState: "new", scoredAt: "2026-11-11T09:00:00.000Z", ...o,
+    postingRevision: 1,
+    assessment: anAssessment("apply"),
+    narration: { reason: "Strong fit", pointsToCapitalize: [] },
+    verdictChangedFrom: null,
+    userState: "new",
+    scoredAt: "2026-11-11T09:00:00.000Z",
+    ...o,
   };
 }
 export function aSearchRun(o: Partial<SearchRunRecord> & Pick<SearchRunRecord, "runId" | "personId">): SearchRunRecord {
   return {
-    trigger: "manual", startedAt: "2026-11-11T09:00:00.000Z", finishedAt: "2026-11-11T09:01:00.000Z", fetched: 0, duplicatesMerged: 0,
-    expiredDropped: 0, failedSources: [], widenedTo: [], costMicros: 0, ...o,
+    trigger: "manual",
+    startedAt: "2026-11-11T09:00:00.000Z",
+    finishedAt: "2026-11-11T09:01:00.000Z",
+    fetched: 0,
+    duplicatesMerged: 0,
+    expiredDropped: 0,
+    failedSources: [],
+    widenedTo: [],
+    costMicros: 0,
+    ...o,
   };
 }
 export function aSpendRecord(o: Partial<SpendRecord>): SpendRecord {
-  return { personId: null, runId: null, purpose: "search", category: "model", provider: "test-model", amountMicros: 1_000, at: "2026-11-11T09:00:00.000Z", ...o };
+  return {
+    personId: null,
+    runId: null,
+    purpose: "search",
+    category: "model",
+    provider: "test-model",
+    amountMicros: 1_000,
+    at: "2026-11-11T09:00:00.000Z",
+    ...o,
+  };
 }
 const versionOf = (personId: string, version: number, evidenceText = `evidence of ${personId} v${version}`): ProfileVersion =>
   aProfile({ personId, version, evidence: [{ id: "ev-1", source: "resume-line", text: evidenceText }] });
@@ -56,14 +103,20 @@ export function postingCatalogContract(name: string, make: Factory<PostingCatalo
     test("postingsByIds skips unknown ids", async () => {
       const store = await make();
       await store.save(aJobPosting({ id: "job-1" }), "k1");
-      assert.deepEqual((await store.postingsByIds(["job-x", "job-1"])).map((p) => p.id), ["job-1"]);
+      assert.deepEqual(
+        (await store.postingsByIds(["job-x", "job-1"])).map((p) => p.id),
+        ["job-1"],
+      );
     });
     test("markClosed removes a posting from openPostings", async () => {
       const store = await make();
       await store.save(aJobPosting({ id: "job-1" }), "k1");
       await store.save(aJobPosting({ id: "job-2" }), "k2");
       await store.markClosed("job-1");
-      assert.deepEqual((await store.openPostings()).map((p) => p.id), ["job-2"]);
+      assert.deepEqual(
+        (await store.openPostings()).map((p) => p.id),
+        ["job-2"],
+      );
     });
   });
 }
@@ -77,7 +130,9 @@ export function profileVersionsContract(name: string, make: Factory<ProfileVersi
     test("saveNewVersion makes the newest version active and keeps earlier ones", async () => {
       const store = await make();
       await store.saveNewVersion(versionOf("p-1", 1, "first-version-marker"), []);
-      await store.saveNewVersion(versionOf("p-1", 2, "second-version-marker"), [{ statement: "Led migrations", tier: "strong", evidenceId: "ev-1" }]);
+      await store.saveNewVersion(versionOf("p-1", 2, "second-version-marker"), [
+        { statement: "Led migrations", tier: "strong", evidenceId: "ev-1" },
+      ]);
       assert.equal((await store.active("p-1"))?.version, 2);
       assert.equal((await store.sellingPoints("p-1")).length, 1);
       const exported = new TextDecoder().decode(await store.exportAll("p-1"));
@@ -109,14 +164,24 @@ export function matchRecordsContract(name: string, make: Factory<MatchRecords>):
     });
     test("saveMatch then findMatch round-trips the match", async () => {
       const store = await make();
-      const match = aStoredMatch({ personId: "p-1", profileVersionKey: "profile-p-1@1", postingId: "job-1", verdictChangedFrom: "stretch", userState: "applied" });
+      const match = aStoredMatch({
+        personId: "p-1",
+        profileVersionKey: "profile-p-1@1",
+        postingId: "job-1",
+        verdictChangedFrom: "stretch",
+        userState: "applied",
+      });
       await store.saveMatch(match);
       assert.deepEqual(await store.findMatch("profile-p-1@1", "job-1", 1), match);
     });
     test("latestVerdictBefore ignores matches under the given profile version", async () => {
       const store = await make();
-      await store.saveMatch(aStoredMatch({ personId: "p-1", profileVersionKey: "profile-p-1@1", postingId: "job-1", assessment: anAssessment("stretch") }));
-      await store.saveMatch(aStoredMatch({ personId: "p-1", profileVersionKey: "profile-p-1@2", postingId: "job-1", assessment: anAssessment("apply") }));
+      await store.saveMatch(
+        aStoredMatch({ personId: "p-1", profileVersionKey: "profile-p-1@1", postingId: "job-1", assessment: anAssessment("stretch") }),
+      );
+      await store.saveMatch(
+        aStoredMatch({ personId: "p-1", profileVersionKey: "profile-p-1@2", postingId: "job-1", assessment: anAssessment("apply") }),
+      );
       assert.equal(await store.latestVerdictBefore("p-1", "job-1", "profile-p-1@2"), "stretch");
       assert.equal(await store.latestVerdictBefore("p-1", "job-1", "profile-p-1@1"), "apply");
       assert.equal(await store.latestVerdictBefore("p-1", "job-2", "profile-p-1@2"), null);
@@ -149,7 +214,10 @@ export function resultsReadModelContract(name: string, make: Factory<ResultsStor
     test("currentResults returns only matches for the active profile version", async () => {
       const store = await make();
       await twoVersionsWithMatches(store);
-      assert.deepEqual((await store.currentResults("p-1")).map((r) => r.postingId), ["job-2"]);
+      assert.deepEqual(
+        (await store.currentResults("p-1")).map((r) => r.postingId),
+        ["job-2"],
+      );
       assert.deepEqual(await store.currentResults("p-2"), []);
     });
     test("a result row carries the posting's and the match's fields", async () => {
@@ -275,7 +343,11 @@ export function usageLedgerContract(name: string, make: Factory<UsageLedger>): v
       await ledger.record("p-1", "onDemandSearches", new Date("2026-11-11T23:59:00.000Z"));
       assert.equal(await ledger.usedToday("p-1", "onDemandSearches", new Date("2026-11-11T00:00:00.000Z")), 1);
       assert.equal(await ledger.usedToday("p-1", "onDemandSearches", new Date("2026-11-12T00:00:00.000Z")), 0);
-      assert.equal(await ledger.usedToday("p-1", "onDemandSearches", new Date("2026-11-12T00:01:00.000+01:00")), 1, "23:01 UTC on the 11th");
+      assert.equal(
+        await ledger.usedToday("p-1", "onDemandSearches", new Date("2026-11-12T00:01:00.000+01:00")),
+        1,
+        "23:01 UTC on the 11th",
+      );
     });
   });
 }
@@ -317,7 +389,9 @@ export function sourceSwitchesContract(name: string, make: Factory<SourceSwitchC
       assert.equal(state?.enabled, false);
       assert.equal(state?.reason, "broken parser");
     });
-    test("states reports each source's real tier", { todo: "Phase 5 (P5-T03): InMemoryStore.setEnabled defaults the tier to 1" }, async () => {
+    test("states reports each source's real tier", {
+      todo: "Phase 5 (P5-T03): InMemoryStore.setEnabled defaults the tier to 1",
+    }, async () => {
       const control = await make();
       await control.setEnabled("aggregator-a", false, "too costly");
       assert.equal((await control.states()).find((s) => s.sourceName === "aggregator-a")?.tier, 3);

@@ -1,6 +1,10 @@
 import type { JobPosting, SourceLink } from "./job-posting.ts";
 
-const normalize = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+const normalize = (s: string) =>
+  s
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
 
 /** First-stage duplicate identity (PRD pipeline step 4): employer, title and location. */
 export function postingIdentityKey(p: Pick<JobPosting, "employer" | "title" | "location">): string {

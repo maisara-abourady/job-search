@@ -21,8 +21,11 @@ export class AsyncSpendMeter implements SpendMeter, SpendAttribution {
   async record(spend: Spend): Promise<void> {
     const to = this.current.getStore();
     await this.ledger.append({
-      personId: to?.personId ?? null, runId: to?.runId ?? null, purpose: to?.purpose ?? "unattributed",
-      ...spend, at: this.clock.now().toISOString(),
+      personId: to?.personId ?? null,
+      runId: to?.runId ?? null,
+      purpose: to?.purpose ?? "unattributed",
+      ...spend,
+      at: this.clock.now().toISOString(),
     });
   }
 }

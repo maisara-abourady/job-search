@@ -12,7 +12,10 @@ export class InProcessWorkQueue {
   run(task: string, work: () => Promise<unknown>): void {
     const p: Promise<void> = Promise.resolve()
       .then(work)
-      .then(() => undefined, (e: unknown) => this.onError(task, e))
+      .then(
+        () => undefined,
+        (e: unknown) => this.onError(task, e),
+      )
       .finally(() => this.pending.delete(p));
     this.pending.add(p);
   }

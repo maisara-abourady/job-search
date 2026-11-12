@@ -1,7 +1,5 @@
 /** One seniority ladder for profiles and postings (PRD: Hard gates). Ordered low to high. */
-export const SENIORITY_LADDER = [
-  "intern", "entry", "mid", "senior", "lead-or-staff", "manager", "director", "vp", "executive",
-] as const;
+export const SENIORITY_LADDER = ["intern", "entry", "mid", "senior", "lead-or-staff", "manager", "director", "vp", "executive"] as const;
 export type SeniorityLevel = (typeof SENIORITY_LADDER)[number];
 /** One or more adjacent levels (PF-3). */
 export type SeniorityBand = readonly SeniorityLevel[];

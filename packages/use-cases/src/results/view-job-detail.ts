@@ -12,7 +12,12 @@ export type ViewJobDetailResponse = {
     readonly fitPoints: Readonly<Record<string, number>> | null;
     readonly confidence: "high" | "medium" | "low" | null;
     readonly jobQuality: number | null;
-    readonly requirementTable: readonly { readonly requirement: string; readonly kind: "must-have" | "nice-to-have"; readonly judgment: "met" | "partial" | "missing"; readonly evidenceText: string | null }[];
+    readonly requirementTable: readonly {
+      readonly requirement: string;
+      readonly kind: "must-have" | "nice-to-have";
+      readonly judgment: "met" | "partial" | "missing";
+      readonly evidenceText: string | null;
+    }[];
   };
   readonly postingUrl: string;
 };

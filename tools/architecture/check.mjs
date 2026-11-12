@@ -7,11 +7,15 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 // The root is this repository unless `--root <dir>` or ARCH_ROOT names another workspace (the checker's own tests
 // use fixture workspaces). The architecture map is always read from <root>/tools/architecture/components.mjs.
 const rootArg = process.argv.indexOf("--root");
-const root = rootArg !== -1 ? resolve(process.argv[rootArg + 1])
-  : process.env.ARCH_ROOT ? resolve(process.env.ARCH_ROOT)
-  : resolve(dirname(fileURLToPath(import.meta.url)), "../..");
-const { AREAS, COMPONENTS, RESTRICTED_SUBPATHS, TYPE_ONLY_AREA_IMPORTS } =
-  await import(pathToFileURL(join(root, "tools/architecture/components.mjs")).href);
+const root =
+  rootArg !== -1
+    ? resolve(process.argv[rootArg + 1])
+    : process.env.ARCH_ROOT
+      ? resolve(process.env.ARCH_ROOT)
+      : resolve(dirname(fileURLToPath(import.meta.url)), "../..");
+const { AREAS, COMPONENTS, RESTRICTED_SUBPATHS, TYPE_ONLY_AREA_IMPORTS } = await import(
+  pathToFileURL(join(root, "tools/architecture/components.mjs")).href
+);
 const errors = [];
 const warn = [];
 
@@ -29,11 +33,23 @@ const typeOnly = (src, spec) => {
   const all = [...src.matchAll(new RegExp(`(import|export)\\s+(type\\s+)?[^;]*?from\\s+["']${esc}["']`, "g"))];
   return all.length > 0 && all.every((m) => m[2] !== undefined);
 };
-const packageOf = (spec) => spec.split("/").slice(0, spec.startsWith("@") ? 2 : 1).join("/");
+const packageOf = (spec) =>
+  spec
+    .split("/")
+    .slice(0, spec.startsWith("@") ? 2 : 1)
+    .join("/");
 
 const files = {}; // component -> [{ path, src }]
 for (const [name, c] of Object.entries(COMPONENTS)) {
-  const dirs = ["src", "test", "contract", "eval"].map((d) => join(root, c.dir, d)).filter((d) => { try { return statSync(d).isDirectory(); } catch { return false; } });
+  const dirs = ["src", "test", "contract", "eval"]
+    .map((d) => join(root, c.dir, d))
+    .filter((d) => {
+      try {
+        return statSync(d).isDirectory();
+      } catch {
+        return false;
+      }
+    });
   files[name] = dirs.flatMap(walk).map((path) => ({ path, src: readFileSync(path, "utf8") }));
 }
 
@@ -56,7 +72,8 @@ for (const [name, c] of Object.entries(COMPONENTS)) {
       if (spec.startsWith(".")) {
         const target = resolve(dirname(path), spec);
         if (!target.startsWith(join(root, c.dir) + sep)) errors.push(`${where}: relative import leaves the component: ${spec}`);
-        const from = areaOf(name, path), to = areaOf(name, target);
+        const from = areaOf(name, path),
+          to = areaOf(name, target);
         if (AREAS[name] && from && to && from !== to) {
           if (!(AREAS[name][from] ?? []).includes(to)) errors.push(`${where}: area "${from}" may not import area "${to}" (${spec})`);
           if (!areaEdges[name].has(from)) areaEdges[name].set(from, new Set());
@@ -90,7 +107,8 @@ for (const [name, c] of Object.entries(COMPONENTS)) {
   // Manifest must not grant more than the architecture allows (pnpm resolves only declared dependencies).
   const manifest = JSON.parse(readFileSync(join(root, c.dir, "package.json"), "utf8"));
   for (const dep of Object.keys(manifest.dependencies ?? {})) {
-    if (dep.startsWith("@matchmaker/") && !c.allowed.includes(dep)) errors.push(`${c.dir}/package.json: declares ${dep}, which ${name} may not depend on`);
+    if (dep.startsWith("@matchmaker/") && !c.allowed.includes(dep))
+      errors.push(`${c.dir}/package.json: declares ${dep}, which ${name} may not depend on`);
   }
 }
 
@@ -102,13 +120,20 @@ function findCycle(graph) {
     stack.push(n);
     for (const m of graph.get(n) ?? []) {
       if (state.get(m) === "open") return [...stack.slice(stack.indexOf(m)), m];
-      if (!state.has(m)) { const c = visit(m); if (c) return c; }
+      if (!state.has(m)) {
+        const c = visit(m);
+        if (c) return c;
+      }
     }
     stack.pop();
     state.set(n, "done");
     return null;
   };
-  for (const n of graph.keys()) if (!state.has(n)) { const c = visit(n); if (c) return c; }
+  for (const n of graph.keys())
+    if (!state.has(n)) {
+      const c = visit(n);
+      if (c) return c;
+    }
   return null;
 }
 const pkgCycle = findCycle(pkgEdges);
@@ -121,10 +146,15 @@ for (const [name, g] of Object.entries(areaEdges)) {
 // ---- metrics: I = Fan-out / (Fan-in + Fan-out); A = abstract / all declarations; D = |A + I - 1| ----
 const metrics = {};
 for (const name of Object.keys(COMPONENTS)) {
-  const src = files[name].filter((f) => f.path.includes(`${sep}src${sep}`)).map((f) => f.src).join("\n");
+  const src = files[name]
+    .filter((f) => f.path.includes(`${sep}src${sep}`))
+    .map((f) => f.src)
+    .join("\n");
   const na = (src.match(/^\s*export\s+interface\s/gm) ?? []).length + (src.match(/^\s*export\s+abstract\s+class\s/gm) ?? []).length;
-  const concrete = (src.match(/^\s*export\s+class\s/gm) ?? []).length + (src.match(/^\s*export\s+(?:async\s+)?function\s/gm) ?? []).length
-    + (src.match(/^\s*export\s+type\s+\w+(?:<[^>]*>)?\s*=/gm) ?? []).length;
+  const concrete =
+    (src.match(/^\s*export\s+class\s/gm) ?? []).length +
+    (src.match(/^\s*export\s+(?:async\s+)?function\s/gm) ?? []).length +
+    (src.match(/^\s*export\s+type\s+\w+(?:<[^>]*>)?\s*=/gm) ?? []).length;
   const I = fanIn[name] + fanOut[name] === 0 ? 0 : fanOut[name] / (fanIn[name] + fanOut[name]);
   const A = na + concrete === 0 ? 0 : na / (na + concrete);
   metrics[name] = { fanIn: fanIn[name], fanOut: fanOut[name], I, A, D: Math.abs(A + I - 1) };
@@ -134,7 +164,9 @@ for (const [from, tos] of pkgEdges) {
     // Tests and Main are the outermost, dirtiest components (§10.1, §10.3): nothing in production depends on them, so
     // their own I is not a stability anyone relies on (ADR 0010 records why Main is exempt as a source).
     if (metrics[from].I <= metrics[to].I && from !== "@matchmaker/testing-api" && COMPONENTS[from].circle !== "4 main") {
-      warn.push(`SDP: ${from} (I=${metrics[from].I.toFixed(2)}) depends on ${to} (I=${metrics[to].I.toFixed(2)}), which is not more stable`);
+      warn.push(
+        `SDP: ${from} (I=${metrics[from].I.toFixed(2)}) depends on ${to} (I=${metrics[to].I.toFixed(2)}), which is not more stable`,
+      );
     }
   }
 }
@@ -142,7 +174,9 @@ for (const [from, tos] of pkgEdges) {
 if (process.argv.includes("--metrics")) {
   console.log("component                       circle        fan-in fan-out    I     A     D");
   for (const [name, m] of Object.entries(metrics)) {
-    console.log(`${name.padEnd(31)} ${COMPONENTS[name].circle.padEnd(13)} ${String(m.fanIn).padStart(6)} ${String(m.fanOut).padStart(7)}  ${m.I.toFixed(2)}  ${m.A.toFixed(2)}  ${m.D.toFixed(2)}${m.D > 0.7 ? "  <- investigate" : ""}`);
+    console.log(
+      `${name.padEnd(31)} ${COMPONENTS[name].circle.padEnd(13)} ${String(m.fanIn).padStart(6)} ${String(m.fanOut).padStart(7)}  ${m.I.toFixed(2)}  ${m.A.toFixed(2)}  ${m.D.toFixed(2)}${m.D > 0.7 ? "  <- investigate" : ""}`,
+    );
   }
 }
 for (const w of warn) console.warn(`warning: ${w}`);
@@ -150,4 +184,6 @@ if (errors.length > 0) {
   for (const e of errors) console.error(`architecture violation: ${e}`);
   process.exit(1);
 }
-console.log(`architecture ok: ${Object.keys(COMPONENTS).length} components, ${Object.values(files).flat().length} files, no outward arrows, no cycles`);
+console.log(
+  `architecture ok: ${Object.keys(COMPONENTS).length} components, ${Object.values(files).flat().length} files, no outward arrows, no cycles`,
+);

@@ -1,6 +1,16 @@
 import {
-  AsyncSpendMeter, GreenhouseBoardSource, InMemoryProductEventLog, InMemorySpendLedger, InMemoryStore, InMemoryUsageLedger, IntervalTicker,
-  JsonArchiveVault, RandomIds, SystemClock, TemplateNarrator, UnchosenModelRuntime,
+  AsyncSpendMeter,
+  GreenhouseBoardSource,
+  InMemoryProductEventLog,
+  InMemorySpendLedger,
+  InMemoryStore,
+  InMemoryUsageLedger,
+  IntervalTicker,
+  JsonArchiveVault,
+  RandomIds,
+  SystemClock,
+  TemplateNarrator,
+  UnchosenModelRuntime,
 } from "@matchmaker/adapters";
 import { presentRunningCost } from "@matchmaker/delivery";
 import { composeMatchmaker } from "./compose-matchmaker.ts";
@@ -30,8 +40,10 @@ export const matchmaker = composeMatchmaker({
   spendLedger,
   spendAttribution: meter,
   personData: new JsonArchiveVault([
-    { section: "profile", vault: store }, { section: "dailyUsage", vault: usage },
-    { section: "spend", vault: spendLedger }, { section: "productEvents", vault: productEvents },
+    { section: "profile", vault: store },
+    { section: "dailyUsage", vault: usage },
+    { section: "spend", vault: spendLedger },
+    { section: "productEvents", vault: productEvents },
   ]),
   productEvents,
   clock,
@@ -71,7 +83,11 @@ if (import.meta.main) {
   } else if (command === undefined) {
     console.log("AI Job Matchmaker (dev):", Object.keys(matchmaker.useCases).join(", "));
     // Monitoring while the app runs: a catch-up tick now, then every MONITORING_TICK_MS. The dev run does not stay alive for it.
-    new IntervalTicker((e) => console.error("monitoring", e)).start(() => matchmaker.useCases.runDueMonitoring.execute(), MONITORING_TICK_MS, { keepProcessAlive: false });
+    new IntervalTicker((e) => console.error("monitoring", e)).start(
+      () => matchmaker.useCases.runDueMonitoring.execute(),
+      MONITORING_TICK_MS,
+      { keepProcessAlive: false },
+    );
   } else {
     console.error(`unknown command: ${command} (known: smoke)`);
     process.exitCode = 2;

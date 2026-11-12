@@ -27,7 +27,12 @@ export interface SetMonthlyBudget {
 }
 
 export class ViewRunningCostInteractor implements ViewRunningCost {
-  private readonly d: { people: PeopleForRunningCost; spend: Pick<SpendLedger, "spentBy" | "totalSpent">; budget: MonthlyBudgetControl; clock: Clock };
+  private readonly d: {
+    people: PeopleForRunningCost;
+    spend: Pick<SpendLedger, "spentBy" | "totalSpent">;
+    budget: MonthlyBudgetControl;
+    clock: Clock;
+  };
   constructor(dependencies: ViewRunningCostInteractor["d"]) {
     this.d = dependencies;
   }
@@ -35,15 +40,25 @@ export class ViewRunningCostInteractor implements ViewRunningCost {
     const { fromIso, toIso } = monthContaining(request.monthOf === undefined ? this.d.clock.now() : new Date(request.monthOf));
     const people = await this.d.people.all();
     const perPerson = await Promise.all(
-      people.map(async (p) => ({ personId: p.personId, displayName: p.displayName, spentMicros: await this.d.spend.spentBy(p.personId, fromIso, toIso) })),
+      people.map(async (p) => ({
+        personId: p.personId,
+        displayName: p.displayName,
+        spentMicros: await this.d.spend.spentBy(p.personId, fromIso, toIso),
+      })),
     );
     const totalMicros = await this.d.spend.totalSpent(fromIso, toIso);
     const budget = await this.d.budget.monthlyBudget();
     // The panel judges the month it shows; the guard always judges the current month.
     const status = budgetStatus(budget, totalMicros).kind;
     return {
-      fromIso, toIso, perPerson, otherMicros: totalMicros - perPerson.reduce((t, p) => t + p.spentMicros, 0), totalMicros,
-      budgetMicros: budget?.limitMicros ?? null, budget: status, monitoringPaused: status === "reached",
+      fromIso,
+      toIso,
+      perPerson,
+      otherMicros: totalMicros - perPerson.reduce((t, p) => t + p.spentMicros, 0),
+      totalMicros,
+      budgetMicros: budget?.limitMicros ?? null,
+      budget: status,
+      monitoringPaused: status === "reached",
     };
   }
 }

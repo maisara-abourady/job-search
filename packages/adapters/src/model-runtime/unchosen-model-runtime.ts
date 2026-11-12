@@ -1,5 +1,13 @@
 import { notYetBuilt, type JobPosting, type ScoringProfile } from "@matchmaker/rules";
-import type { Enrichment, FoundPosting, MatchJudge, PostingEnricher, RelevanceRanker, SearchPlan, SearchPlanner } from "@matchmaker/use-cases";
+import type {
+  Enrichment,
+  FoundPosting,
+  MatchJudge,
+  PostingEnricher,
+  RelevanceRanker,
+  SearchPlan,
+  SearchPlanner,
+} from "@matchmaker/use-cases";
 
 /**
  * Placeholder for the model runtime, which is a deferred decision (ADR 0003, docs/architecture/deferred.md):

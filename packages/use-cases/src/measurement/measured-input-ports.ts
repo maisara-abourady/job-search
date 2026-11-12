@@ -36,7 +36,12 @@ export class MeasuredListResults implements ListResults {
   async execute(request: ListResultsRequest): Promise<ListResultsResponse> {
     const response = await this.inner.execute(request);
     if (response.apply.length > 0) {
-      this.events.record({ name: "apply-verdict-shown", personId: request.personId, at: this.clock.now().toISOString(), applyCount: response.apply.length });
+      this.events.record({
+        name: "apply-verdict-shown",
+        personId: request.personId,
+        at: this.clock.now().toISOString(),
+        applyCount: response.apply.length,
+      });
     }
     return response;
   }
@@ -54,7 +59,12 @@ export class MeasuredRecordJobDecision implements RecordJobDecision {
   async execute(request: RecordJobDecisionRequest): Promise<void> {
     await this.inner.execute(request);
     if (request.decision === "applied") {
-      this.events.record({ name: "job-marked-applied", personId: request.personId, at: this.clock.now().toISOString(), postingId: request.postingId });
+      this.events.record({
+        name: "job-marked-applied",
+        personId: request.personId,
+        at: this.clock.now().toISOString(),
+        postingId: request.postingId,
+      });
     }
   }
 }

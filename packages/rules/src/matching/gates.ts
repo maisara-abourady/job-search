@@ -9,7 +9,8 @@ export type GateResults = { readonly authorization: GateResult; readonly seniori
 /** PRD: Hard gates, Work authorization. Authorization is used only as the user stated it. */
 export function authorizationGate(job: JobPosting, prefs: Preferences): GateResult {
   const text = job.authorization.postingText;
-  if (job.country !== null && prefs.authorizedCountries.includes(job.country)) return { outcome: "pass", decidingText: text ?? job.location };
+  if (job.country !== null && prefs.authorizedCountries.includes(job.country))
+    return { outcome: "pass", decidingText: text ?? job.location };
   if (job.authorization.kind === "sponsorship-offered" && prefs.acceptsSponsorship) return { outcome: "pass", decidingText: text };
   if (job.authorization.kind === "silent") return { outcome: "unknown", decidingText: null };
   return { outcome: "fail", decidingText: text };

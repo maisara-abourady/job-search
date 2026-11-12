@@ -10,7 +10,12 @@ export type ResultCardViewModel = {
   readonly badges: readonly string[];
   readonly showChangedFlag: boolean;
 };
-export type ResultsTabViewModel = { readonly id: "apply" | "within-reach" | "not-a-fit"; readonly label: string; readonly countLabel: string; readonly selected: boolean };
+export type ResultsTabViewModel = {
+  readonly id: "apply" | "within-reach" | "not-a-fit";
+  readonly label: string;
+  readonly countLabel: string;
+  readonly selected: boolean;
+};
 export type ResultsViewModel = {
   readonly tabs: readonly ResultsTabViewModel[];
   readonly applyCards: readonly ResultCardViewModel[];

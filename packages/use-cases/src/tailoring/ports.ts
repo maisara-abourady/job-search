@@ -14,7 +14,12 @@ export interface KeywordMatcher {
 }
 /** A model rewrites; the TailoringGuard in the rules decides whether the result may be shown. */
 export interface ResumeWriter {
-  rewrite(input: { profile: ScoringProfile; source: ResumeDocument; posting: JobPosting; confirmedKeywords: readonly { keyword: string; whereUsed: string }[] }): Promise<ResumeDocument>;
+  rewrite(input: {
+    profile: ScoringProfile;
+    source: ResumeDocument;
+    posting: JobPosting;
+    confirmedKeywords: readonly { keyword: string; whereUsed: string }[];
+  }): Promise<ResumeDocument>;
 }
 /** TR-5: ATS-safe single-column PDF and DOCX. */
 export interface ResumeRenderer {

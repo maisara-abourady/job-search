@@ -4,8 +4,20 @@ import { UseCaseError } from "../shared/errors.ts";
 import type { SpendAttribution, SpendLedger } from "../shared/metering.ts";
 import type { Clock, IdGenerator } from "../shared/ports.ts";
 import type {
-  AtsLinkRecognizer, CompanyRegistry, FoundPosting, JobSource, PostingCatalog, PostingEnricher, PostingLiveness,
-  ProfilesForSearch, RelevanceRanker, ScoringRequests, SearchPlanner, SearchQuery, SearchRuns, SourceSwitchboard,
+  AtsLinkRecognizer,
+  CompanyRegistry,
+  FoundPosting,
+  JobSource,
+  PostingCatalog,
+  PostingEnricher,
+  PostingLiveness,
+  ProfilesForSearch,
+  RelevanceRanker,
+  ScoringRequests,
+  SearchPlanner,
+  SearchQuery,
+  SearchRuns,
+  SourceSwitchboard,
 } from "./ports.ts";
 
 // ---- Input port and models (DS-1..DS-7; Flow 1 step 3, Flow 6) ----
@@ -74,7 +86,12 @@ export class RunJobSearchInteractor implements RunJobSearch {
   async execute(request: RunJobSearchRequest): Promise<RunJobSearchResponse> {
     // Running cost (ADR 0015): manual searches count against the daily cap; scheduled ones pause at the budget.
     if (request.trigger === "scheduled") await this.d.spending.beforeBackground(request.personId);
-    else await this.d.spending.beforeOnDemand(request.personId, request.trigger === "manual" ? "onDemandSearches" : null, request.overBudgetConfirmed === true);
+    else
+      await this.d.spending.beforeOnDemand(
+        request.personId,
+        request.trigger === "manual" ? "onDemandSearches" : null,
+        request.overBudgetConfirmed === true,
+      );
     const runId = this.d.ids.next("run");
     // Every source call, model call and awaited scoring call made by this run is charged to it (ADR 0010).
     return this.d.spend.charge({ personId: request.personId, runId, purpose: "search" }, () => this.run(runId, request));
@@ -120,8 +137,16 @@ export class RunJobSearchInteractor implements RunJobSearch {
       }
       const enrichment = await this.d.enricher.enrich(first);
       const posting: JobPosting = {
-        id: this.d.ids.next("job"), revision: 1, employer: first.employer, title: first.title, location: first.location,
-        description: first.description, postedAt: first.postedAt, status: "open", sources: links, ...enrichment,
+        id: this.d.ids.next("job"),
+        revision: 1,
+        employer: first.employer,
+        title: first.title,
+        location: first.location,
+        description: first.description,
+        postedAt: first.postedAt,
+        status: "open",
+        sources: links,
+        ...enrichment,
       };
       await this.d.catalog.save(posting, identityKey);
       runPostings.push(posting);
@@ -135,12 +160,27 @@ export class RunJobSearchInteractor implements RunJobSearch {
     const duplicatesMerged = fetched.found.length - groups.size;
     const costMicros = await this.d.spendLedger.spentOnRun(runId);
     await this.d.runs.record({
-      runId, personId: request.personId, trigger: request.trigger, startedAt, finishedAt: this.d.clock.now().toISOString(),
-      fetched: fetched.found.length, duplicatesMerged, expiredDropped, failedSources: fetched.failed, widenedTo, costMicros,
+      runId,
+      personId: request.personId,
+      trigger: request.trigger,
+      startedAt,
+      finishedAt: this.d.clock.now().toISOString(),
+      fetched: fetched.found.length,
+      duplicatesMerged,
+      expiredDropped,
+      failedSources: fetched.failed,
+      widenedTo,
+      costMicros,
     });
     return {
-      runId, fetched: fetched.found.length, duplicatesMerged, failedSources: fetched.failed, widenedTo,
-      sentToScoring: toScore.length, cutAtPrefilter: cut.length, costMicros,
+      runId,
+      fetched: fetched.found.length,
+      duplicatesMerged,
+      failedSources: fetched.failed,
+      widenedTo,
+      sentToScoring: toScore.length,
+      cutAtPrefilter: cut.length,
+      costMicros,
     };
   }
 
@@ -159,7 +199,10 @@ export class RunJobSearchInteractor implements RunJobSearch {
     const tier4Configured = this.d.sources.filter((s) => s.descriptor.tier === 4).length;
     const tier4Healthy = primary.filter((s) => s.descriptor.tier === 4 && !first.failed.includes(s.descriptor.name)).length;
     if (tier4Healthy === tier4Configured && tier4Configured > 0) return first;
-    const fallback = await this.query(enabled.filter((s) => s.descriptor.tier === 3), queries);
+    const fallback = await this.query(
+      enabled.filter((s) => s.descriptor.tier === 3),
+      queries,
+    );
     return { found: [...first.found, ...fallback.found], failed: [...first.failed, ...fallback.failed] };
   }
 

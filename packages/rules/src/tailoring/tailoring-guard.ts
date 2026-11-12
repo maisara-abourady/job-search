@@ -4,7 +4,13 @@
  */
 export type ResumeDocument = {
   readonly summary: string;
-  readonly roles: readonly { readonly employer: string; readonly title: string; readonly start: string; readonly end: string | null; readonly bullets: readonly string[] }[];
+  readonly roles: readonly {
+    readonly employer: string;
+    readonly title: string;
+    readonly start: string;
+    readonly end: string | null;
+    readonly bullets: readonly string[];
+  }[];
   readonly skills: readonly string[];
   readonly credentials: readonly { readonly name: string; readonly issuer: string; readonly year: string | null }[];
 };
@@ -39,7 +45,8 @@ export function checkTailoredResume(input: {
   }
   const tailoredText = JSON.stringify(tailored).toLowerCase();
   for (const k of input.absentKeywords) {
-    if (!input.confirmedKeywords.includes(k) && tailoredText.includes(k.toLowerCase())) v.push({ kind: "unconfirmed-keyword-added", detail: k });
+    if (!input.confirmedKeywords.includes(k) && tailoredText.includes(k.toLowerCase()))
+      v.push({ kind: "unconfirmed-keyword-added", detail: k });
   }
   return v;
 }

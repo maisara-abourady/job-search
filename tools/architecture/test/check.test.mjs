@@ -47,7 +47,10 @@ test("the clean fixture passes", () => {
 
 test("an outward arrow fails: use-cases importing adapters", () =>
   assertViolation(
-    { "packages/use-cases/src/alpha/outward.ts": 'import { MemoryStore } from "@matchmaker/adapters";\nexport const s = new MemoryStore();\n' },
+    {
+      "packages/use-cases/src/alpha/outward.ts":
+        'import { MemoryStore } from "@matchmaker/adapters";\nexport const s = new MemoryStore();\n',
+    },
     "packages/use-cases/src/alpha/outward.ts",
     /@matchmaker\/use-cases may not depend on @matchmaker\/adapters \(Dependency Rule\)/,
   ));
@@ -75,14 +78,20 @@ test("a cross-area import in use-cases fails", () =>
 
 test("@matchmaker/use-cases/wiring imported outside Main fails", () =>
   assertViolation(
-    { "packages/adapters/src/storage/wired.ts": 'import { wiredScore } from "@matchmaker/use-cases/wiring";\nexport const w = wiredScore;\n' },
+    {
+      "packages/adapters/src/storage/wired.ts":
+        'import { wiredScore } from "@matchmaker/use-cases/wiring";\nexport const w = wiredScore;\n',
+    },
     "packages/adapters/src/storage/wired.ts",
     /@matchmaker\/use-cases\/wiring is not published to @matchmaker\/adapters/,
   ));
 
 test("a relative import leaving its package fails", () =>
   assertViolation(
-    { "packages/adapters/src/storage/escape.ts": 'import { score } from "../../../use-cases/src/alpha/score.ts";\nexport const s = score;\n' },
+    {
+      "packages/adapters/src/storage/escape.ts":
+        'import { score } from "../../../use-cases/src/alpha/score.ts";\nexport const s = score;\n',
+    },
     "packages/adapters/src/storage/escape.ts",
     /relative import leaves the component/,
   ));
@@ -109,21 +118,30 @@ test("a package cycle fails", () =>
 
 test("an adapter subfolder importing another fails", () =>
   assertViolation(
-    { "packages/adapters/src/storage/timed.ts": 'import { SystemClock } from "../clock/system-clock.ts";\nexport const c = new SystemClock();\n' },
+    {
+      "packages/adapters/src/storage/timed.ts":
+        'import { SystemClock } from "../clock/system-clock.ts";\nexport const c = new SystemClock();\n',
+    },
     "packages/adapters/src/storage/timed.ts",
     /area "storage" may not import area "clock"/,
   ));
 
 test("a violation inside a contract/ directory fails", () =>
   assertViolation(
-    { "packages/use-cases/contract/store.contract.test.ts": 'import { MemoryStore } from "@matchmaker/adapters";\nexport const s = new MemoryStore();\n' },
+    {
+      "packages/use-cases/contract/store.contract.test.ts":
+        'import { MemoryStore } from "@matchmaker/adapters";\nexport const s = new MemoryStore();\n',
+    },
     "packages/use-cases/contract/store.contract.test.ts",
     /@matchmaker\/use-cases may not depend on @matchmaker\/adapters/,
   ));
 
 test("a violation inside an eval/ directory fails", () =>
   assertViolation(
-    { "apps/main/eval/reach-in.ts": 'import { MemoryStore } from "../../../packages/adapters/src/storage/memory-store.ts";\nexport const s = new MemoryStore();\n' },
+    {
+      "apps/main/eval/reach-in.ts":
+        'import { MemoryStore } from "../../../packages/adapters/src/storage/memory-store.ts";\nexport const s = new MemoryStore();\n',
+    },
     "apps/main/eval/reach-in.ts",
     /relative import leaves the component/,
   ));

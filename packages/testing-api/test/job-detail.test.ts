@@ -12,7 +12,9 @@ const judgment = {
     { requirementId: "r-cloud", judgment: "missing" as const, evidenceIds: [], closableByUser: false },
     { requirementId: "r-go", judgment: "partial" as const, evidenceIds: ["ev-ts"], closableByUser: true },
   ],
-  experienceRelevance: 0.9, skillsAndTools: 0.9, scopeAlignment: 0.8,
+  experienceRelevance: 0.9,
+  skillsAndTools: 0.9,
+  scopeAlignment: 0.8,
 };
 
 test("job detail links each point to capitalize and each judged requirement to its evidence text", async () => {
@@ -26,7 +28,10 @@ test("job detail links each point to capitalize and each judged requirement to i
   const detail = await api.jobDetail(u1, job.id);
 
   assert.deepEqual(detail.pointsToCapitalize[0], { point: "SQL", evidenceText: "Built SQL reporting for 40 stores" });
-  assert.deepEqual(detail.gaps, [{ requirement: "Cloud infrastructure", closable: false }, { requirement: "Go", closable: true }]);
+  assert.deepEqual(detail.gaps, [
+    { requirement: "Cloud infrastructure", closable: false },
+    { requirement: "Go", closable: true },
+  ]);
   const lead = detail.breakdown.requirementTable.find((r) => r.requirement === "Team leadership");
   assert.equal(lead?.evidenceText, "Managed a team of 6");
   assert.equal(detail.breakdown.requirementTable.find((r) => r.requirement === "Cloud infrastructure")?.evidenceText, null);
@@ -40,7 +45,9 @@ test("after Fix a fact, detail shows the corrected text only once the job is re-
   api.judgeWillSay(job.id, judgment);
   await api.scorePostings(u1, [job.id]);
 
-  await api.givenProfile(u1, { evidence: v1.evidence.map((e) => (e.id === "ev-sql" ? { ...e, text: "Built SQL reporting for 45 stores" } : e)) });
+  await api.givenProfile(u1, {
+    evidence: v1.evidence.map((e) => (e.id === "ev-sql" ? { ...e, text: "Built SQL reporting for 45 stores" } : e)),
+  });
   await assert.rejects(api.jobDetail(u1, job.id), /no result/, "results read only the active version's matches");
   await api.scorePostings(u1, [job.id]);
 

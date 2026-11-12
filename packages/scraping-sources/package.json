@@ -2,6 +2,11 @@
   "name": "@matchmaker/scraping-sources",
   "private": true,
   "type": "module",
-  "exports": { ".": "./src/index.ts" },
-  "dependencies": { "@matchmaker/rules": "workspace:*", "@matchmaker/use-cases": "workspace:*" }
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@matchmaker/rules": "workspace:*",
+    "@matchmaker/use-cases": "workspace:*"
+  }
 }

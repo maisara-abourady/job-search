@@ -26,7 +26,12 @@ export interface RunDueMonitoring {
   execute(): Promise<RunDueMonitoringResponse>;
 }
 export class RunDueMonitoringInteractor implements RunDueMonitoring {
-  private readonly d: { roster: MonitoringRoster; searches: MonitoringSearchRequests; spending: Pick<SpendingGuard, "monthlyBudgetReached">; clock: Clock };
+  private readonly d: {
+    roster: MonitoringRoster;
+    searches: MonitoringSearchRequests;
+    spending: Pick<SpendingGuard, "monthlyBudgetReached">;
+    clock: Clock;
+  };
   constructor(dependencies: RunDueMonitoringInteractor["d"]) {
     this.d = dependencies;
   }

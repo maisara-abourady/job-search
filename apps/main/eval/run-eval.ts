@@ -31,11 +31,21 @@ function parseOptions(args: readonly string[]): EvalOptions | string {
 function report(e: Evaluation, results: readonly CaseResult[], verdict: ThresholdResult, startedAt: string): string {
   const failed = results.filter((r) => !r.passed);
   return [
-    `# Evaluation: ${e.name}`, "", e.description, "", `- Started: ${startedAt}`, `- Result: ${verdict.passed ? "PASSED" : "FAILED"}`,
-    `- ${verdict.summary}`, "",
+    `# Evaluation: ${e.name}`,
+    "",
+    e.description,
+    "",
+    `- Started: ${startedAt}`,
+    `- Result: ${verdict.passed ? "PASSED" : "FAILED"}`,
+    `- ${verdict.summary}`,
+    "",
     ...(failed.length > 0 ? ["## Failed cases", "", ...failed.map((r) => `- **${r.id}**: ${r.detail}`), ""] : []),
-    "## All cases", "", "| Case | Passed | Detail |", "|------|--------|--------|",
-    ...results.map((r) => `| ${r.id} | ${r.passed ? "yes" : "no"} | ${r.detail} |`), "",
+    "## All cases",
+    "",
+    "| Case | Passed | Detail |",
+    "|------|--------|--------|",
+    ...results.map((r) => `| ${r.id} | ${r.passed ? "yes" : "no"} | ${r.detail} |`),
+    "",
   ].join("\n");
 }
 
