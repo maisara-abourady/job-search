@@ -1,8 +1,8 @@
 # Progress
 
 Current phase: 1 — Foundations (Phase 0 complete 2026-11-12)
-Next task: P1-T01 (Phase 1 runs in a fresh session)
-Last updated: 2026-11-12 by execution (Gate 0B approved)
+Next task: P1-T02
+Last updated: 2026-11-12 by execution (P1-T01)
 
 ## Status
 
@@ -32,7 +32,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (reason i
 - [x] H-4 Parsing thresholds confirmed (default accepted)
 
 ### Phase 1 — Foundations (exit: 20 resumes parse correctly)
-- [ ] P1-T01 In-memory resume files and onboarding storage contracts
+- [x] P1-T01 In-memory resume files and onboarding storage contracts
 - [ ] P1-T02 Wire intake and profile correction through Main and the testing API
 - [ ] P1-T03 Rules: choose 5 to 8 selling points and suggest a target seniority band
 - [ ] P1-T04 `IntakeResume` use case
@@ -131,6 +131,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (reason i
 - 2026-11-12 (S-1, owner): plan is Claude Ultra. "Help improve Claude" is currently ON, which breaks PRD Privacy 4; turning it off is part of H-2 and must happen before any real resume reaches the model (P1-T10, P1-T11). The owner accepts the cloud-session latency numbers as the S-1 latency answer. The owner will install and run the app on their machine at the end (ADR 0016) without working in the repository.
 - 2026-11-12 (P0-T10): `/architect` wrote ADR 0009. Every model port runs on Claude Code headless with the owner's subscription. Large (`sonnet`): ResumeAnalyst, SearchPlanner, MatchJudge, Interviewer, ResumeWriter. Small (`haiku`): PostingEnricher, KeywordMatcher. No model: DocumentReader, MatchNarrator, and RelevanceRanker (in-process lexical, D3). Package `@matchmaker/model-runtime-claude-code`. Spend is the per-call `total_cost_usd` estimate. Main refuses to start model calls without the training-off confirmation (Privacy 4). New watch items W17 (one-posting-at-a-time enrichment and judging may miss the 60 s first result: decide before P2-T13), W18 (subscription usage limits), W19 (Claude Code self-updates). D1 and D3 decided in deferred.md; ADRs 0002, 0003, 0015 and 0016 carry an "amended by ADR 0009" line.
 - 2026-11-12 (H-2): the owner turned "Help improve Claude" off (Privacy 4). Real resumes may now be sent to the model.
+- 2026-11-12 (P1-T01): `InMemoryResumeFiles` (`packages/adapters/src/in-memory/in-memory-resume-files.ts`) keeps every upload as a numbered version and is a `PersonDataVault` part (export lists each version's id, version, time, kind, file name and size; the bytes are not exported). It joins the `JsonArchiveVault` as section `resumeFiles` in `main.dev.ts` and the testing API. Contract: `resumeFilesContract` (3 cases), a `sellingPoints` case in `profileVersionsContract`, and the vault suite on the new store and inside the composed vault. `pnpm test:contract`: 45 pass, 1 todo; `pnpm verify` green.
 
 ## Deviations log
 
@@ -154,3 +155,4 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (reason i
 | 2026-11-12 | S-1 | Spike code is on the working branch (`tools/spikes/s1/`, results gitignored), not a throwaway branch; first run in the cloud session, confirmation run on the owner's machine | The owner must be able to fetch and run it; this session may push only to its working branch |
 | 2026-11-12 | P1-T10 | Package fixed to `packages/model-runtime-claude-code`; no-training criterion now the start-up refusal plus the H-2 date; new criterion to confirm the sign-in check and settings-isolation flag against current docs | ADR 0009 |
 | 2026-11-12 | P2-T11, P2-T12, P2-T13, P4-T04, P6-T03, P6-T08 | To apply when Phase 2 is re-read at Gate 1 and later phases are detailed: P2-T11/P2-T12 make enrichment and judging concurrent in the use cases (runner bounds at `maxConcurrentCalls`, default 5); P2-T13 ranker is lexical in `packages/adapters/src/relevance/` with no spend line; decide W17 before P2-T13; P4-T04 deletes `UnchosenModelRuntime` and the adapters' `model-runtime` area; P6-T03/P6-T08 label model spend as an estimate and the README states the training rule | ADR 0009 hand-offs |
+| 2026-11-12 | P1-T01 | `ResumeFiles` port gained `original(personId, resumeId)` | The acceptance criterion "both remain retrievable" cannot be checked through a port that only stores; tailoring (Phase 4) needs to read the original back anyway |

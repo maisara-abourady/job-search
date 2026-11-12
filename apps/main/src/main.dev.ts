@@ -2,6 +2,7 @@ import {
   AsyncSpendMeter,
   GreenhouseBoardSource,
   InMemoryProductEventLog,
+  InMemoryResumeFiles,
   InMemorySpendLedger,
   InMemoryStore,
   InMemoryUsageLedger,
@@ -25,6 +26,7 @@ const usage = new InMemoryUsageLedger();
 const clock = new SystemClock();
 const spendLedger = new InMemorySpendLedger();
 const productEvents = new InMemoryProductEventLog();
+const resumeFiles = new InMemoryResumeFiles(() => clock.now());
 // ADR 0010: every adapter that spends money gets this meter in its constructor (none does yet: Greenhouse is free).
 const meter = new AsyncSpendMeter(spendLedger, clock);
 const models = new UnchosenModelRuntime();
@@ -41,6 +43,7 @@ export const matchmaker = composeMatchmaker({
   spendAttribution: meter,
   personData: new JsonArchiveVault([
     { section: "profile", vault: store },
+    { section: "resumeFiles", vault: resumeFiles },
     { section: "dailyUsage", vault: usage },
     { section: "spend", vault: spendLedger },
     { section: "productEvents", vault: productEvents },

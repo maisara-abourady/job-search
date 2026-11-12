@@ -19,6 +19,8 @@ import type {
   PostingsForScoring,
   ProfileVersions,
   ResultsReadModel,
+  ResumeFiles,
+  ResumeUpload,
   SearchRunRecord,
   SearchRuns,
   SourceSwitchControl,
@@ -145,6 +147,51 @@ export function profileVersionsContract(name: string, make: Factory<ProfileVersi
       await store.saveNewVersion(versionOf("p-2", 4), []);
       assert.equal((await store.active("p-1"))?.version, 1);
       assert.equal((await store.active("p-2"))?.version, 4);
+    });
+    test("sellingPoints are those saved with the latest version, and none for an unknown person", async () => {
+      const store = await make();
+      await store.saveNewVersion(versionOf("p-1", 1), [{ statement: "Old point", tier: "supporting", evidenceId: "ev-1" }]);
+      const latest = [
+        { statement: "Cut costs by a third", tier: "signature", evidenceId: "ev-2" },
+        { statement: "Led migrations", tier: "strong", evidenceId: "ev-1" },
+      ] as const;
+      await store.saveNewVersion(versionOf("p-1", 2), latest);
+      assert.deepEqual(await store.sellingPoints("p-1"), latest);
+      assert.deepEqual(await store.sellingPoints("p-unknown"), []);
+    });
+  });
+}
+
+// ---------- ResumeFiles ----------
+export function aResumeFile(fileName: string, text = `text of ${fileName}`): ResumeUpload {
+  return { kind: "pdf", fileName, bytes: new TextEncoder().encode(text), text: null };
+}
+export function resumeFilesContract(name: string, make: Factory<ResumeFiles>): void {
+  describe(`${name}: ResumeFiles`, () => {
+    test("each upload is a new version with its own id, and every version stays retrievable (RP-8)", async () => {
+      const files = await make();
+      const first = await files.store("p-1", aResumeFile("first.pdf", "first-upload-content"));
+      const second = await files.store("p-1", aResumeFile("second.pdf", "second-upload-content"));
+      assert.equal(first.version, 1);
+      assert.equal(second.version, 2);
+      assert.notEqual(first.resumeId, second.resumeId);
+      const text = (u: ResumeUpload | null) => new TextDecoder().decode(u?.bytes ?? new Uint8Array());
+      assert.equal(text(await files.original("p-1", first.resumeId)), "first-upload-content");
+      assert.equal(text(await files.original("p-1", second.resumeId)), "second-upload-content");
+      assert.equal((await files.original("p-1", second.resumeId))?.fileName, "second.pdf");
+    });
+    test("versions are counted per person, and one person cannot read another's resume", async () => {
+      const files = await make();
+      const ana = await files.store("p-ana", aResumeFile("ana.pdf"));
+      const ben = await files.store("p-ben", aResumeFile("ben.pdf"));
+      assert.equal(ben.version, 1);
+      assert.equal(await files.original("p-ben", ana.resumeId), null);
+      assert.equal(await files.original("p-ana", "no-such-resume"), null);
+    });
+    test("pasted text is kept as text", async () => {
+      const files = await make();
+      const { resumeId } = await files.store("p-1", { kind: "text", fileName: "pasted.txt", bytes: null, text: "Pasted resume" });
+      assert.equal((await files.original("p-1", resumeId))?.text, "Pasted resume");
     });
   });
 }

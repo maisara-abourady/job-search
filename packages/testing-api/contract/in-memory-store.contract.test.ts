@@ -1,8 +1,16 @@
 import assert from "node:assert/strict";
-import { InMemoryProductEventLog, InMemorySpendLedger, InMemoryStore, InMemoryUsageLedger, JsonArchiveVault } from "@matchmaker/adapters";
+import {
+  InMemoryProductEventLog,
+  InMemoryResumeFiles,
+  InMemorySpendLedger,
+  InMemoryStore,
+  InMemoryUsageLedger,
+  JsonArchiveVault,
+} from "@matchmaker/adapters";
 import { profileVersionKey } from "@matchmaker/rules";
 import { aJobPosting, aProfile } from "../src/builders.ts";
 import {
+  aResumeFile,
   aSearchRun,
   aSpendRecord,
   aStoredMatch,
@@ -14,6 +22,7 @@ import {
   postingCatalogContract,
   profileVersionsContract,
   resultsReadModelContract,
+  resumeFilesContract,
   sourceSwitchesContract,
   spendLedgerContract,
   usageLedgerContract,
@@ -32,6 +41,7 @@ monthlyBudgetContract("InMemoryStore", store);
 sourceSwitchesContract("InMemoryStore", store);
 usageLedgerContract("InMemoryUsageLedger", () => new InMemoryUsageLedger());
 spendLedgerContract("InMemorySpendLedger", () => new InMemorySpendLedger());
+resumeFilesContract("InMemoryResumeFiles", () => new InMemoryResumeFiles());
 
 // ---------- every store that holds a person's data ----------
 const at = "2026-11-11T09:00:00.000Z";
@@ -51,6 +61,12 @@ async function seedStore(s: InMemoryStore, personId: string): Promise<string[]> 
 async function seedUsage(u: InMemoryUsageLedger, personId: string): Promise<string[]> {
   await u.record(personId, "onDemandSearches", new Date(at));
   return [personId];
+}
+/** Two versions; the export lists both versions' metadata (file names are the markers). */
+async function seedResumes(f: InMemoryResumeFiles, personId: string): Promise<string[]> {
+  await f.store(personId, aResumeFile(`first-resume-of-${personId}.pdf`));
+  await f.store(personId, aResumeFile(`second-resume-of-${personId}.pdf`));
+  return [`first-resume-of-${personId}.pdf`, `second-resume-of-${personId}.pdf`];
 }
 async function seedSpend(l: InMemorySpendLedger, personId: string): Promise<string[]> {
   await l.append(aSpendRecord({ personId, runId: `spend-run-of-${personId}`, amountMicros: 5_000 }));
@@ -79,14 +95,32 @@ personDataVaultContract("InMemorySpendLedger", (): VaultUnderTest => {
   const l = new InMemorySpendLedger();
   return { vault: l, seed: (id) => seedSpend(l, id), afterErase: spendKept(l) };
 });
+personDataVaultContract("InMemoryResumeFiles", (): VaultUnderTest => {
+  const f = new InMemoryResumeFiles();
+  return {
+    vault: f,
+    seed: (id) => seedResumes(f, id),
+    afterErase: async (id) => {
+      const text = new TextDecoder().decode(await f.exportAll(id));
+      assert.doesNotMatch(text, /resume-of/, "no version of the erased person's resumes is listed");
+    },
+  };
+});
 personDataVaultContract("InMemoryProductEventLog", (): VaultUnderTest => {
   const e = new InMemoryProductEventLog();
   return { vault: e, seed: (id) => seedEvents(e, id) };
 });
 personDataVaultContract("JsonArchiveVault over the in-memory stores", (): VaultUnderTest => {
-  const [s, u, l, e] = [new InMemoryStore(), new InMemoryUsageLedger(), new InMemorySpendLedger(), new InMemoryProductEventLog()];
+  const [s, u, l, e, f] = [
+    new InMemoryStore(),
+    new InMemoryUsageLedger(),
+    new InMemorySpendLedger(),
+    new InMemoryProductEventLog(),
+    new InMemoryResumeFiles(),
+  ];
   const vault = new JsonArchiveVault([
     { section: "profile", vault: s },
+    { section: "resumeFiles", vault: f },
     { section: "dailyUsage", vault: u },
     { section: "spend", vault: l },
     { section: "productEvents", vault: e },
@@ -96,7 +130,7 @@ personDataVaultContract("JsonArchiveVault over the in-memory stores", (): VaultU
     // The archive names the person at its top level, so its markers are each part's own content, not the id.
     seed: async (id) => {
       await seedUsage(u, id); // its only marker is the id, which the archive header always carries; afterErase checks it
-      return [...(await seedStore(s, id)), ...(await seedSpend(l, id)), ...(await seedEvents(e, id))];
+      return [...(await seedStore(s, id)), ...(await seedSpend(l, id)), ...(await seedEvents(e, id)), ...(await seedResumes(f, id))];
     },
     afterErase: async (id) => {
       await spendKept(l)(id);

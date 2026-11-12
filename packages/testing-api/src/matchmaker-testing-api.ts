@@ -8,6 +8,7 @@ import {
 import {
   AsyncSpendMeter,
   InMemoryProductEventLog,
+  InMemoryResumeFiles,
   InMemorySpendLedger,
   InMemoryStore,
   InMemoryUsageLedger,
@@ -50,6 +51,7 @@ export class MatchmakerTestingApi {
   private readonly usage = new InMemoryUsageLedger();
   private readonly spendLedger = new InMemorySpendLedger();
   private readonly events = new InMemoryProductEventLog();
+  private readonly resumeFiles = new InMemoryResumeFiles(() => new Date(this.nowIso));
   /** The meter scripted details report spend to, exactly as real adapters will (ADR 0010). */
   private readonly meter: AsyncSpendMeter;
   private judgeSpendMicros = 0;
@@ -83,6 +85,7 @@ export class MatchmakerTestingApi {
       spendAttribution: this.meter,
       personData: new JsonArchiveVault([
         { section: "profile", vault: this.store },
+        { section: "resumeFiles", vault: this.resumeFiles },
         { section: "dailyUsage", vault: this.usage },
         { section: "spend", vault: this.spendLedger },
         { section: "productEvents", vault: this.events },

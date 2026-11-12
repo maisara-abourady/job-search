@@ -62,8 +62,11 @@ export interface Interviewer {
   evidenceFrom(turn: InterviewTurn): Promise<readonly Evidence[]>;
 }
 
+/** RP-8: every upload is kept as its own version; nothing is overwritten. */
 export interface ResumeFiles {
   store(personId: string, upload: ResumeUpload): Promise<{ resumeId: string; version: number }>;
+  /** The original as uploaded, or null if this person has no such resume (tailoring and export read it back). */
+  original(personId: string, resumeId: string): Promise<ResumeUpload | null>;
 }
 export interface ProfileVersions {
   active(personId: string): Promise<ProfileVersion | null>;
