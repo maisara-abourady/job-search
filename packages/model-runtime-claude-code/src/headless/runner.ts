@@ -57,7 +57,9 @@ export class HeadlessRunner {
 
   /** The arguments of one call (exported for the contract test that pins the privacy flags). */
   argumentsFor(c: HeadlessCall): string[] {
+    const effort = this.config.portEffort?.[c.port];
     return [
+      ...(effort === undefined ? [] : ["--effort", effort]),
       "-p",
       "--output-format",
       "json",

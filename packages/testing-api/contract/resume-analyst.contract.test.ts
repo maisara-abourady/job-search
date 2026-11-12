@@ -6,20 +6,23 @@ import { resumeAnalystContract } from "./resume-analyst.contract.ts";
 /** Claude Code's envelopes for a fictional resume, replayed by call order (no CLI or sign-in needed). */
 const recorded = JSON.parse(readFileSync(new URL("./fixtures/analyst-recorded-response.json", import.meta.url), "utf8")) as {
   resumeText: string;
-  calls: { structured_output: unknown }[];
+  calls: Record<"roles" | "skills" | "candidates" | "strength", { structured_output: unknown }>;
 };
 
-/** Replays the recorded envelope whose schema matches the call (structure, candidates or strength). */
+/** Replays the recorded envelope whose schema matches the call (roles, skills, candidates or strength). */
 export function replayingLauncher(): ProcessLauncher {
   return {
     run: async (_command, args) => {
       const schema = JSON.parse(args[args.indexOf("--json-schema") + 1] ?? "{}") as { properties: Record<string, unknown> };
+      const p = schema.properties;
       const call =
-        "candidates" in schema.properties
-          ? recorded.calls[1]
-          : "impactEvidence" in schema.properties
-            ? recorded.calls[2]
-            : recorded.calls[0];
+        "roles" in p
+          ? recorded.calls.roles
+          : "skills" in p
+            ? recorded.calls.skills
+            : "candidates" in p
+              ? recorded.calls.candidates
+              : recorded.calls.strength;
       return { exitCode: 0, stdout: JSON.stringify(call), stderr: "", timedOut: false };
     },
   };

@@ -91,6 +91,7 @@ export function loadModelRuntimeConfig(source: ConfigSource): ClaudeCodeRuntimeC
       small: get(s.small.name) ?? CLAUDE_CODE_DEFAULTS.tierAliases.small,
     },
     portTiers: CLAUDE_CODE_DEFAULTS.portTiers,
+    portEffort: CLAUDE_CODE_DEFAULTS.portEffort,
     maxConcurrentCalls: count(s.concurrency, CLAUDE_CODE_DEFAULTS.maxConcurrentCalls),
     callTimeoutMs: count(s.timeout, CLAUDE_CODE_DEFAULTS.callTimeoutMs / 1000) * 1000,
     modelTrainingOffConfirmed: trainingOff ?? null,

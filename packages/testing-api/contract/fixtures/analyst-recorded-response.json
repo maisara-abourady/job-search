@@ -1,28 +1,223 @@
 {
-  "resumeText": "LENA VOSS (fictional sample)\nBerlin, Germany \u00b7 lena.voss@example.com\n\nSUMMARY\nBackend engineer with 7 years building data-heavy web services.\n\nEXPERIENCE\nSenior Software Engineer \u2014 Kestrel Logistics GmbH, Berlin \u2014 03/2022 to present\n- Led migration of the shipment-tracking API from a Python monolith to TypeScript services; p95 latency fell from 900 ms to 180 ms.\n- Designed the PostgreSQL partitioning scheme for 2 billion tracking events.\n- Mentored 4 engineers; ran the team's hiring loop for 2 years.\n\nSoftware Engineer \u2014 Pixelgrove Studios, Hamburg \u2014 06/2018 to 02/2022\n- Built the billing service in Node.js handling 30k invoices a month.\n- Introduced end-to-end tests that cut production incidents by 40%.\n\nJunior Developer \u2014 Pixelgrove Studios, Hamburg \u2014 09/2017 to 05/2018\n- Maintained internal admin tools (PHP, MySQL).\n\nEDUCATION\nB.Sc. Computer Science \u2014 University of Hamburg \u2014 2017\n\nSKILLS\nTypeScript, Node.js, PostgreSQL, Python, AWS (ECS, RDS), Docker, Terraform\nLANGUAGES: German (native), English (fluent)\n",
-  "calls": [
-    {
+  "note": "Recorded 2026-11-12 from Claude Code 2.1.322 (claude -p, sonnet alias, --effort low, prompts analyst-4) on the fictional sample tools/spikes/s1/samples/resume-a.txt. One envelope per call kind: roles, skills, candidates, strength. Fictional data only.",
+  "resumeText": "LENA VOSS (fictional sample)\nBerlin, Germany · lena.voss@example.com\n\nSUMMARY\nBackend engineer with 7 years building data-heavy web services.\n\nEXPERIENCE\nSenior Software Engineer — Kestrel Logistics GmbH, Berlin — 03/2022 to present\n- Led migration of the shipment-tracking API from a Python monolith to TypeScript services; p95 latency fell from 900 ms to 180 ms.\n- Designed the PostgreSQL partitioning scheme for 2 billion tracking events.\n- Mentored 4 engineers; ran the team's hiring loop for 2 years.\n\nSoftware Engineer — Pixelgrove Studios, Hamburg — 06/2018 to 02/2022\n- Built the billing service in Node.js handling 30k invoices a month.\n- Introduced end-to-end tests that cut production incidents by 40%.\n\nJunior Developer — Pixelgrove Studios, Hamburg — 09/2017 to 05/2018\n- Maintained internal admin tools (PHP, MySQL).\n\nEDUCATION\nB.Sc. Computer Science — University of Hamburg — 2017\n\nSKILLS\nTypeScript, Node.js, PostgreSQL, Python, AWS (ECS, RDS), Docker, Terraform\nLANGUAGES: German (native), English (fluent)\n",
+  "calls": {
+    "skills": {
       "type": "result",
       "subtype": "success",
       "is_error": false,
-      "duration_ms": 9335,
-      "duration_api_ms": 9211,
+      "duration_ms": 1920,
+      "duration_api_ms": 1789,
       "num_turns": 2,
-      "result": "{\"name\":\"LENA VOSS\",\"evidence\":[{\"id\":\"e1\",\"text\":\"Backend engineer with 7 years building data-heavy web services.\"},{\"id\":\"e2\",\"text\":\"Led migration of the shipment-tracking API from a Python monolith to TypeScript services; p95 latency fell from 900 ms to 180 ms.\"},{\"id\":\"e3\",\"text\":\"Designed the PostgreSQL partitioning scheme for 2 billion tracking events.\"},{\"id\":\"e4\",\"text\":\"Mentored 4 engineers; ran the team's hiring loop for 2 years.\"},{\"id\":\"e5\",\"text\":\"Built the billing service in Node.js handling 30k invoices a month.\"},{\"id\":\"e6\",\"text\":\"Introduced end-to-end tests that cut production incidents by 40%.\"},{\"id\":\"e7\",\"text\":\"Maintained internal admin tools (PHP, MySQL).\"},{\"id\":\"e8\",\"text\":\"TypeScript, Node.js, PostgreSQL, Python, AWS (ECS, RDS), Docker, Terraform\"}],\"roles\":[{\"employer\":\"Kestrel Logistics GmbH\",\"title\":\"Senior Software Engineer\",\"start\":\"2022-03\",\"end\":null,\"achievementEvidenceIds\":[\"e2\",\"e3\",\"e4\"]},{\"employer\":\"Pixelgrove Studios\",\"title\":\"Software Engineer\",\"start\":\"2018-06\",\"end\":\"2022-02\",\"achievementEvidenceIds\":[\"e5\",\"e6\"]},{\"employer\":\"Pixelgrove Studios\",\"title\":\"Junior Developer\",\"start\":\"2017-09\",\"end\":\"2018-05\",\"achievementEvidenceIds\":[\"e7\"]}],\"skills\":[{\"name\":\"TypeScript\",\"evidenceIds\":[\"e2\",\"e8\"]},{\"name\":\"Node.js\",\"evidenceIds\":[\"e5\",\"e8\"]},{\"name\":\"PostgreSQL\",\"evidenceIds\":[\"e3\",\"e8\"]},{\"name\":\"Python\",\"evidenceIds\":[\"e2\",\"e8\"]},{\"name\":\"AWS\",\"evidenceIds\":[\"e8\"]},{\"name\":\"ECS\",\"evidenceIds\":[\"e8\"]},{\"name\":\"RDS\",\"evidenceIds\":[\"e8\"]},{\"name\":\"Docker\",\"evidenceIds\":[\"e8\"]},{\"name\":\"Terraform\",\"evidenceIds\":[\"e8\"]},{\"name\":\"PHP\",\"evidenceIds\":[\"e7\"]},{\"name\":\"MySQL\",\"evidenceIds\":[\"e7\"]},{\"name\":\"end-to-end tests\",\"evidenceIds\":[\"e6\"]}],\"credentials\":[{\"kind\":\"degree\",\"name\":\"B.Sc. Computer Science\",\"issuer\":\"University of Hamburg\",\"year\":\"2017\"}],\"languages\":[\"de\",\"en\"],\"inferredSeniority\":\"senior\"}",
-      "total_cost_usd": 0.030166000000000002,
+      "result": "{\"skills\":[{\"name\":\"Python\",\"line\":9},{\"name\":\"TypeScript\",\"line\":9},{\"name\":\"PostgreSQL\",\"line\":10},{\"name\":\"Node.js\",\"line\":14},{\"name\":\"end-to-end tests\",\"line\":15},{\"name\":\"PHP\",\"line\":18},{\"name\":\"MySQL\",\"line\":18},{\"name\":\"AWS\",\"line\":24},{\"name\":\"ECS\",\"line\":24},{\"name\":\"RDS\",\"line\":24},{\"name\":\"Docker\",\"line\":24},{\"name\":\"Terraform\",\"line\":24}]}",
+      "total_cost_usd": 0.0097833,
       "modelUsage": {
         "claude-sonnet-5-5": {
           "inputTokens": 2,
-          "outputTokens": 1667,
-          "cacheReadInputTokens": 0,
-          "cacheCreationInputTokens": 3373,
+          "outputTokens": 221,
+          "cacheReadInputTokens": 613,
+          "cacheCreationInputTokens": 1877,
           "webSearchRequests": 0,
-          "costUSD": 0.030166000000000002,
+          "costUSD": 0.0097833,
           "contextWindow": 1000000,
           "maxOutputTokens": 128000,
-          "thinkingTokens": 606,
+          "thinkingTokens": 0,
           "cacheCreationEphemeral5mInputTokens": 0,
-          "cacheCreationEphemeral1hInputTokens": 3373,
+          "cacheCreationEphemeral1hInputTokens": 1877,
+          "canonicalModel": "claude-sonnet-5-5",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "structured_output": {
+        "skills": [
+          {
+            "name": "Python",
+            "line": 9
+          },
+          {
+            "name": "TypeScript",
+            "line": 9
+          },
+          {
+            "name": "PostgreSQL",
+            "line": 10
+          },
+          {
+            "name": "Node.js",
+            "line": 14
+          },
+          {
+            "name": "end-to-end tests",
+            "line": 15
+          },
+          {
+            "name": "PHP",
+            "line": 18
+          },
+          {
+            "name": "MySQL",
+            "line": 18
+          },
+          {
+            "name": "AWS",
+            "line": 24
+          },
+          {
+            "name": "ECS",
+            "line": 24
+          },
+          {
+            "name": "RDS",
+            "line": 24
+          },
+          {
+            "name": "Docker",
+            "line": 24
+          },
+          {
+            "name": "Terraform",
+            "line": 24
+          }
+        ]
+      }
+    },
+    "strength": {
+      "type": "result",
+      "subtype": "success",
+      "is_error": false,
+      "duration_ms": 3018,
+      "duration_api_ms": 2879,
+      "num_turns": 2,
+      "result": "{\"impactEvidence\":0.71,\"skillsDepth\":0.6,\"clarityAndStructure\":0.85,\"careerTrajectory\":0.85,\"atsReadability\":0.92,\"topFixes\":[\"Add measurable results to the unquantified bullets (lines 11, 18, and the outcome of line 10), such as query speedups, hiring numbers, or tools usage.\",\"Show Terraform, AWS (ECS, RDS), and Docker in experience bullets, since lines 9-18 never mention them and the Skills list (line 24) is their only evidence.\",\"Expand the one-line summary (line 5) to state scope, domain strengths, and key achievements, and add a bullet for the Junior Developer role showing outcomes.\"]}",
+      "total_cost_usd": 0.0112721,
+      "modelUsage": {
+        "claude-sonnet-5-5": {
+          "inputTokens": 2,
+          "outputTokens": 368,
+          "cacheReadInputTokens": 921,
+          "cacheCreationInputTokens": 1874,
+          "webSearchRequests": 0,
+          "costUSD": 0.0112721,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 128000,
+          "thinkingTokens": 0,
+          "cacheCreationEphemeral5mInputTokens": 0,
+          "cacheCreationEphemeral1hInputTokens": 1874,
+          "canonicalModel": "claude-sonnet-5-5",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "structured_output": {
+        "impactEvidence": 0.71,
+        "skillsDepth": 0.6,
+        "clarityAndStructure": 0.85,
+        "careerTrajectory": 0.85,
+        "atsReadability": 0.92,
+        "topFixes": [
+          "Add measurable results to the unquantified bullets (lines 11, 18, and the outcome of line 10), such as query speedups, hiring numbers, or tools usage.",
+          "Show Terraform, AWS (ECS, RDS), and Docker in experience bullets, since lines 9-18 never mention them and the Skills list (line 24) is their only evidence.",
+          "Expand the one-line summary (line 5) to state scope, domain strengths, and key achievements, and add a bullet for the Junior Developer role showing outcomes."
+        ]
+      }
+    },
+    "candidates": {
+      "type": "result",
+      "subtype": "success",
+      "is_error": false,
+      "duration_ms": 3265,
+      "duration_api_ms": 3127,
+      "num_turns": 2,
+      "result": "{\"candidates\":[{\"statement\":\"Cut p95 latency of the shipment-tracking API from 900 ms to 180 ms while migrating from a Python monolith to TypeScript services\",\"line\":9,\"quantified\":true,\"withinLastThreeYears\":true,\"uncommonForRole\":true},{\"statement\":\"Designed the PostgreSQL partitioning scheme for 2 billion tracking events\",\"line\":10,\"quantified\":true,\"withinLastThreeYears\":true,\"uncommonForRole\":true},{\"statement\":\"Mentored 4 engineers and ran the team's hiring loop for 2 years\",\"line\":11,\"quantified\":true,\"withinLastThreeYears\":true,\"uncommonForRole\":false},{\"statement\":\"Built the Node.js billing service handling 30k invoices a month\",\"line\":14,\"quantified\":true,\"withinLastThreeYears\":false,\"uncommonForRole\":false},{\"statement\":\"Introduced end-to-end tests that cut production incidents by 40%\",\"line\":15,\"quantified\":true,\"withinLastThreeYears\":false,\"uncommonForRole\":false},{\"statement\":\"Cloud and infrastructure skills including AWS (ECS, RDS), Docker and Terraform alongside TypeScript and PostgreSQL\",\"line\":24,\"quantified\":false,\"withinLastThreeYears\":true,\"uncommonForRole\":false}]}",
+      "total_cost_usd": 0.0125767,
+      "modelUsage": {
+        "claude-sonnet-5-5": {
+          "inputTokens": 2,
+          "outputTokens": 499,
+          "cacheReadInputTokens": 827,
+          "cacheCreationInputTokens": 1875,
+          "webSearchRequests": 0,
+          "costUSD": 0.0125767,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 128000,
+          "thinkingTokens": 0,
+          "cacheCreationEphemeral5mInputTokens": 0,
+          "cacheCreationEphemeral1hInputTokens": 1875,
+          "canonicalModel": "claude-sonnet-5-5",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "structured_output": {
+        "candidates": [
+          {
+            "statement": "Cut p95 latency of the shipment-tracking API from 900 ms to 180 ms while migrating from a Python monolith to TypeScript services",
+            "line": 9,
+            "quantified": true,
+            "withinLastThreeYears": true,
+            "uncommonForRole": true
+          },
+          {
+            "statement": "Designed the PostgreSQL partitioning scheme for 2 billion tracking events",
+            "line": 10,
+            "quantified": true,
+            "withinLastThreeYears": true,
+            "uncommonForRole": true
+          },
+          {
+            "statement": "Mentored 4 engineers and ran the team's hiring loop for 2 years",
+            "line": 11,
+            "quantified": true,
+            "withinLastThreeYears": true,
+            "uncommonForRole": false
+          },
+          {
+            "statement": "Built the Node.js billing service handling 30k invoices a month",
+            "line": 14,
+            "quantified": true,
+            "withinLastThreeYears": false,
+            "uncommonForRole": false
+          },
+          {
+            "statement": "Introduced end-to-end tests that cut production incidents by 40%",
+            "line": 15,
+            "quantified": true,
+            "withinLastThreeYears": false,
+            "uncommonForRole": false
+          },
+          {
+            "statement": "Cloud and infrastructure skills including AWS (ECS, RDS), Docker and Terraform alongside TypeScript and PostgreSQL",
+            "line": 24,
+            "quantified": false,
+            "withinLastThreeYears": true,
+            "uncommonForRole": false
+          }
+        ]
+      }
+    },
+    "roles": {
+      "type": "result",
+      "subtype": "success",
+      "is_error": false,
+      "duration_ms": 6276,
+      "duration_api_ms": 6100,
+      "num_turns": 3,
+      "result": "{\"name\":\"LENA VOSS\",\"roles\":[{\"employer\":\"Kestrel Logistics GmbH\",\"title\":\"Senior Software Engineer\",\"start\":\"2022-03\",\"end\":null,\"lines\":[{\"from\":9,\"to\":9},{\"from\":10,\"to\":10},{\"from\":11,\"to\":11}]},{\"employer\":\"Pixelgrove Studios\",\"title\":\"Software Engineer\",\"start\":\"2018-06\",\"end\":\"2022-02\",\"lines\":[{\"from\":14,\"to\":14},{\"from\":15,\"to\":15}]},{\"employer\":\"Pixelgrove Studios\",\"title\":\"Junior Developer\",\"start\":\"2017-09\",\"end\":\"2018-05\",\"lines\":[{\"from\":18,\"to\":18}]}],\"summaryLines\":[{\"from\":5,\"to\":5}],\"credentials\":[{\"kind\":\"degree\",\"name\":\"B.Sc. Computer Science\",\"issuer\":\"University of Hamburg\",\"year\":\"2017\"}],\"languages\":[\"de\",\"en\"],\"inferredSeniority\":\"senior\"}",
+      "total_cost_usd": 0.0207433,
+      "modelUsage": {
+        "claude-sonnet-5-5": {
+          "inputTokens": 4,
+          "outputTokens": 1036,
+          "cacheReadInputTokens": 4753,
+          "cacheCreationInputTokens": 2475,
+          "webSearchRequests": 0,
+          "costUSD": 0.0207433,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 128000,
+          "thinkingTokens": 87,
+          "cacheCreationEphemeral5mInputTokens": 0,
+          "cacheCreationEphemeral1hInputTokens": 2475,
           "canonicalModel": "claude-sonnet-5-5",
           "provider": "firstParty",
           "costBasis": "list"
@@ -30,111 +225,60 @@
       },
       "structured_output": {
         "name": "LENA VOSS",
-        "evidence": [
-          {
-            "id": "e1",
-            "text": "Backend engineer with 7 years building data-heavy web services."
-          },
-          {
-            "id": "e2",
-            "text": "Led migration of the shipment-tracking API from a Python monolith to TypeScript services; p95 latency fell from 900 ms to 180 ms."
-          },
-          {
-            "id": "e3",
-            "text": "Designed the PostgreSQL partitioning scheme for 2 billion tracking events."
-          },
-          {
-            "id": "e4",
-            "text": "Mentored 4 engineers; ran the team's hiring loop for 2 years."
-          },
-          {
-            "id": "e5",
-            "text": "Built the billing service in Node.js handling 30k invoices a month."
-          },
-          {
-            "id": "e6",
-            "text": "Introduced end-to-end tests that cut production incidents by 40%."
-          },
-          {
-            "id": "e7",
-            "text": "Maintained internal admin tools (PHP, MySQL)."
-          },
-          {
-            "id": "e8",
-            "text": "TypeScript, Node.js, PostgreSQL, Python, AWS (ECS, RDS), Docker, Terraform"
-          }
-        ],
         "roles": [
           {
             "employer": "Kestrel Logistics GmbH",
             "title": "Senior Software Engineer",
             "start": "2022-03",
             "end": null,
-            "achievementEvidenceIds": ["e2", "e3", "e4"]
+            "lines": [
+              {
+                "from": 9,
+                "to": 9
+              },
+              {
+                "from": 10,
+                "to": 10
+              },
+              {
+                "from": 11,
+                "to": 11
+              }
+            ]
           },
           {
             "employer": "Pixelgrove Studios",
             "title": "Software Engineer",
             "start": "2018-06",
             "end": "2022-02",
-            "achievementEvidenceIds": ["e5", "e6"]
+            "lines": [
+              {
+                "from": 14,
+                "to": 14
+              },
+              {
+                "from": 15,
+                "to": 15
+              }
+            ]
           },
           {
             "employer": "Pixelgrove Studios",
             "title": "Junior Developer",
             "start": "2017-09",
             "end": "2018-05",
-            "achievementEvidenceIds": ["e7"]
+            "lines": [
+              {
+                "from": 18,
+                "to": 18
+              }
+            ]
           }
         ],
-        "skills": [
+        "summaryLines": [
           {
-            "name": "TypeScript",
-            "evidenceIds": ["e2", "e8"]
-          },
-          {
-            "name": "Node.js",
-            "evidenceIds": ["e5", "e8"]
-          },
-          {
-            "name": "PostgreSQL",
-            "evidenceIds": ["e3", "e8"]
-          },
-          {
-            "name": "Python",
-            "evidenceIds": ["e2", "e8"]
-          },
-          {
-            "name": "AWS",
-            "evidenceIds": ["e8"]
-          },
-          {
-            "name": "ECS",
-            "evidenceIds": ["e8"]
-          },
-          {
-            "name": "RDS",
-            "evidenceIds": ["e8"]
-          },
-          {
-            "name": "Docker",
-            "evidenceIds": ["e8"]
-          },
-          {
-            "name": "Terraform",
-            "evidenceIds": ["e8"]
-          },
-          {
-            "name": "PHP",
-            "evidenceIds": ["e7"]
-          },
-          {
-            "name": "MySQL",
-            "evidenceIds": ["e7"]
-          },
-          {
-            "name": "end-to-end tests",
-            "evidenceIds": ["e6"]
+            "from": 5,
+            "to": 5
           }
         ],
         "credentials": [
@@ -148,128 +292,6 @@
         "languages": ["de", "en"],
         "inferredSeniority": "senior"
       }
-    },
-    {
-      "type": "result",
-      "subtype": "success",
-      "is_error": false,
-      "duration_ms": 3556,
-      "duration_api_ms": 3427,
-      "num_turns": 2,
-      "result": "{\"candidates\":[{\"statement\":\"Led migration of the shipment-tracking API from a Python monolith to TypeScript services, cutting p95 latency from 900 ms to 180 ms (80% reduction).\",\"evidenceId\":\"ev-2\",\"quantified\":true,\"withinLastThreeYears\":true,\"uncommonForRole\":true},{\"statement\":\"Designed the PostgreSQL partitioning scheme for a dataset of 2 billion tracking events.\",\"evidenceId\":\"ev-3\",\"quantified\":true,\"withinLastThreeYears\":true,\"uncommonForRole\":true},{\"statement\":\"Mentored 4 engineers and ran the team's hiring loop for 2 years.\",\"evidenceId\":\"ev-4\",\"quantified\":true,\"withinLastThreeYears\":true,\"uncommonForRole\":false},{\"statement\":\"Introduced end-to-end tests that cut production incidents by 40%.\",\"evidenceId\":\"ev-6\",\"quantified\":true,\"withinLastThreeYears\":false,\"uncommonForRole\":true},{\"statement\":\"Built the billing service in Node.js handling 30k invoices a month.\",\"evidenceId\":\"ev-5\",\"quantified\":true,\"withinLastThreeYears\":false,\"uncommonForRole\":false},{\"statement\":\"Seven years of backend experience building data-heavy web services.\",\"evidenceId\":\"ev-1\",\"quantified\":true,\"withinLastThreeYears\":true,\"uncommonForRole\":false},{\"statement\":\"Hands-on stack spanning TypeScript, Node.js, PostgreSQL, Python, AWS (ECS, RDS), Docker and Terraform.\",\"evidenceId\":\"ev-8\",\"quantified\":false,\"withinLastThreeYears\":true,\"uncommonForRole\":false}]}",
-      "total_cost_usd": 0.017196,
-      "modelUsage": {
-        "claude-sonnet-5-5": {
-          "inputTokens": 2,
-          "outputTokens": 630,
-          "cacheReadInputTokens": 0,
-          "cacheCreationInputTokens": 2723,
-          "webSearchRequests": 0,
-          "costUSD": 0.017196,
-          "contextWindow": 1000000,
-          "maxOutputTokens": 128000,
-          "thinkingTokens": 0,
-          "cacheCreationEphemeral5mInputTokens": 0,
-          "cacheCreationEphemeral1hInputTokens": 2723,
-          "canonicalModel": "claude-sonnet-5-5",
-          "provider": "firstParty",
-          "costBasis": "list"
-        }
-      },
-      "structured_output": {
-        "candidates": [
-          {
-            "statement": "Led migration of the shipment-tracking API from a Python monolith to TypeScript services, cutting p95 latency from 900 ms to 180 ms (80% reduction).",
-            "evidenceId": "ev-2",
-            "quantified": true,
-            "withinLastThreeYears": true,
-            "uncommonForRole": true
-          },
-          {
-            "statement": "Designed the PostgreSQL partitioning scheme for a dataset of 2 billion tracking events.",
-            "evidenceId": "ev-3",
-            "quantified": true,
-            "withinLastThreeYears": true,
-            "uncommonForRole": true
-          },
-          {
-            "statement": "Mentored 4 engineers and ran the team's hiring loop for 2 years.",
-            "evidenceId": "ev-4",
-            "quantified": true,
-            "withinLastThreeYears": true,
-            "uncommonForRole": false
-          },
-          {
-            "statement": "Introduced end-to-end tests that cut production incidents by 40%.",
-            "evidenceId": "ev-6",
-            "quantified": true,
-            "withinLastThreeYears": false,
-            "uncommonForRole": true
-          },
-          {
-            "statement": "Built the billing service in Node.js handling 30k invoices a month.",
-            "evidenceId": "ev-5",
-            "quantified": true,
-            "withinLastThreeYears": false,
-            "uncommonForRole": false
-          },
-          {
-            "statement": "Seven years of backend experience building data-heavy web services.",
-            "evidenceId": "ev-1",
-            "quantified": true,
-            "withinLastThreeYears": true,
-            "uncommonForRole": false
-          },
-          {
-            "statement": "Hands-on stack spanning TypeScript, Node.js, PostgreSQL, Python, AWS (ECS, RDS), Docker and Terraform.",
-            "evidenceId": "ev-8",
-            "quantified": false,
-            "withinLastThreeYears": true,
-            "uncommonForRole": false
-          }
-        ]
-      }
-    },
-    {
-      "type": "result",
-      "subtype": "success",
-      "is_error": false,
-      "duration_ms": 3598,
-      "duration_api_ms": 3468,
-      "num_turns": 2,
-      "result": "{\"impactEvidence\":0.8,\"skillsDepth\":0.7,\"clarityAndStructure\":0.85,\"careerTrajectory\":0.85,\"atsReadability\":0.9,\"topFixes\":[\"Add measurable results to the unquantified bullets, such as the PostgreSQL partitioning line (query speed or cost change), the mentoring line (retention or promotions) and the junior admin-tools line (users or time saved).\",\"Back the skills that appear only in the Skills list, namely AWS (ECS, RDS), Docker, Terraform and Python, with experience bullets that show how they were used and at what scale.\",\"Expand the one-line summary into two or three lines that name the domain, scope of ownership and strongest quantified achievement, and add a title or level-progression cue to the Pixelgrove entries, for example by merging the two roles into one employer block with both titles.\"]}",
-      "total_cost_usd": 0.015004,
-      "modelUsage": {
-        "claude-sonnet-5-5": {
-          "inputTokens": 2,
-          "outputTokens": 412,
-          "cacheReadInputTokens": 0,
-          "cacheCreationInputTokens": 2720,
-          "webSearchRequests": 0,
-          "costUSD": 0.015004,
-          "contextWindow": 1000000,
-          "maxOutputTokens": 128000,
-          "thinkingTokens": 0,
-          "cacheCreationEphemeral5mInputTokens": 0,
-          "cacheCreationEphemeral1hInputTokens": 2720,
-          "canonicalModel": "claude-sonnet-5-5",
-          "provider": "firstParty",
-          "costBasis": "list"
-        }
-      },
-      "structured_output": {
-        "impactEvidence": 0.8,
-        "skillsDepth": 0.7,
-        "clarityAndStructure": 0.85,
-        "careerTrajectory": 0.85,
-        "atsReadability": 0.9,
-        "topFixes": [
-          "Add measurable results to the unquantified bullets, such as the PostgreSQL partitioning line (query speed or cost change), the mentoring line (retention or promotions) and the junior admin-tools line (users or time saved).",
-          "Back the skills that appear only in the Skills list, namely AWS (ECS, RDS), Docker, Terraform and Python, with experience bullets that show how they were used and at what scale.",
-          "Expand the one-line summary into two or three lines that name the domain, scope of ownership and strongest quantified achievement, and add a title or level-progression cue to the Pixelgrove entries, for example by merging the two roles into one employer block with both titles."
-        ]
-      }
     }
-  ],
-  "note": "Recorded 2026-11-12 from Claude Code 2.1.322 (claude -p, sonnet alias) on the fictional sample tools/spikes/s1/samples/resume-a.txt: structure, then selling-point candidates, then strength, in that order. Fictional data only."
+  }
 }

@@ -17,6 +17,8 @@ export type ClaudeCodeRuntimeConfig = {
   readonly command: string;
   readonly tierAliases: { readonly [T in ModelTier]: string };
   readonly portTiers: { readonly [P in ModelPort]: ModelTier };
+  /** Claude Code's reasoning effort per port (`--effort`); a port without one uses the CLI's default. */
+  readonly portEffort?: { readonly [P in ModelPort]?: string };
   readonly maxConcurrentCalls: number;
   readonly callTimeoutMs: number;
   /** The date the owner turned "Help improve Claude" off (Privacy 4, ADR 0009 decision 7); null when not confirmed. */
@@ -35,6 +37,8 @@ export const CLAUDE_CODE_DEFAULTS = {
     resumeWriter: "large",
     keywordMatcher: "small",
   },
+  // P1-T13: low effort keeps the resume analyst's thinking short enough for the 20 s card, with parsing unchanged.
+  portEffort: { resumeAnalyst: "low" },
   maxConcurrentCalls: 5,
   callTimeoutMs: 60_000,
 } as const satisfies Omit<ClaudeCodeRuntimeConfig, "modelTrainingOffConfirmed">;

@@ -69,6 +69,15 @@ describe("HeadlessRunner", () => {
     assert.deepEqual(readdirSync(seen.cwd), [], "an empty working directory");
   });
 
+  test("a port's configured effort is passed; a port without one uses the CLI's default", async () => {
+    const l = launcher(() => envelope({ structured_output: {} }));
+    const { runner } = runnerWith(l, { ...config, portEffort: { resumeAnalyst: "low" } });
+    await runner.call(aCall);
+    await runner.call({ ...aCall, port: "matchJudge" });
+    assert.equal(l.seen[0]?.args[l.seen[0].args.indexOf("--effort") + 1], "low");
+    assert.ok(!l.seen[1]?.args.includes("--effort"));
+  });
+
   test("the child environment carries no API key or provider switch", async () => {
     const l = launcher(() => envelope({ structured_output: {} }));
     process.env["ANTHROPIC_API_KEY"] = "fictional-key";
