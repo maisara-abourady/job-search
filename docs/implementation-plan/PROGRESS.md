@@ -1,8 +1,8 @@
 # Progress
 
-Current phase: 1 — Foundations (Phase 0 complete 2026-11-12)
-Next task: GATE 1 (owner approval)
-Last updated: 2026-11-12 by execution (P1-T13)
+Current phase: 2 — Matching core (Phase 1 complete 2026-11-13)
+Next task: P2-T01 (re-check Phase 2 against what Phase 1 taught before starting)
+Last updated: 2026-11-13 by execution (Gate 1 approved)
 
 ## Status
 
@@ -48,7 +48,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (reason i
 - [x] S-2 Initial Tier 1 company registry
 - [x] H-5 Registry source chosen: the MIT slug lists from S-2 (owner, 2026-11-12); the crawl for the other three ATS is P5-T09
 - [-] H-6 Adzuna and USAJobs keys (deferred with P2-T09 to P5-T10)
-- [ ] GATE 1
+- [x] GATE 1 — approved by the owner 2026-11-13 (initial preferences never invent work authorization: kept as is)
 
 ### Phase 2 — Matching core (exit: 95% score stability)
 - [ ] P2-T01 Characterization tests for the existing matching rules
@@ -148,6 +148,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (reason i
 - 2026-11-12 (P1-T11): `apps/main/eval/parsing/` (`parsing.eval.ts`, `compare.ts`, `README.md` with the expected-file schema) and `apps/main/test/parsing-compare.test.ts` (5 tests of the comparison rules, fictional data). The eval composes the real reader and the Claude Code analyst with in-memory storage, refuses to start without the training-off confirmation (`run-eval.ts` now prints a configuration error as one message, exit 2), runs the start check, and reports per resume the role mismatches, skills recall and precision, and seconds to card, plus the median and maximum. The owner's six consented PDFs were fetched from their Drive folder (after allowing `drive.google.com` and `drive.usercontent.google.com` on the environment) into the gitignored `fixtures/private/resumes/` as `resume-01.pdf` to `resume-06.pdf`. I drafted each `resume-NN.expected.json` by reading the PDF myself (roles with accepted spellings; skills split into required, meaning named tools, technologies and methods, and optional, meaning further defensible names); they await the owner's review. **Run 1 (analyst-2):** 5/6; every role exact on all six; resume-06 failed precision (0.87: two product names and "AI-assisted PM framework" read as skills). Several "unexpected" skills were labeling or matching gaps, not parser errors ("Retail Media Networks (RMN)"; the resume's own "Builder Design Pattern" wording), so `sameSkill` now accepts either part of "Name (Abbreviation)" (tested) and resume-02's optional list gained the resume's own pattern spellings and AML. Genuine misses were left as misses. **Run 2: PASSED 6/6**; every role exact; skills recall 0.91 to 1.00, precision 0.96 to 1.00; resume-06 passed on this run, so results near the threshold vary between runs. **Seconds to card: median 32.8, max 56.4 (target 20; run 1: median 34.5, max 49.4).** Where the time goes: the structure call writes about 7,700 output tokens (about 2,900 of them thinking) for the longest resume, about 42 s. Two adapter-only experiments did not help and were reverted: citing line ranges instead of copying lines (75 s) and `--effort low`/`medium` (63 s/81 s). A real fix splits the analyst's work into parallel calls; that is the owner's call (ADR 0009 review trigger: the 20 s card).
 - 2026-11-12 (P1-T11): The owner reviewed the six expected files ("all good"). The parsing exit test stands at PASSED 6/6 (run 2). Still open for Gate 1: the 20 s card decision, H-5, H-6.
 - 2026-11-12 (P1-T13): Card now under 20 s. Findings: thinking cannot be switched off (`MAX_THINKING_TOKENS=0` and `alwaysThinkingEnabled:false` changed nothing); the one structure call wrote about 8,000 tokens (about 42 s on the longest resume). Fix, adapter-only, `ResumeAnalyst` port unchanged: `structure` starts four calls at once on the resume's numbered lines (roles with line ranges, skills with a line, selling-point candidates with a line, strength); every call cites line numbers and the adapter takes evidence text from the resume itself (verbatim), so `sellingPointCandidates` and `strengthRatios` return answers already under way. A skill is backed by the evidence covering its line, or by that line alone (never a line naming the person). New runner setting `portEffort` (default `resumeAnalyst: "low"`, passed as `--effort`; a new runner test pins it). The separate skills call first listed product features, industries and metrics as skills (precision 0.64 to 0.83 on three resumes), so its prompt now says what a skill is and is not (`ANALYST_PROMPT_VERSION` "analyst-5"). Contract fixture re-recorded on the fictional sample (one envelope per call kind; the sample takes 7.4 s). **`pnpm eval parsing`: PASSED 6/6 twice; seconds to card median 9.4, max 15.7 (was median 32.8, max 56.4); every role exact; skills recall 0.94 to 1.00, precision 0.96 to 1.00.** `pnpm verify`: 75 tests + 88 contract cases; no SDP warning; use-cases/rules grep clean.
+- 2026-11-13 (Gate 1): approved by the owner. Exit checks at approval: `pnpm verify` green (75 tests + 87 contract cases), architecture and metrics clean (no SDP warning), onboarding/profiles/spending acceptance tests green, `pnpm eval parsing` PASSED 6/6 (median 9.4 s, max 15.7 s to card). Initial preferences keep work authorization empty until the owner fills preferences (P2-T15 use-case side, Phase 3 screens). Phase 2 is detailed but must be re-checked against Phase 1 lessons (four parallel calls per analysis, `--effort`, thinking cannot be disabled, output tokens drive latency) before P2-T01.
 
 ## Deviations log
 
